@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "bradlc.vscode-tailwindcss",
+    "oxc.oxc-vscode",
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "editorconfig.editorconfig"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.testing.pytestArgs": ["tests"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": { "source.organizeImports": "explicit" }
+  },
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "tailwindCSS.experimental.configFile": "frontend/src/styles/index.css",
+  "files.associations": { "*.css": "tailwindcss" },
+  "editor.rulers": [100],
+  "files.exclude": { "**/__pycache__": true, "**/.pytest_cache": true, "**/.ruff_cache": true }
+}
