@@ -19,12 +19,18 @@ if [[ ! -d frontend/node_modules ]]; then
   (cd frontend && npm install)
 fi
 
-TELESCOPE_ROOT="${TELESCOPE_ROOT:-}"
-if [[ -z "$TELESCOPE_ROOT" && -d "$ROOT/../Quantum_Monitoring-main" ]]; then
-  TELESCOPE_ROOT="$(cd "$ROOT/../Quantum_Monitoring-main" && pwd)"
-fi
-if [[ -z "$TELESCOPE_ROOT" && -f "$ROOT/../app/main.py" ]]; then
-  TELESCOPE_ROOT="$(cd "$ROOT/.." && pwd)"
+if [[ -z "${TELESCOPE_ROOT:-}" ]]; then
+  for d in \
+    /home/cloud/QTelescope \
+    /home/cloud/Quantum_Monitoring-main \
+    "$ROOT/../QTelescope" \
+    "$ROOT/../Quantum_Monitoring-main"
+  do
+    if [[ -f "$d/app/main.py" ]]; then
+      TELESCOPE_ROOT="$(cd "$d" && pwd)"
+      break
+    fi
+  done
 fi
 
 UI_PORT="${UI_PORT:-5176}"
@@ -60,7 +66,6 @@ log "Portal  http://0.0.0.0:${UI_PORT}/qrp"
 log "Login   admin / quantum2026 (lab; API must be TeleScope)"
 echo
 echo "Manual:"
-echo "  export TELESCOPE_ROOT=/path/to/QTelescope"
-echo "  bash scripts/vm-setup.sh"
+echo "  bash scripts/vm-setup.sh   # uses /home/cloud/QTelescope when present"
 echo "  # or:"
 echo "  cd frontend && npm install && npm run dev -- --host 0.0.0.0 --port 5176"
