@@ -24,17 +24,35 @@ export function RegisterPage() {
   })
   const [captchaInput, setCaptchaInput] = useState('')
   const [captcha, setCaptcha] = useState<Captcha | null>(null)
+  const [captchaLoading, setCaptchaLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function loadCaptcha() {
-    const next = await authFetch<Captcha>('/auth/captcha')
-    setCaptcha(next)
-    setCaptchaInput('')
+  async function loadCaptcha(attempt = 0) {
+    setCaptchaLoading(true)
+    try {
+      const next = await authFetch<Captcha>('/auth/captcha')
+      if (!next?.captcha_id || !next?.captcha_image) {
+        throw new Error('Captcha response incomplete')
+      }
+      setCaptcha(next)
+      setCaptchaInput('')
+      setError('')
+    } catch (err) {
+      setCaptcha(null)
+      const msg = err instanceof Error ? err.message : 'Could not load captcha'
+      if (attempt < 1) {
+        await new Promise((r) => setTimeout(r, 600))
+        return loadCaptcha(attempt + 1)
+      }
+      setError(msg)
+    } finally {
+      setCaptchaLoading(false)
+    }
   }
 
   useEffect(() => {
-    void loadCaptcha().catch(() => setError('Could not load captcha'))
+    void loadCaptcha()
   }, [])
 
   async function onSubmit(event: FormEvent) {
@@ -124,7 +142,14 @@ export function RegisterPage() {
                   <button type="button" onClick={() => void loadCaptcha()} className="block" title="Refresh captcha">
                     <img src={captcha.captcha_image} alt="Captcha challenge" className="h-12 rounded-lg border border-border bg-white" />
                   </button>
-                ) : null}
+                ) : (
+                  <p className={cn('text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
+                    {captchaLoading ? 'Loading challenge…' : 'Captcha unavailable.'}{' '}
+                    <button type="button" className="font-medium text-primary hover:underline" onClick={() => void loadCaptcha()}>
+                      Retry
+                    </button>
+                  </p>
+                )}
                 <input
                   required
                   className={cn('field-input font-mono uppercase', dark && 'border-white/15 bg-white/5 text-white')}

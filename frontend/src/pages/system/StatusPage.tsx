@@ -90,15 +90,11 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
     void readiness.refetch()
   }
 
-  useSetPageChrome(
-    framed
-      ? {
-          eyebrow: 'Operations',
-          title: 'Platform status',
-          description: 'Browser → API → database path for this portal session.',
-        }
-      : {},
-  )
+  useSetPageChrome({
+    skip: framed,
+    crumbs: [{ label: 'Admin' }, { label: 'Status' }],
+    title: 'Platform status',
+  })
 
   return (
     <main className={framed ? 'mx-auto flex max-w-4xl flex-col gap-6' : 'mx-auto flex min-h-svh max-w-4xl flex-col gap-6 px-4 py-10 sm:px-6'}>

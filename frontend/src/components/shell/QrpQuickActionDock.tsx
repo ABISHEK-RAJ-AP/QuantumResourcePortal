@@ -3,10 +3,8 @@ import { Link } from 'react-router'
 import {
   CalendarClock,
   ClipboardList,
-  Gauge,
   LayoutDashboard,
   Plus,
-  ScrollText,
   Siren,
   Sparkles,
   X,
@@ -30,10 +28,7 @@ type DockAction = {
   icon: React.ReactNode
 }
 
-/**
- * Cert Studio–style bottom-right quick actions.
- * Keeps random CTAs out of page headers; one dock for role work.
- */
+/** Lifecycle actions only — not a second sidebar. */
 export function QrpQuickActionDock() {
   const client = useQueryClient()
   const user = getSessionUser()
@@ -66,7 +61,7 @@ export function QrpQuickActionDock() {
   const seed = useMutation({
     mutationFn: seedPortalDemo,
     onSuccess: (r) => {
-      setSeedMsg(`Demo: ${r.projects}p · ${r.approvals}r · ${r.reservations}h`)
+      setSeedMsg(`Demo: ${r.projects}p · ${r.approvals}r · ${r.reservations}h · ${r.assets}a`)
       void client.invalidateQueries()
       setOpen(false)
     },
@@ -93,31 +88,40 @@ export function QrpQuickActionDock() {
     const list: DockAction[] = [
       {
         id: 'review',
-        label: 'Review next request',
-        subtitle: queue ? `${queue} in queue` : 'Open review queue',
+        label: 'Review queue',
+        subtitle: queue ? `${queue} waiting` : 'Open queue',
         to: '/qrp/approvals',
         badge: queue || undefined,
         tone: queue ? 'warning' : 'primary',
         icon: <ClipboardList className="size-5" strokeWidth={2} />,
       },
       {
-        id: 'request',
-        label: 'Create resource request',
-        subtitle: 'From a project',
+        id: 'project',
+        label: 'Projects',
+        subtitle: 'Submit requests',
         to: '/qrp/projects',
         icon: <Plus className="size-5" strokeWidth={2} />,
       },
       {
-        id: 'ops',
-        label: 'Operations Centre',
-        subtitle: 'Exceptions & posture',
-        to: '/qrp/centre',
-        icon: <Gauge className="size-5" strokeWidth={2} />,
+        id: 'hold',
+        label: 'Schedule hold',
+        subtitle: 'After approval',
+        to: '/qrp/scheduling',
+        icon: <CalendarClock className="size-5" strokeWidth={2} />,
+      },
+      {
+        id: 'reconcile',
+        label: 'Reconciliation',
+        subtitle: unresolved ? `${unresolved} open` : 'Dispatch outcomes',
+        to: '/qrp/reconciliation',
+        badge: unresolved || undefined,
+        tone: unresolved ? 'critical' : 'primary',
+        icon: <LayoutDashboard className="size-5" strokeWidth={2} />,
       },
       {
         id: 'incidents',
         label: 'Incidents',
-        subtitle: incidents ? `${incidents} open` : 'Triage cases',
+        subtitle: incidents ? `${incidents} open` : 'Cases',
         to: '/qrp/incidents',
         badge: incidents || undefined,
         tone: incidents ? 'critical' : 'primary',
@@ -125,42 +129,19 @@ export function QrpQuickActionDock() {
       },
       {
         id: 'alerts',
-        label: 'Alert queue',
+        label: 'Alerts',
         subtitle: alerts ? `${alerts} active` : 'Fleet signals',
         to: '/qrp/support',
         badge: alerts > 0 ? Math.min(alerts, 99) : undefined,
         tone: alerts ? 'warning' : 'primary',
         icon: <Zap className="size-5" strokeWidth={2} />,
       },
-      {
-        id: 'reconcile',
-        label: 'Reconciliation',
-        subtitle: unresolved ? `${unresolved} unresolved` : 'Dispatch outcomes',
-        to: '/qrp/reconciliation',
-        badge: unresolved || undefined,
-        tone: unresolved ? 'critical' : 'primary',
-        icon: <LayoutDashboard className="size-5" strokeWidth={2} />,
-      },
-      {
-        id: 'hold',
-        label: 'Schedule hold',
-        subtitle: 'Governance reservation window',
-        to: '/qrp/scheduling',
-        icon: <CalendarClock className="size-5" strokeWidth={2} />,
-      },
-      {
-        id: 'quotas',
-        label: 'Quotas & usage',
-        subtitle: 'Daily shot ledger',
-        to: '/qrp/quotas',
-        icon: <ScrollText className="size-5" strokeWidth={2} />,
-      },
     ]
     if (isAdmin) {
       list.push({
         id: 'demo',
-        label: seed.isPending ? 'Loading demo…' : 'Load demo workspace',
-        subtitle: 'Seed via real APIs',
+        label: seed.isPending ? 'Loading demo…' : 'Load demo',
+        subtitle: 'Seed via APIs',
         onClick: () => seed.mutate(),
         icon: <Sparkles className="size-5" strokeWidth={2} />,
       })
@@ -182,45 +163,43 @@ export function QrpQuickActionDock() {
       ) : null}
       {open ? (
         <div className="qrp-quick-dock__panel" role="menu">
-          <div className="qrp-quick-dock__panel-head">
-            <span>Quick actions</span>
-            <button type="button" className="btn-ghost p-1" aria-label="Close quick actions" onClick={() => setOpen(false)}>
-              <X className="size-4" />
+          <div className="mb-2 flex items-center justify-between px-1">
+            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Actions</p>
+            <button type="button" className="btn-ghost grid size-7 place-items-center p-0" aria-label="Close" onClick={() => setOpen(false)}>
+              <X className="size-3.5" />
             </button>
           </div>
-          <ul className="qrp-quick-dock__list">
-            {actions.map((a) => {
+          <ul className="space-y-1">
+            {actions.map((action) => {
               const body = (
                 <>
-                  <span className={cn('qrp-quick-dock__icon', a.tone === 'critical' && 'is-critical', a.tone === 'warning' && 'is-warning')}>
-                    {a.icon}
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">{action.icon}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{action.label}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{action.subtitle}</span>
                   </span>
-                  <span className="qrp-quick-dock__copy">
-                    <span className="qrp-quick-dock__label">{a.label}</span>
-                    <span className="qrp-quick-dock__sub">{a.subtitle}</span>
-                  </span>
-                  {a.badge ? <span className="qrp-quick-dock__badge">{a.badge}</span> : null}
+                  {action.badge ? (
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums',
+                        action.tone === 'critical' && 'bg-critical-soft text-critical',
+                        action.tone === 'warning' && 'bg-warning-soft text-warning',
+                        (!action.tone || action.tone === 'primary') && 'bg-primary/15 text-primary',
+                      )}
+                    >
+                      {action.badge}
+                    </span>
+                  ) : null}
                 </>
               )
               return (
-                <li key={a.id}>
-                  {a.to ? (
-                    <Link
-                      role="menuitem"
-                      className="qrp-quick-dock__action"
-                      to={a.to}
-                      onClick={() => setOpen(false)}
-                    >
+                <li key={action.id}>
+                  {action.to ? (
+                    <Link className="qrp-quick-dock__item" to={action.to} role="menuitem" onClick={() => setOpen(false)}>
                       {body}
                     </Link>
                   ) : (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="qrp-quick-dock__action"
-                      disabled={a.id === 'demo' && seed.isPending}
-                      onClick={() => a.onClick?.()}
-                    >
+                    <button type="button" className="qrp-quick-dock__item w-full text-start" role="menuitem" onClick={action.onClick}>
                       {body}
                     </button>
                   )}
@@ -232,13 +211,13 @@ export function QrpQuickActionDock() {
       ) : null}
       <button
         type="button"
-        className={cn('qrp-quick-dock__toggle', urgent > 0 && 'has-urgent')}
+        className={cn('qrp-quick-dock__fab', urgent > 0 && 'qrp-quick-dock__fab--urgent')}
         aria-expanded={open}
-        aria-label={open ? 'Close quick actions' : 'Open quick actions'}
+        aria-label="Quick actions"
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? <X className="size-5" /> : <Zap className="size-5" />}
-        {urgent > 0 && !open ? <span className="qrp-quick-dock__fab-badge">{urgent > 99 ? '99+' : urgent}</span> : null}
+        <Zap className="size-5" strokeWidth={2} />
+        {urgent > 0 ? <span className="qrp-quick-dock__fab-badge">{urgent > 99 ? '99+' : urgent}</span> : null}
       </button>
     </div>
   )

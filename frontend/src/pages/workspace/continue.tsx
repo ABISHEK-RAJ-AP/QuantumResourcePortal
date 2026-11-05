@@ -13,12 +13,12 @@ import {
   YAxis,
 } from 'recharts'
 
-import { seedPortalDemo } from '@/api/seedDemo'
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { CopyableId } from '@/components/data/CopyableId'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
-import { DataFreshness } from '@/components/data/DataFreshness'
+import { ChartPanel } from '@/components/data/ChartPanel'
 import { FilterBar } from '@/components/data/FilterBar'
+import { KpiStrip } from '@/components/data/KpiStrip'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import {
   Card,
@@ -31,7 +31,12 @@ import {
   stateLabel,
   stateTone,
 } from '@/components/layout/Page'
+import { InfoTip } from '@/components/ui/InfoTip'
+import { Modal } from '@/components/ui/Modal'
+import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
+import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
+import { StatusPage } from '@/pages/system/StatusPage'
 import { clearSession, getSessionUser } from '@/lib/session'
 import { message, QueryBody, shortId, Table } from '@/pages/workspace/screens'
 
@@ -216,22 +221,8 @@ export function ReconciliationPage() {
       eyebrow="Operations"
       title="Reconciliation"
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-ghost" to="/qrp/jobs">
-            Provider jobs
-          </Link>
-          <Link className="btn-ghost" to="/qrp/dispatch">
-            Dispatch ICD
-          </Link>
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-        </span>
-      }
+      updatedAt={query.dataUpdatedAt}
     >
-      <Notice tone="info">
-        Expected = QRP authorized / unresolved attempt. Observed = reconcile outcome (confirmed needs external job id; failed /
-        unresolved do not resubmit).
-      </Notice>
       <div className="grid gap-3 sm:grid-cols-3">
         <MetricTile label="Needs reconcile" value={unresolvedCount} hint="Authorized or unresolved" tone={unresolvedCount ? 'critical' : 'neutral'} />
         <MetricTile label="Confirmed" value={confirmedCount} hint="External outcome confirmed" tone="success" />
@@ -409,15 +400,9 @@ export function SchedulingPage() {
           <Link to="/qrp/reservations" className="btn-secondary">
             Reservation calendar
           </Link>
-          <Link to="/qrp/approvals" className="btn-ghost">
-            Review queue
-          </Link>
         </span>
       }
     >
-      <Notice tone="info">
-        Conflicts are detected against other QRP holds on the same resource_ref. This is not a live provider schedule.
-      </Notice>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <PanelHeader title="New hold" />
@@ -525,8 +510,7 @@ export function NotificationsPage() {
         </span>
       }
     >
-      <Notice tone="info">No in-app notification inbox. Governance activity remains on Audit.</Notice>
-    </Page>
+      </Page>
   )
 }
 
@@ -856,448 +840,529 @@ export function ProjectDetailPage() {
   const openApprovals = approvalRows.filter((r) =>
     ['submitted_for_review', 'in_review', 'changes_requested'].includes(String(r.governance_state || '')),
   ).length
+  const approvedCount = approvalRows.filter((r) => String(r.governance_state || '') === 'approved').length
+  const activeHolds = reservationRows.filter((r) => ['requested', 'active'].includes(String(r.state || ''))).length
   const locked = Boolean(project.data?.submission_lock)
+  const archived = Boolean(project.data?.is_archived)
   const projectName = String(project.data?.name || projectId)
+  const requestStateChart = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const row of approvalRows) {
+      const key = stateLabel(String(row.governance_state || 'unknown'))
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return Array.from(counts.entries()).map(([name, value], i) => ({
+      name,
+      value,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }))
+  }, [approvalRows])
+  const readiness = [
+    { ok: !archived, label: 'Project is active (not archived)' },
+    { ok: memberRows.length > 0 || members.isError, label: members.isError ? 'Members API unavailable' : 'At least one member listed' },
+    { ok: !locked, label: locked ? 'Submission unlocked (currently locked by open review)' : 'Submission unlocked' },
+    { ok: !quota.isError, label: quota.isError ? 'Quota ledger reachable' : 'Quota ledger available' },
+  ]
 
   return (
     <Page
       eyebrow="Workspace · Projects"
       title={projectName}
-      description="Work queue for this project: open reviews, holds, quota, then request creation. Owner/type meta is secondary."
+      description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={projectId} keep={14} />
+          
           <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
             {locked ? 'View requests' : 'Create resource request'}
           </button>
           <Link to="/qrp/scheduling" className="btn-secondary">
             Request hold
           </Link>
-          <Link to="/qrp/projects" className="btn-ghost">
-            All projects
-          </Link>
         </span>
       }
+      updatedAt={project.dataUpdatedAt}
     >
       {project.isPending ? (
         <DetailSkeleton />
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricTile label="Open reviews" value={approvals.isError ? '—' : openApprovals} hint="In queue for this project" tone={openApprovals ? 'warning' : 'neutral'} />
+          <KpiStrip>
+            <MetricTile label="Open reviews" value={approvals.isError ? '—' : openApprovals} hint="Needs reviewer action" tone={openApprovals ? 'warning' : 'neutral'} />
+            <MetricTile label="Approved" value={approvals.isError ? '—' : approvedCount} hint="Eligible for hold / dispatch path" tone="success" />
             <MetricTile label="Requests" value={approvals.isError ? '—' : approvalRows.length} hint="All linked workloads" />
-            <MetricTile label="Holds" value={reservations.isError ? '—' : reservationRows.length} hint="Reservation windows" />
-            <MetricTile label="Members" value={members.isError ? '—' : memberRows.length} hint="Directory membership" />
-          </div>
+            <MetricTile label="Active holds" value={reservations.isError ? '—' : activeHolds} hint="Requested or active windows" />
+            <MetricTile label="Members" value={members.isError ? '—' : memberRows.length} hint="Directory membership" /></KpiStrip>
 
-          <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Project sections">
-            {PROJECT_TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                className={tab === t.id ? 'btn-secondary' : 'btn-ghost'}
-                onClick={() => setTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <RecordWorkspace
+            tabs={PROJECT_TABS.map((t) => ({
+              id: t.id,
+              label: t.label,
+              count:
+                t.id === 'members'
+                  ? memberRows.length
+                  : t.id === 'requests'
+                    ? approvalRows.length
+                    : t.id === 'reservations'
+                      ? reservationRows.length
+                      : t.id === 'activity'
+                        ? activityRows.length
+                        : undefined,
+            }))}
+            activeTab={tab}
+            onTabChange={(id) => setTab(id as ProjectTab)}
+            nextAction={{
+              title: locked
+                ? 'Finish open review'
+                : archived
+                  ? 'Project archived'
+                  : openApprovals
+                    ? 'Open reviews waiting'
+                    : 'Create or track requests',
+              body: locked
+                ? 'Submission locked until the open review finishes or is withdrawn.'
+                : archived
+                  ? 'Archived projects are read-only for new requests.'
+                  : openApprovals
+                    ? `${openApprovals} request(s) in review for this project.`
+                    : 'Submit a scoped request, then track holds and usage from this hub.',
+              blockers: [
+                ...(archived ? ['Project is archived'] : []),
+                ...(locked ? ['Submission lock active'] : []),
+                ...(quota.data && quota.data.remaining_shots === 0 ? ['Daily shot remaining is 0'] : []),
+              ],
+              primary: locked || archived
+                ? { label: 'Open Requests', onClick: () => setTab('requests') }
+                : { label: 'Create request', onClick: () => setTab('requests') },
+              secondary: { to: '/qrp/approvals', label: 'Review Queue' },
+            }}
+            related={[
+              { to: '/qrp/approvals', label: 'Review Queue', hint: `${openApprovals} open here` },
+              { to: '/qrp/reservations', label: 'All holds', hint: `${reservationRows.length} on project` },
+              { to: '/qrp/scheduling', label: 'Schedule hold', hint: 'Guided window request' },
+              { to: '/qrp/quotas', label: 'Quotas', hint: quota.isError ? 'Unavailable' : 'Institution ledger' },
+              { to: '/qrp/metering', label: 'Metering', hint: 'Usage samples' },
+              { to: '/qrp/inventory', label: 'Catalogue', hint: 'Eligible resources' },
+              { to: '/qrp/reconciliation', label: 'Dispatch', hint: 'Attempts / reconcile' },
+              { to: '/qrp/audit', label: 'Audit', hint: 'Decision trail' },
+              { to: '/qrp/evidence', label: 'Evidence', hint: 'Snapshots' },
+            ]}
+          >
+            {tab === 'overview' && (
+              <QueryBody query={project}>
+                {project.data && (
+                  <div className="space-y-4">
+                    {locked ? (
+                      <Notice tone="warning">
+                        Submission locked while a request is under review. Finish or withdraw the open review before creating another —{' '}
+                        <button type="button" className="font-medium text-primary hover:underline" onClick={() => setTab('requests')}>
+                          open Requests
+                        </button>
+                        .
+                      </Notice>
+                    ) : null}
 
-          {tab === 'overview' && (
-            <QueryBody query={project}>
-              {project.data && (
-                <div className="space-y-4">
-                  {locked ? (
-                    <Notice tone="warning">
-                      Submission locked while a request is under review. Finish or withdraw the open review before creating another —{' '}
-                      <button type="button" className="font-medium text-primary hover:underline" onClick={() => setTab('requests')}>
-                        open Requests
-                      </button>
-                      .
-                    </Notice>
-                  ) : null}
-
-                  <Card className="space-y-3">
-                    <PanelHeader title="What needs attention" />
-                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                      <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('requests')}>
-                        <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Open reviews</span>
-                        <span className="text-lg font-semibold tabular-nums">{approvals.isError ? '—' : openApprovals}</span>
-                      </button>
-                      <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('reservations')}>
-                        <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Active / requested holds</span>
-                        <span className="text-lg font-semibold tabular-nums">
-                          {reservations.isError
-                            ? '—'
-                            : reservationRows.filter((r) => ['requested', 'active'].includes(String(r.state || ''))).length}
-                        </span>
-                      </button>
-                      <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('usage')}>
-                        <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Shots remaining today</span>
-                        <span className="text-lg font-semibold tabular-nums">{quota.isError ? '—' : String(quota.data?.remaining_shots ?? '—')}</span>
-                      </button>
-                      <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('activity')}>
-                        <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Recent decisions</span>
-                        <span className="text-lg font-semibold tabular-nums">{activity.isError ? '—' : activityRows.length}</span>
-                      </button>
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      <Card className="space-y-3">
+                        <PanelHeader title="Project readiness" />
+                        <ul className="space-y-2 text-sm">
+                          {readiness.map((item) => (
+                            <li key={item.label} className="flex items-start gap-2">
+                              <span className={item.ok ? 'text-success' : 'text-critical'}>{item.ok ? '✓' : '!'}</span>
+                              <span className={item.ok ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <dl className="grid gap-2 border-t border-border pt-3 text-sm sm:grid-cols-2">
+                          <div>
+                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Owner</dt>
+                            <dd className="mt-1 font-medium">{text(project.data, 'owner_username')}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Type</dt>
+                            <dd className="mt-1">{String(project.data.project_type || '—').replace(/_/g, ' ')}</dd>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Description</dt>
+                            <dd className="mt-1 text-muted-foreground">{text(project.data, 'description') || '—'}</dd>
+                          </div>
+                        </dl>
+                      </Card>
+                      <Card className="space-y-3">
+                        <PanelHeader title="Request lifecycle mix" />
+                        {requestStateChart.length === 0 ? (
+                          <EmptyState title="No requests yet" body="Create a resource request to populate this chart." />
+                        ) : (
+                          <div className="h-44">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie data={requestStateChart} dataKey="value" nameKey="name" innerRadius={42} outerRadius={68} paddingAngle={2}>
+                                  {requestStateChart.map((d) => (
+                                    <Cell key={d.name} fill={d.fill} />
+                                  ))}
+                                </Pie>
+                                <Tooltip />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                        )}
+                      </Card>
                     </div>
-                    <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-                      <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
-                        {locked ? 'Review open requests' : 'Create resource request'}
-                      </button>
-                      <Link className="btn-secondary" to="/qrp/scheduling">
-                        Request hold window
-                      </Link>
-                      <Link className="btn-ghost" to="/qrp/inventory">
-                        Browse catalogue
-                      </Link>
-                      <Link className="btn-ghost" to="/qrp/approvals">
-                        Institution Review Queue
-                      </Link>
-                    </div>
-                  </Card>
 
-                  <div className="grid gap-4 xl:grid-cols-2">
                     <Card className="space-y-3">
-                      <PanelHeader
-                        title="Latest requests"
-                        action={
-                          <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setTab('requests')}>
-                            All requests
-                          </button>
-                        }
-                      />
-                      <QueryBody query={approvals}>
-                        <Table
-                          rows={approvalRows.slice(0, 5)}
-                          emptyTitle="No requests"
-                          emptyBody="Create a resource request to start governance review for this project."
-                          columns={[
-                            {
-                              key: 'workload_id',
-                              label: 'Request',
-                              render: (row) => (
-                                <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
-                                  {shortId(String(row.workload_id || ''), 12)}
-                                </Link>
-                              ),
-                            },
-                            {
-                              key: 'governance_state',
-                              label: 'State',
-                              render: (row) => (
-                                <StatusBadge
-                                  tone={stateTone(String(row.governance_state || ''))}
-                                  label={stateLabel(String(row.governance_state || 'unknown'))}
-                                />
-                              ),
-                            },
-                            { key: 'created_by', label: 'By' },
-                          ]}
-                        />
-                      </QueryBody>
+                      <PanelHeader title="What needs attention" />
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('requests')}>
+                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Open reviews</span>
+                          <span className="text-lg font-semibold tabular-nums">{approvals.isError ? '—' : openApprovals}</span>
+                        </button>
+                        <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('reservations')}>
+                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Active / requested holds</span>
+                          <span className="text-lg font-semibold tabular-nums">{reservations.isError ? '—' : activeHolds}</span>
+                        </button>
+                        <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('usage')}>
+                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Shots remaining today</span>
+                          <span className="text-lg font-semibold tabular-nums">{quota.isError ? '—' : String(quota.data?.remaining_shots ?? '—')}</span>
+                        </button>
+                        <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('activity')}>
+                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Recent decisions</span>
+                          <span className="text-lg font-semibold tabular-nums">{activity.isError ? '—' : activityRows.length}</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                        <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
+                          {locked ? 'Review open requests' : 'Create resource request'}
+                        </button>
+                        <Link className="btn-secondary" to="/qrp/scheduling">
+                          Request hold window
+                        </Link>
+                      </div>
                     </Card>
-                    <Card className="space-y-3">
-                      <PanelHeader
-                        title="Holds & quota"
-                        action={
-                          <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setTab('reservations')}>
-                            Calendar
-                          </button>
-                        }
-                      />
-                      {quota.isError ? (
-                        <p className="text-sm text-muted-foreground">Quota ledger unavailable.</p>
-                      ) : (
-                        <p className="text-sm">
-                          Today (UTC): <span className="font-semibold tabular-nums">{String(quota.data?.used_shots ?? '—')}</span> used /{' '}
-                          <span className="font-semibold tabular-nums">{String(quota.data?.daily_shots_cap ?? '—')}</span> cap · remaining{' '}
-                          <span className="font-semibold tabular-nums">{String(quota.data?.remaining_shots ?? '—')}</span>
-                        </p>
-                      )}
-                      <QueryBody query={reservations}>
-                        <Table
-                          rows={reservationRows.slice(0, 4)}
-                          emptyTitle="No holds"
-                          emptyBody="No reservation windows on this project yet."
-                          columns={[
-                            {
-                              key: 'reservation_id',
-                              label: 'Hold',
-                              render: (row) => (
-                                <Link className="font-medium text-primary hover:underline" to="/qrp/reservations">
-                                  {shortId(String(row.reservation_id || ''), 10)}
-                                </Link>
-                              ),
-                            },
-                            {
-                              key: 'state',
-                              label: 'State',
-                              render: (row) => (
-                                <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />
-                              ),
-                            },
-                            { key: 'resource_ref', label: 'Resource' },
-                          ]}
+
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      <Card className="space-y-3">
+                        <PanelHeader
+                          title="Latest requests"
+                          action={
+                            <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setTab('requests')}>
+                              All requests
+                            </button>
+                          }
                         />
-                      </QueryBody>
-                    </Card>
+                        <QueryBody query={approvals}>
+                          <Table
+                            rows={approvalRows.slice(0, 5)}
+                            emptyTitle="No requests"
+                            emptyBody="Create a resource request to start governance review for this project."
+                            columns={[
+                              {
+                                key: 'workload_id',
+                                label: 'Request',
+                                render: (row) => (
+                                  <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
+                                    {shortId(String(row.workload_id || ''), 12)}
+                                  </Link>
+                                ),
+                              },
+                              {
+                                key: 'governance_state',
+                                label: 'State',
+                                render: (row) => (
+                                  <StatusBadge
+                                    tone={stateTone(String(row.governance_state || ''))}
+                                    label={stateLabel(String(row.governance_state || 'unknown'))}
+                                  />
+                                ),
+                              },
+                              { key: 'created_by', label: 'By' },
+                            ]}
+                          />
+                        </QueryBody>
+                      </Card>
+                      <Card className="space-y-3">
+                        <PanelHeader
+                          title="Holds & quota"
+                          action={
+                            <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => setTab('reservations')}>
+                              Calendar
+                            </button>
+                          }
+                        />
+                        {quota.isError ? (
+                          <p className="text-sm text-muted-foreground">Quota ledger unavailable.</p>
+                        ) : (
+                          <p className="text-sm">
+                            Today (UTC): <span className="font-semibold tabular-nums">{String(quota.data?.used_shots ?? '—')}</span> used /{' '}
+                            <span className="font-semibold tabular-nums">{String(quota.data?.daily_shots_cap ?? '—')}</span> cap · remaining{' '}
+                            <span className="font-semibold tabular-nums">{String(quota.data?.remaining_shots ?? '—')}</span>
+                          </p>
+                        )}
+                        <QueryBody query={reservations}>
+                          <Table
+                            rows={reservationRows.slice(0, 4)}
+                            emptyTitle="No holds"
+                            emptyBody="No reservation windows on this project yet."
+                            columns={[
+                              {
+                                key: 'reservation_id',
+                                label: 'Hold',
+                                render: (row) => (
+                                  <Link className="font-medium text-primary hover:underline" to="/qrp/reservations">
+                                    {shortId(String(row.reservation_id || ''), 10)}
+                                  </Link>
+                                ),
+                              },
+                              {
+                                key: 'state',
+                                label: 'State',
+                                render: (row) => (
+                                  <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />
+                                ),
+                              },
+                              { key: 'resource_ref', label: 'Resource' },
+                            ]}
+                          />
+                        </QueryBody>
+                      </Card>
+                    </div>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Meta · owner {text(project.data, 'owner_username')} · type {text(project.data, 'project_type')} ·{' '}
-                    {project.data.is_archived ? 'archived' : 'open'}
-                    {project.data.description ? ` · ${String(project.data.description).slice(0, 120)}` : ''} · members on Members tab
-                  </p>
-                </div>
-              )}
-            </QueryBody>
-          )}
-
-          {tab === 'members' && (
-            <Card className="space-y-3">
-              <PanelHeader title="Members" />
-              <Notice tone="info">Project membership is not a second IdP. Assign application roles only for directory users already known to the institution.</Notice>
-              <MemberForm projectId={projectId} />
-              <QueryBody query={members}>
-                <Table
-                  rows={memberRows}
-                  emptyTitle="No members listed"
-                  emptyBody="Add a directory user with editor or viewer role."
-                  columns={[
-                    { key: 'username', label: 'User' },
-                    { key: 'role', label: 'Role' },
-                  ]}
-                />
+                )}
               </QueryBody>
-            </Card>
-          )}
+            )}
 
-          {tab === 'requests' && (
-            <div className="grid gap-4 xl:grid-cols-2">
+            {tab === 'members' && (
               <Card className="space-y-3">
-                <PanelHeader title="Create resource request" />
-                <Notice tone="info">
-                  Creates a workload submission then submits it for governance review. Approval ≠ provider dispatch. Package includes purpose metadata when provided.
-                </Notice>
-                {locked ? (
-                  <EmptyState title="Submission locked" body="This project is locked while a review is in progress." />
-                ) : (
-                  <form
-                    className="grid gap-3"
-                    onSubmit={(event) => {
-                      event.preventDefault()
-                      submit.mutate()
-                    }}
-                  >
-                    <label className="text-sm">
-                      Purpose
-                      <input
-                        required
-                        className={fieldClass}
-                        value={purpose}
-                        placeholder="Scientific / technical purpose for reviewers"
-                        onChange={(e) => setPurpose(e.target.value)}
-                      />
-                    </label>
-                    <label className="text-sm">
-                      Resource hint (optional)
-                      <input
-                        className={fieldClass}
-                        value={resourceHint}
-                        placeholder="e.g. simulator class or catalogue ref — not a booking"
-                        onChange={(e) => setResourceHint(e.target.value)}
-                      />
-                    </label>
-                    <label className="text-sm">
-                      Notes for reviewers (optional)
-                      <textarea className={fieldClass} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="submit" className={buttonClass} disabled={submit.isPending}>
-                        {submit.isPending ? 'Submitting…' : 'Submit for review'}
-                      </button>
-                      <Link className="btn-ghost" to="/qrp/approvals">
-                        Open Review Queue
+                <PanelHeader title="Members" />
+                <MemberForm projectId={projectId} />
+                <QueryBody query={members}>
+                  <Table
+                    rows={memberRows}
+                    emptyTitle="No members listed"
+                    emptyBody="Add a directory user with editor or viewer role."
+                    columns={[
+                      { key: 'username', label: 'User' },
+                      { key: 'role', label: 'Role' },
+                    ]}
+                  />
+                </QueryBody>
+              </Card>
+            )}
+
+            {tab === 'requests' && (
+              <div className="grid gap-4 xl:grid-cols-2">
+                <Card className="space-y-3">
+                  <PanelHeader title="Create resource request" />
+                  {locked ? (
+                    <EmptyState title="Submission locked" body="This project is locked while a review is in progress." />
+                  ) : archived ? (
+                    <EmptyState title="Archived" body="Unarchive before submitting new requests." />
+                  ) : (
+                    <form
+                      className="grid gap-3"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        submit.mutate()
+                      }}
+                    >
+                      <label className="text-sm">
+                        Purpose
+                        <input
+                          required
+                          className={fieldClass}
+                          value={purpose}
+                          placeholder="Scientific / technical purpose for reviewers"
+                          onChange={(e) => setPurpose(e.target.value)}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        Resource hint (optional)
+                        <input
+                          className={fieldClass}
+                          value={resourceHint}
+                          placeholder="e.g. simulator class or catalogue ref — not a booking"
+                          onChange={(e) => setResourceHint(e.target.value)}
+                        />
+                      </label>
+                      <label className="text-sm">
+                        Notes for reviewers (optional)
+                        <textarea className={fieldClass} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="submit" className={buttonClass} disabled={submit.isPending}>
+                          {submit.isPending ? 'Submitting…' : 'Submit for review'}
+                        </button>
+                      </div>
+                      {submit.error && <p className="text-sm text-critical">{message(submit.error)}</p>}
+                    </form>
+                  )}
+                </Card>
+                <Card className="space-y-3">
+                  <PanelHeader
+                    title="Project requests"
+                    action={
+                      <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">
+                        Queue
                       </Link>
+                    }
+                  />
+                  <QueryBody query={approvals}>
+                    <Table
+                      rows={approvalRows}
+                      emptyTitle="No requests yet"
+                      emptyBody="Submit a request to open a workload on the configured policy stages."
+                      columns={[
+                        {
+                          key: 'workload_id',
+                          label: 'Request',
+                          render: (row) => (
+                            <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
+                              {shortId(String(row.workload_id || ''), 12)}
+                            </Link>
+                          ),
+                        },
+                        {
+                          key: 'governance_state',
+                          label: 'State',
+                          render: (row) => (
+                            <StatusBadge
+                              tone={stateTone(String(row.governance_state || ''))}
+                              label={stateLabel(String(row.governance_state || 'unknown'))}
+                            />
+                          ),
+                        },
+                        { key: 'created_by', label: 'Requester' },
+                      ]}
+                    />
+                  </QueryBody>
+                </Card>
+              </div>
+            )}
+
+            {tab === 'reservations' && (
+              <div className="space-y-4">
+                <Card className="space-y-3">
+                  <PanelHeader
+                    title="Reservation holds"
+                    action={
+                      <Link className="btn-secondary" to="/qrp/scheduling">
+                        Request window
+                      </Link>
+                    }
+                  />
+                  <QueryBody query={reservations}>
+                    <Table
+                      rows={reservationRows}
+                      emptyTitle="No holds"
+                      emptyBody="Request a window after (or while planning) governance approval."
+                      columns={[
+                        {
+                          key: 'reservation_id',
+                          label: 'Hold',
+                          render: (row) => (
+                            <Link className="font-medium text-primary hover:underline" to="/qrp/reservations">
+                              {shortId(String(row.reservation_id || ''), 12)}
+                            </Link>
+                          ),
+                        },
+                        {
+                          key: 'state',
+                          label: 'State',
+                          render: (row) => (
+                            <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />
+                          ),
+                        },
+                        { key: 'resource_ref', label: 'Resource' },
+                        { key: 'window_start', label: 'Start' },
+                        { key: 'window_end', label: 'End' },
+                      ]}
+                    />
+                  </QueryBody>
+                </Card>
+                <Card>
+                  <PanelHeader title="Hold calendar" />
+                  <QueryBody query={reservations}>
+                    <ReservationCalendar rows={reservationRows} title={`${projectName} holds`} />
+                  </QueryBody>
+                </Card>
+              </div>
+            )}
+
+            {tab === 'usage' && (
+              <Card className="space-y-3">
+                <PanelHeader
+                  title="Quota & usage"
+                  action={
+                    <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/quotas">
+                      Institution ledger
+                    </Link>
+                  }
+                />
+                {quota.isError ? (
+                  <EmptyState title="Quota unavailable" body={message(quota.error)} />
+                ) : quota.isPending ? (
+                  <div className="h-32 animate-pulse rounded-lg bg-muted" />
+                ) : (
+                  <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Used (today UTC)</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.used_shots ?? '—')}</dd>
                     </div>
-                    {submit.error && <p className="text-sm text-critical">{message(submit.error)}</p>}
-                  </form>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Cap</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.daily_shots_cap ?? '—')}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Remaining</dt>
+                      <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.remaining_shots ?? '—')}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Window</dt>
+                      <dd className="mt-1 font-medium">{String(quota.data?.window || 'today')}</dd>
+                    </div>
+                  </dl>
                 )}
               </Card>
+            )}
+
+            {tab === 'activity' && (
               <Card className="space-y-3">
                 <PanelHeader
-                  title="Project requests"
+                  title="Governance activity"
                   action={
-                    <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">
-                      Queue
+                    <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/audit">
+                      Audit trail
                     </Link>
                   }
                 />
-                <QueryBody query={approvals}>
+                {activity.isError ? (
+                  <EmptyState title="Activity unavailable" body={message(activity.error)} />
+                ) : (
                   <Table
-                    rows={approvalRows}
-                    emptyTitle="No requests yet"
-                    emptyBody="Submit a request to open a workload on the configured policy stages."
+                    rows={activityRows}
+                    emptyTitle="No activity yet"
+                    emptyBody="Approval decisions for this project appear here after reviews."
                     columns={[
+                      { key: 'timestamp', label: 'When' },
+                      { key: 'actor', label: 'Actor' },
+                      { key: 'action', label: 'Action' },
                       {
-                        key: 'workload_id',
+                        key: 'target_id',
                         label: 'Request',
-                        render: (row) => (
-                          <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
-                            {shortId(String(row.workload_id || ''), 12)}
-                          </Link>
-                        ),
+                        render: (row) =>
+                          row.target_id ? (
+                            <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.target_id}`}>
+                              {shortId(String(row.target_id), 12)}
+                            </Link>
+                          ) : (
+                            '—'
+                          ),
                       },
-                      {
-                        key: 'governance_state',
-                        label: 'State',
-                        render: (row) => (
-                          <StatusBadge
-                            tone={stateTone(String(row.governance_state || ''))}
-                            label={stateLabel(String(row.governance_state || 'unknown'))}
-                          />
-                        ),
-                      },
-                      { key: 'created_by', label: 'Requester' },
                     ]}
                   />
-                </QueryBody>
+                )}
               </Card>
-            </div>
-          )}
-
-          {tab === 'reservations' && (
-            <div className="space-y-4">
-              <Card className="space-y-3">
-                <PanelHeader
-                  title="Reservation holds"
-                  action={
-                    <Link className="btn-secondary" to="/qrp/scheduling">
-                      Request window
-                    </Link>
-                  }
-                />
-                <Notice tone="info">Hold ≠ provider-confirmed booking · Hold ≠ dispatch authorisation.</Notice>
-                <QueryBody query={reservations}>
-                  <Table
-                    rows={reservationRows}
-                    emptyTitle="No holds"
-                    emptyBody="Request a window after (or while planning) governance approval."
-                    columns={[
-                      {
-                        key: 'reservation_id',
-                        label: 'Hold',
-                        render: (row) => (
-                          <Link className="font-medium text-primary hover:underline" to="/qrp/reservations">
-                            {shortId(String(row.reservation_id || ''), 12)}
-                          </Link>
-                        ),
-                      },
-                      {
-                        key: 'state',
-                        label: 'State',
-                        render: (row) => (
-                          <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />
-                        ),
-                      },
-                      { key: 'resource_ref', label: 'Resource' },
-                      { key: 'window_start', label: 'Start' },
-                      { key: 'window_end', label: 'End' },
-                    ]}
-                  />
-                </QueryBody>
-              </Card>
-              <Card>
-                <PanelHeader title="Hold calendar" />
-                <QueryBody query={reservations}>
-                  <ReservationCalendar rows={reservationRows} title={`${projectName} holds`} />
-                </QueryBody>
-              </Card>
-            </div>
-          )}
-
-          {tab === 'usage' && (
-            <Card className="space-y-3">
-              <PanelHeader
-                title="Quota & usage"
-                action={
-                  <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/quotas">
-                    Institution ledger
-                  </Link>
-                }
-              />
-              {quota.isError ? (
-                <EmptyState title="Quota unavailable" body={message(quota.error)} />
-              ) : quota.isPending ? (
-                <div className="h-32 animate-pulse rounded-lg bg-muted" />
-              ) : (
-                <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Used (today UTC)</dt>
-                    <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.used_shots ?? '—')}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Cap</dt>
-                    <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.daily_shots_cap ?? '—')}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Remaining</dt>
-                    <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.remaining_shots ?? '—')}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Window</dt>
-                    <dd className="mt-1 font-medium">{String(quota.data?.window || 'today')}</dd>
-                  </div>
-                </dl>
-              )}
-              <Notice tone="info">Daily simulation-shot cap is separate from lifetime usage. Incomplete metering is not shown as zero.</Notice>
-              <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/metering">
-                Open metering →
-              </Link>
-            </Card>
-          )}
-
-          {tab === 'activity' && (
-            <Card className="space-y-3">
-              <PanelHeader
-                title="Governance activity"
-                action={
-                  <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/audit">
-                    Audit trail
-                  </Link>
-                }
-              />
-              {activity.isError ? (
-                <EmptyState title="Activity unavailable" body={message(activity.error)} />
-              ) : (
-                <Table
-                  rows={activityRows}
-                  emptyTitle="No activity yet"
-                  emptyBody="Approval decisions for this project appear here after reviews."
-                  columns={[
-                    { key: 'timestamp', label: 'When' },
-                    { key: 'actor', label: 'Actor' },
-                    { key: 'action', label: 'Action' },
-                    {
-                      key: 'target_id',
-                      label: 'Request',
-                      render: (row) =>
-                        row.target_id ? (
-                          <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.target_id}`}>
-                            {shortId(String(row.target_id), 12)}
-                          </Link>
-                        ) : (
-                          '—'
-                        ),
-                    },
-                  ]}
-                />
-              )}
-            </Card>
-          )}
+            )}
+          </RecordWorkspace>
         </>
       )}
     </Page>
@@ -1460,7 +1525,7 @@ export function AlertDetailPage() {
         <QueryBody query={query}>
           {row && (
             <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <KpiStrip>
                 <MetricTile
                   label={`Observed${unit ? ` (${unit})` : ''}`}
                   value={Number.isFinite(current) ? current.toFixed(2) : '—'}
@@ -1484,8 +1549,7 @@ export function AlertDetailPage() {
                   hint="current / threshold"
                   tone={breachPct != null && breachPct < 100 ? 'critical' : 'neutral'}
                 />
-                <MetricTile label="Age" value={formatAlertAge(row.detected_at)} hint={String(row.detected_at || '')} />
-              </div>
+                <MetricTile label="Age" value={formatAlertAge(row.detected_at)} hint={String(row.detected_at || '')} /></KpiStrip>
 
               <div className="grid gap-4 xl:grid-cols-3">
                 <div className="space-y-4 xl:col-span-2">
@@ -1537,10 +1601,7 @@ export function AlertDetailPage() {
                         </dd>
                       </div>
                     </dl>
-                    <Notice tone="info">
-                      QRP shows detector evidence for ops triage. Live qubit telemetry charts stay in Q-TeleScope — this page does not invent trends.
-                    </Notice>
-                  </Card>
+                    </Card>
 
                   <Card className="space-y-3">
                     <PanelHeader
@@ -1787,6 +1848,7 @@ export function AlertDetailPage() {
 export function PoolsPage() {
   const client = useQueryClient()
   const [search, setSearch] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
   const query = useQuery({
     queryKey: ['pools'],
     queryFn: () => qre<unknown>('/virtual-pools'),
@@ -1801,6 +1863,7 @@ export function PoolsPage() {
     mutationFn: () => qre('/virtual-pools', { method: 'POST', body: JSON.stringify({ name }) }),
     onSuccess: () => {
       setName('')
+      setCreateOpen(false)
       void client.invalidateQueries({ queryKey: ['pools'] })
     },
   })
@@ -1818,48 +1881,48 @@ export function PoolsPage() {
   const emptyPools = all.filter((row) => Number(row.member_count || 0) === 0).length
   return (
     <Page
-      eyebrow="Resources"
-      title="Virtual pools"
-      description="A pool groups assets. Membership does not reserve or dispatch them."
+      crumbs={[{ label: 'Catalogue', to: '/qrp/inventory' }, { label: 'Pools' }]}
+      title="Resource pools"
       actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/inventory">
-            Inventory
-          </Link>
-          <Link className="btn-ghost" to="/qrp/providers">
-            Providers
-          </Link>
-        </span>
+        <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
+          New pool
+        </button>
       }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricTile label="Pools" value={query.isError ? '—' : all.length} hint="Virtual groupings" />
-        <MetricTile label="Members (sum)" value={query.isError ? '—' : memberTotal} hint="Across pools" />
-        <MetricTile label="Empty pools" value={query.isError ? '—' : emptyPools} hint="No members yet" tone={emptyPools ? 'warning' : 'neutral'} />
-        <MetricTile
-          label="Inventory assets"
-          value={inventory.isError ? '—' : (inventory.data?.length ?? 0)}
-          hint="Available to attach"
-        />
-      </div>
-      <Card>
-        <PanelHeader title="Create pool" />
+      <Modal open={createOpen} title="New pool" onClose={() => setCreateOpen(false)}>
         <form
-          className="mt-2 flex gap-2"
+          className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault()
             create.mutate()
           }}
         >
-          <input required className={fieldClass} value={name} placeholder="Pool name" onChange={(e) => setName(e.target.value)} />
-          <button type="submit" className={buttonClass} disabled={create.isPending}>
-            Create
-          </button>
+          <input
+            required
+            className={fieldClass}
+            value={name}
+            placeholder="Pool name"
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
+          {create.error ? <p className="text-sm text-critical">{message(create.error)}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className={buttonClass} disabled={create.isPending}>
+              {create.isPending ? 'Creating…' : 'Create'}
+            </button>
+          </div>
         </form>
-        {create.error && <p className="mt-2 text-sm text-critical">{message(create.error)}</p>}
-        <p className="mt-2 text-xs text-muted-foreground">Pools are labels for capacity planning — not holds, not dispatch.</p>
-      </Card>
+      </Modal>
+      <KpiStrip>
+        <MetricTile label="Pools" value={query.isError ? '—' : all.length} />
+        <MetricTile label="Members" value={query.isError ? '—' : memberTotal} />
+        <MetricTile label="Empty" value={query.isError ? '—' : emptyPools} tone={emptyPools ? 'warning' : 'neutral'} />
+        <MetricTile label="Assets" value={inventory.isError ? '—' : (inventory.data?.length ?? 0)} />
+      </KpiStrip>
       <Card>
         <FilterBar
           options={[{ id: 'all', label: 'All' }]}
@@ -2120,35 +2183,23 @@ export function ConnectorsPage() {
       eyebrow="Resources"
       title="Connectors"
       description="Integration stage is evidence on file. I5 is not claimed until a reconciled dispatch exists. No live connection test endpoint."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/providers">
-            Providers
-          </Link>
-          <Link className="btn-ghost" to="/qrp/reconciliation">
-            Reconciliation
-          </Link>
-        </span>
-      }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="Connectors" value={query.isError ? '—' : all.length} hint="Mirrors providers" />
         <MetricTile label="Collector OK" value={query.isError ? '—' : collectorOk} hint="Last status" tone="success" />
         <MetricTile label="Backends detected" value={query.isError ? '—' : backendsDetected} hint="Sum of last runs" />
-        <MetricTile label="Circuit open" value={query.isError ? '—' : circuitOpen} hint="Breaker state" tone={circuitOpen ? 'critical' : 'neutral'} />
-      </div>
+        <MetricTile label="Circuit open" value={query.isError ? '—' : circuitOpen} hint="Breaker state" tone={circuitOpen ? 'critical' : 'neutral'} /></KpiStrip>
       <QueryBody query={query}>
         <div className="grid gap-4 xl:grid-cols-3">
-          <Card>
-            <PanelHeader title="Stage mix" />
-            {stageChart.length === 0 ? (
-              <EmptyState title="No connectors" body="Empty catalogue." />
-            ) : (
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
+          <ChartPanel title="Stage mix" empty={stageChart.length === 0}>
+            {(h) =>
+              stageChart.length === 0 ? (
+                <EmptyState title="No connectors" body="Empty catalogue." />
+              ) : (
+                <ResponsiveContainer width="100%" height={h}>
                   <PieChart>
-                    <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={62} paddingAngle={2}>
+                    <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
                       {stageChart.map((d) => (
                         <Cell key={d.name} fill={d.fill} />
                       ))}
@@ -2156,9 +2207,9 @@ export function ConnectorsPage() {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-              </div>
-            )}
-          </Card>
+              )
+            }
+          </ChartPanel>
           <Card className="xl:col-span-2 space-y-1 text-sm">
             <PanelHeader title="Stage legend" />
             {Object.keys(legend).length === 0 ? (
@@ -2251,6 +2302,9 @@ export function ConnectorsPage() {
 }
 
 export function DispatchPage() {
+  const [view, setView] = useState<'overview' | 'attempts' | 'contract'>('overview')
+  const [attemptFilter, setAttemptFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const query = useQuery({
     queryKey: ['dispatch-icd'],
     queryFn: () => qre<Row>('/dispatch-icd'),
@@ -2273,12 +2327,36 @@ export function DispatchPage() {
     return state === 'dispatch_unresolved' || state === 'dispatch_authorized'
   }).length
   const confirmed = attemptRows.filter((row) => row.dispatch_state === 'dispatch_confirmed').length
+  const failed = attemptRows.filter((row) => row.dispatch_state === 'dispatch_failed').length
   const jobRows = asList(jobs.data)
+  const stateChart = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const row of attemptRows) {
+      const key = stateLabel(String(row.dispatch_state || 'unknown'))
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return Array.from(counts.entries()).map(([name, value], i) => ({
+      name,
+      value,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }))
+  }, [attemptRows])
+  const filteredAttempts = attemptRows.filter((row) => {
+    if (attemptFilter === 'needs' && !needsReconcile(row)) return false
+    if (attemptFilter !== 'all' && attemptFilter !== 'needs' && String(row.dispatch_state || '') !== attemptFilter) return false
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return ['attempt_id', 'workload_id', 'backend_id', 'dispatch_state', 'external_job_id'].some((key) =>
+      String(row[key] ?? '')
+        .toLowerCase()
+        .includes(q),
+    )
+  })
   return (
     <Page
-      eyebrow="Operations · Contract"
+      eyebrow="Operations"
       title="Dispatch & Jobs"
-      description="ICD contract for authorise/reconcile, plus live attempt and provider-job posture. Operator work happens on Reconciliation / Jobs."
+      description="Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs / reconcile. Approval ≠ provider submission."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reconciliation" className="btn-primary">
@@ -2287,14 +2365,11 @@ export function DispatchPage() {
           <Link to="/qrp/jobs" className="btn-secondary">
             Provider jobs
           </Link>
-          <Link to="/qrp/connectors" className="btn-ghost">
-            Connectors
-          </Link>
         </span>
       }
+      updatedAt={attempts.dataUpdatedAt}
     >
-      <Notice tone="info">Use Reconciliation for G3 attempts. ICD below is the contract — not a live connector console.</Notice>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="ICD version" value={query.isError ? '—' : text(query.data ?? {}, 'icd_version')} hint="Contract" />
         <MetricTile
           label="Live connector"
@@ -2302,87 +2377,253 @@ export function DispatchPage() {
           hint="I5 claim flag"
           tone={query.data?.live_connector ? 'success' : 'neutral'}
         />
-        <MetricTile
-          label="Needs reconcile"
-          value={attempts.isError ? '—' : unresolved}
-          hint="Authorized / unresolved"
-          tone={unresolved ? 'critical' : 'neutral'}
-        />
-        <MetricTile label="Provider jobs (sample)" value={jobs.isError ? '—' : jobRows.length} hint="Latest /jobs?limit=50" />
+        <MetricTile label="Needs reconcile" value={attempts.isError ? '—' : unresolved} hint="Authorized / unresolved" tone={unresolved ? 'critical' : 'neutral'} />
+        <MetricTile label="Confirmed" value={attempts.isError ? '—' : confirmed} hint="External outcome" tone="success" />
+        <MetricTile label="Provider jobs" value={jobs.isError ? '—' : jobRows.length} hint="Sample /jobs?limit=50" /></KpiStrip>
+
+      <div className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Dispatch views">
+        {(
+          [
+            { id: 'overview', label: 'Overview' },
+            { id: 'attempts', label: `Attempts (${attemptRows.length})` },
+            { id: 'contract', label: 'ICD contract' },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={view === t.id}
+            className={view === t.id ? 'btn-secondary' : 'btn-ghost'}
+            onClick={() => setView(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <QueryBody query={query}>
-          <Card className="space-y-3 text-sm">
-            <PanelHeader title="ICD endpoints" />
-            <dl className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reconcile outcomes</dt>
-                <dd className="mt-1 flex flex-wrap gap-1">
-                  {outcomes.length
-                    ? outcomes.map((o) => <StatusBadge key={o} tone="neutral" label={o} />)
-                    : '—'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Confirmed attempts</dt>
-                <dd className="mt-1 tabular-nums font-medium">{attempts.isError ? '—' : confirmed}</dd>
-              </div>
-            </dl>
-            <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'authorize_dispatch')}</p>
-            <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'record_attempt')}</p>
-            <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'reconcile')}</p>
-            <p className="text-muted-foreground">{text(query.data ?? {}, 'notes')}</p>
-            {required.length > 0 && (
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Required fields</p>
-                <ul className="mt-1 list-inside list-disc font-mono text-xs text-muted-foreground">
-                  {required.map((field) => (
-                    <li key={field}>{field}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </Card>
-        </QueryBody>
-        <Card>
-          <PanelHeader
-            title="Operator path"
-            action={
-              <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/jobs">
-                Jobs list
-              </Link>
-            }
-          />
-          <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
-            <li>Approve workload on Review Queue.</li>
-            <li>Authorise + record attempt (governance handoff).</li>
-            <li>Reconcile outcome on Reconciliation — never blind retry.</li>
-            <li>Cross-check provider job status when external_job_id exists.</li>
-          </ol>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <MetricTile label="Failed jobs (sample)" value={jobRows.filter((r) => String(r.status || '').toUpperCase() === 'FAILED').length} hint="Provider-reported" tone="warning" />
-            <MetricTile label="Running (sample)" value={jobRows.filter((r) => String(r.status || '').toUpperCase() === 'RUNNING').length} hint="Provider-reported" />
+
+      {view === 'overview' && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-3">
+            <ChartPanel title="Attempt state mix" empty={stateChart.length === 0}>
+              {(h) =>
+                stateChart.length === 0 ? (
+                  <EmptyState title="No attempts yet" body="Attempts appear after approve → authorize → record attempt." />
+                ) : (
+                  <ResponsiveContainer width="100%" height={h}>
+                    <PieChart>
+                      <Pie data={stateChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                        {stateChart.map((d) => (
+                          <Cell key={d.name} fill={d.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              }
+            </ChartPanel>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <MetricTile label="Unresolved path" value={unresolved} hint="Needs operator" tone={unresolved ? 'critical' : 'neutral'} />
+              <MetricTile label="Failed" value={failed} hint="Recorded failures" tone="warning" />
+              <MetricTile label="Running jobs" value={jobRows.filter((r) => String(r.status || '').toUpperCase() === 'RUNNING').length} hint="Provider-reported" />
+            </div>
           </div>
+          <Card>
+            <PanelHeader
+              title="Operator path"
+              action={
+                <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/reconciliation">
+                  Reconcile
+                </Link>
+              }
+            />
+            <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
+              <li>Approve workload on Review Queue (governance only).</li>
+              <li>Confirm reservation / eligibility, then authorise dispatch.</li>
+              <li>Record durable attempt before connector call.</li>
+              <li>Reconcile outcome — never blind retry ambiguous calls.</li>
+              <li>Cross-check provider job when external_job_id exists.</li>
+            </ol>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary" onClick={() => setView('attempts')}>
+                Browse attempts
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {view === 'attempts' && (
+        <Card>
+          <FilterBar
+            options={[
+              { id: 'all', label: 'All' },
+              { id: 'needs', label: 'Needs reconcile' },
+              { id: 'dispatch_confirmed', label: 'Confirmed' },
+              { id: 'dispatch_failed', label: 'Failed' },
+              { id: 'dispatch_unresolved', label: 'Unresolved' },
+              { id: 'dispatch_authorized', label: 'Authorized' },
+            ]}
+            value={attemptFilter}
+            onChange={setAttemptFilter}
+            search={search}
+            onSearch={setSearch}
+            searchPlaceholder="Search attempts…"
+            defaultId="all"
+          />
+          <QueryBody query={attempts}>
+            <Table
+              rows={filteredAttempts}
+              emptyTitle="No attempts"
+              emptyBody="Dispatch attempts appear after authorisation and record-attempt."
+              columns={[
+                {
+                  key: 'attempt_id',
+                  label: 'Attempt',
+                  render: (row) => <CopyableId value={String(row.attempt_id || '')} keep={10} />,
+                },
+                {
+                  key: 'workload_id',
+                  label: 'Request',
+                  render: (row) =>
+                    row.workload_id ? (
+                      <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
+                        {shortId(String(row.workload_id), 12)}
+                      </Link>
+                    ) : (
+                      '—'
+                    ),
+                },
+                {
+                  key: 'dispatch_state',
+                  label: 'Governance / attempt',
+                  render: (row) => (
+                    <StatusBadge tone={stateTone(String(row.dispatch_state || ''))} label={stateLabel(String(row.dispatch_state || '—'))} />
+                  ),
+                },
+                {
+                  key: 'external_job_id',
+                  label: 'Provider job',
+                  render: (row) =>
+                    row.external_job_id ? (
+                      <Link className="font-mono text-xs text-primary hover:underline" to={`/qrp/jobs/${row.external_job_id}`}>
+                        {text(row, 'external_job_id')}
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Not reported</span>
+                    ),
+                },
+                {
+                  key: 'backend_id',
+                  label: 'Backend',
+                  render: (row) =>
+                    row.backend_id ? (
+                      <Link className="hover:underline" to={`/qrp/backends/${row.backend_id}`}>
+                        {text(row, 'backend_id')}
+                      </Link>
+                    ) : (
+                      '—'
+                    ),
+                },
+                {
+                  key: 'go',
+                  label: 'Next',
+                  render: (row) =>
+                    needsReconcile(row) ? (
+                      <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/reconciliation">
+                        Reconcile
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Closed</span>
+                    ),
+                },
+              ]}
+            />
+          </QueryBody>
         </Card>
-      </div>
+      )}
+
+      {view === 'contract' && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <QueryBody query={query}>
+            <Card className="space-y-3 text-sm">
+              <PanelHeader title="ICD endpoints" />
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reconcile outcomes</dt>
+                  <dd className="mt-1 flex flex-wrap gap-1">
+                    {outcomes.length ? outcomes.map((o) => <StatusBadge key={o} tone="neutral" label={o} />) : '—'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Confirmed attempts</dt>
+                  <dd className="mt-1 tabular-nums font-medium">{attempts.isError ? '—' : confirmed}</dd>
+                </div>
+              </dl>
+              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'authorize_dispatch')}</p>
+              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'record_attempt')}</p>
+              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'reconcile')}</p>
+              <p className="text-muted-foreground">{text(query.data ?? {}, 'notes')}</p>
+              {required.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Required fields</p>
+                  <ul className="mt-1 list-inside list-disc font-mono text-xs text-muted-foreground">
+                    {required.map((field) => (
+                      <li key={field}>{field}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </Card>
+          </QueryBody>
+          <Card className="space-y-3">
+            <PanelHeader title="Safeguards" />
+            <ul className="list-inside list-disc space-y-2 text-sm text-muted-foreground">
+              <li>Distinguish governance request from provider job.</li>
+              <li>Ambiguous timeout → unresolved, not auto-retry.</li>
+              <li>Confirmed requires provider-reported external_job_id when policy says so.</li>
+              <li>Connector capability gaps block submission — see Connectors.</li>
+            </ul>
+            <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/connectors">
+              Connector maturity →
+            </Link>
+          </Card>
+        </div>
+      )}
     </Page>
   )
 }
 
+type CatalogRole = { id: string; label: string; builtin?: boolean; permissions?: number; permission_ids?: string[] }
+
 export function UsersPage() {
   const client = useQueryClient()
+  const session = getSessionUser()
+  const canManage = ['Admin', 'SuperAdmin', 'PlatformAdmin'].includes(session?.role || '')
   const [roleFilter, setRoleFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [roleOpen, setRoleOpen] = useState(false)
   const query = useQuery({
     queryKey: ['users'],
     queryFn: () => qre<unknown>('/users'),
   })
   const catalog = useQuery({
     queryKey: ['role-catalog'],
-    queryFn: () => qre<{ roles?: { id: string; label: string }[] }>('/users/roles/catalog'),
+    queryFn: () => qre<{ roles?: CatalogRole[] }>('/users/roles/catalog'),
+  })
+  const permCatalog = useQuery({
+    queryKey: ['role-permissions'],
+    queryFn: () => qre<{ permissions?: string[] }>('/users/roles/permissions'),
+    enabled: canManage && roleOpen,
   })
   const [username, setUsername] = useState('')
   const [role, setRole] = useState('Operator')
+  const [newRoleId, setNewRoleId] = useState('')
+  const [newRoleLabel, setNewRoleLabel] = useState('')
+  const [cloneFrom, setCloneFrom] = useState('Viewer')
+  const [picked, setPicked] = useState<string[]>([])
   const save = useMutation({
     mutationFn: () =>
       qre(`/users/${encodeURIComponent(username)}/role`, {
@@ -2391,8 +2632,32 @@ export function UsersPage() {
       }),
     onSuccess: () => {
       setUsername('')
+      setAssignOpen(false)
       void client.invalidateQueries({ queryKey: ['users'] })
     },
+  })
+  const createRole = useMutation({
+    mutationFn: () =>
+      qre('/users/roles', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: newRoleId,
+          label: newRoleLabel || newRoleId,
+          clone_from: cloneFrom || undefined,
+          permissions: picked,
+        }),
+      }),
+    onSuccess: () => {
+      setRoleOpen(false)
+      setNewRoleId('')
+      setNewRoleLabel('')
+      setPicked([])
+      void client.invalidateQueries({ queryKey: ['role-catalog'] })
+    },
+  })
+  const deleteRole = useMutation({
+    mutationFn: (id: string) => qre(`/users/roles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['role-catalog'] }),
   })
   const roles = catalog.data?.roles ?? []
   const all = asList(query.data)
@@ -2424,70 +2689,131 @@ export function UsersPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Workspace"
+      crumbs={[{ label: 'Admin', to: '/qrp/settings' }, { label: 'Users & Roles' }]}
       title="Users & Roles"
-      description="Institution directory and QRP role assignment. QRP does not manage local passwords or MFA enrollment here."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link to="/qrp/audit" className="btn-ghost">
-            Audit log
-          </Link>
-        </span>
+        <div className="flex flex-wrap justify-end gap-2">
+          {canManage ? (
+            <button type="button" className="btn-secondary" onClick={() => setRoleOpen(true)} title="Create a catalog role from a clone">
+              New role
+            </button>
+          ) : null}
+          <button type="button" className="btn-primary" onClick={() => setAssignOpen(true)} title="Assign an existing catalog role">
+            Assign role
+          </button>
+        </div>
       }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricTile label="Users" value={query.isError ? '—' : all.length} hint="Directory" />
-        <MetricTile label="Roles in use" value={query.isError ? '—' : roleChart.length} hint="Distinct role values" />
-        <MetricTile label="Orgs" value={query.isError ? '—' : orgs} hint="Distinct org field" />
-        <MetricTile label="MFA flagged" value={query.isError ? '—' : mfaOn} hint="mfa_enabled from directory" />
-      </div>
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card>
-          <PanelHeader title="Role distribution" />
-          {roleChart.length === 0 ? (
-            <EmptyState title="No users" body="Directory empty." />
-          ) : (
-            <div className="h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={roleChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={62} paddingAngle={2}>
-                    {roleChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </Card>
-        <Card className="xl:col-span-2">
-          <PanelHeader title="Assign role" />
-          <form
-            className="mt-2 flex flex-wrap gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (!window.confirm(`Assign role ${role} to ${username}?`)) return
-              save.mutate()
-            }}
-          >
-            <input required className={`${fieldClass} min-w-40 flex-1`} value={username} placeholder="Username" onChange={(event) => setUsername(event.target.value)} />
-            <select className={fieldClass} value={role} onChange={(event) => setRole(event.target.value)}>
+      <Modal open={assignOpen} title="Assign role" onClose={() => setAssignOpen(false)}>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!window.confirm(`Assign ${role} to ${username}?`)) return
+            save.mutate()
+          }}
+        >
+          <input
+            required
+            className={fieldClass}
+            value={username}
+            placeholder="Username"
+            onChange={(event) => setUsername(event.target.value)}
+            autoFocus
+          />
+          <select className={fieldClass} value={role} onChange={(event) => setRole(event.target.value)}>
+            {roles.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+          {save.error ? <p className="text-sm text-critical">{message(save.error)}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={() => setAssignOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className={buttonClass} disabled={save.isPending}>
+              {save.isPending ? 'Saving…' : 'Assign'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      <Modal open={roleOpen} title="New role" onClose={() => setRoleOpen(false)}>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            createRole.mutate()
+          }}
+        >
+          <label className="text-xs">
+            Id
+            <input required className={fieldClass} value={newRoleId} onChange={(e) => setNewRoleId(e.target.value)} placeholder="LabOps" />
+          </label>
+          <label className="text-xs">
+            Label
+            <input className={fieldClass} value={newRoleLabel} onChange={(e) => setNewRoleLabel(e.target.value)} placeholder="Lab operations" />
+          </label>
+          <label className="text-xs">
+            Clone from
+            <select className={fieldClass} value={cloneFrom} onChange={(e) => setCloneFrom(e.target.value)}>
               {roles.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label} ({item.id})
+                  {item.label}
                 </option>
               ))}
             </select>
-            <button type="submit" className={buttonClass} disabled={save.isPending}>
-              Assign role
+          </label>
+          <div className="max-h-40 overflow-auto rounded-lg border border-border p-2">
+            <p className="mb-1 text-[11px] text-muted-foreground">Extra permissions</p>
+            {(permCatalog.data?.permissions ?? []).map((perm) => (
+              <label key={perm} className="flex items-center gap-2 py-0.5 text-xs">
+                <input
+                  type="checkbox"
+                  checked={picked.includes(perm)}
+                  onChange={(e) =>
+                    setPicked((prev) => (e.target.checked ? [...prev, perm] : prev.filter((p) => p !== perm)))
+                  }
+                />
+                {perm}
+              </label>
+            ))}
+          </div>
+          {createRole.error ? <p className="text-sm text-critical">{message(createRole.error)}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={() => setRoleOpen(false)}>
+              Cancel
             </button>
-            {save.error && <p className="w-full text-sm text-critical">{message(save.error)}</p>}
-          </form>
-          <p className="mt-2 text-xs text-muted-foreground">Role changes append to Audit Trail. Catalog has {roles.length} assignable roles.</p>
-        </Card>
-      </div>
+            <button type="submit" className={buttonClass} disabled={createRole.isPending}>
+              {createRole.isPending ? 'Saving…' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      <KpiStrip>
+        <MetricTile label="Users" value={query.isError ? '—' : all.length} />
+        <MetricTile label="Roles" value={query.isError ? '—' : roleChart.length} />
+        <MetricTile label="Orgs" value={query.isError ? '—' : orgs} />
+        <MetricTile label="MFA on" value={query.isError ? '—' : mfaOn} />
+      </KpiStrip>
+      {roleChart.length > 0 ? (
+        <ChartPanel title="Roles" empty={false}>
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <PieChart>
+                <Pie data={roleChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={62} paddingAngle={2}>
+                  {roleChart.map((d) => (
+                    <Cell key={d.name} fill={d.fill} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartPanel>
+      ) : null}
       <Card>
         <FilterBar
           options={roleOptions}
@@ -2526,6 +2852,52 @@ export function UsersPage() {
           />
         </QueryBody>
       </Card>
+      <Card>
+        <PanelHeader
+          title="Role catalog"
+          action={
+            <InfoTip label="Role catalog">
+              SuperAdmin, PlatformAdmin, and Admin share full platform permissions. Custom roles persist in data/custom_roles.json.
+            </InfoTip>
+          }
+        />
+        <QueryBody query={catalog}>
+          <Table
+            rows={roles as unknown as Row[]}
+            emptyTitle="No roles"
+            emptyBody="Catalog unavailable."
+            columns={[
+              { key: 'id', label: 'Id' },
+              { key: 'label', label: 'Label' },
+              {
+                key: 'builtin',
+                label: 'Kind',
+                render: (row) => (row.builtin ? 'Built-in' : 'Custom'),
+              },
+              { key: 'permissions', label: 'Perms' },
+              {
+                key: 'actions',
+                label: '',
+                render: (row) =>
+                  canManage && !row.builtin ? (
+                    <button
+                      type="button"
+                      className="btn-ghost text-xs"
+                      title="Delete custom role"
+                      onClick={() => {
+                        if (!window.confirm(`Delete role ${String(row.id)}?`)) return
+                        deleteRole.mutate(String(row.id))
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : null,
+              },
+            ]}
+          />
+        </QueryBody>
+        {deleteRole.error ? <p className="mt-2 text-sm text-critical">{message(deleteRole.error)}</p> : null}
+      </Card>
     </Page>
   )
 }
@@ -2559,35 +2931,89 @@ export function IncidentsPage() {
     )
   })
   const openCount = all.filter((row) => String(row.status || '').toLowerCase() === 'open').length
+  const investigating = all.filter((row) => ['investigating', 'acknowledged'].includes(String(row.status || '').toLowerCase())).length
   const criticalCount = all.filter((row) => String(row.severity || '').toLowerCase() === 'critical').length
   const alertTotal = all.reduce((sum, row) => sum + (Number(row.alert_count) || 0), 0)
+  const severityChart = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const row of all) {
+      const key = String(row.severity || 'unset')
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return Array.from(counts.entries()).map(([name, value], i) => ({
+      name,
+      value,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }))
+  }, [all])
+  const statusChart = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const row of all) {
+      const key = stateLabel(String(row.status || 'open').toLowerCase())
+      counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value }))
+  }, [all])
   return (
     <Page
       eyebrow="Operations"
       title="Incidents"
-      description="Incidents group related alerts into cases. Prefer these over scrolling 80+ qubit rows."
+      description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
       actions={
         <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
           <Link to="/qrp/support" className="btn-secondary">
             Active alerts
           </Link>
-          <Link to="/qrp/centre" className="btn-ghost">
-            Ops centre
-          </Link>
         </span>
       }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="Listed" value={query.isError ? '—' : all.length} hint="Latest sync sample" />
         <MetricTile label="Open" value={query.isError ? '—' : openCount} hint="Needs triage" tone={openCount ? 'critical' : 'neutral'} />
+        <MetricTile label="In progress" value={query.isError ? '—' : investigating} hint="Ack / investigating" tone="warning" />
         <MetricTile label="Critical severity" value={query.isError ? '—' : criticalCount} hint="Among listed" tone={criticalCount ? 'critical' : 'neutral'} />
         <MetricTile
           label="Linked alerts"
           value={query.isError ? '—' : alertTotal || alertSummary.data?.active}
           hint={alertSummary.isError ? 'From incident rows' : `${String(alertSummary.data?.active ?? '—')} active fleet-wide`}
           tone="warning"
-        />
+        /></KpiStrip>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ChartPanel title="By severity" empty={severityChart.length === 0}>
+          {(h) =>
+            severityChart.length === 0 ? (
+              <EmptyState title="No incidents" body="Cases appear when triage opens an incident." />
+            ) : (
+              <ResponsiveContainer width="100%" height={h}>
+                <PieChart>
+                  <Pie data={severityChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                    {severityChart.map((d) => (
+                      <Cell key={d.name} fill={d.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )
+          }
+        </ChartPanel>
+        <ChartPanel title="By status" empty={statusChart.length === 0}>
+          {(h) =>
+            statusChart.length === 0 ? (
+              <EmptyState title="No status mix" body="Empty until incidents exist." />
+            ) : (
+              <ResponsiveContainer width="100%" height={h}>
+                <BarChart data={statusChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--chart-3)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )
+          }
+        </ChartPanel>
       </div>
       <Card>
         <FilterBar
@@ -2646,6 +3072,11 @@ export function IncidentsPage() {
                   <StatusBadge tone={stateTone(String(row.status || '').toLowerCase())} label={stateLabel(String(row.status || 'open'))} />
                 ),
               },
+              {
+                key: 'owner',
+                label: 'Owner',
+                render: (row) => <span className="text-sm">{text(row, 'owner') || '—'}</span>,
+              },
               { key: 'alert_count', label: 'Alerts', sortable: true },
             ]}
           />
@@ -2655,14 +3086,35 @@ export function IncidentsPage() {
   )
 }
 
+const INCIDENT_FLOW: WorkflowStep[] = [
+  { id: 'OPEN', label: 'Detected' },
+  { id: 'ACKNOWLEDGED', label: 'Triaged' },
+  { id: 'INVESTIGATING', label: 'Investigating' },
+  { id: 'RESOLVED', label: 'Resolved' },
+]
+
+function incidentStepIndex(status: string) {
+  const s = status.toUpperCase()
+  if (s === 'RESOLVED' || s === 'CLOSED') return 3
+  if (s === 'INVESTIGATING' || s === 'MITIGATING') return 2
+  if (s === 'ACKNOWLEDGED' || s === 'ASSIGNED') return 1
+  return 0
+}
+
 export function IncidentDetailPage() {
   const { incidentId = '' } = useParams()
   const client = useQueryClient()
   const [note, setNote] = useState('')
+  const [tab, setTab] = useState('overview')
   const query = useQuery({
     queryKey: ['incident', incidentId],
     queryFn: () => qre<Row>(`/incidents/${encodeURIComponent(incidentId)}`),
     enabled: !!incidentId,
+  })
+  const attempts = useQuery({
+    queryKey: ['incident-dispatch', incidentId],
+    queryFn: async () => asList(await qre<unknown>('/dispatch-attempts')),
+    retry: false,
   })
   const act = useMutation({
     mutationFn: (action: 'acknowledge' | 'investigate' | 'resolve') =>
@@ -2676,66 +3128,252 @@ export function IncidentDetailPage() {
   })
   const status = String(query.data?.status || 'OPEN')
   const alerts = Array.isArray(query.data?.alerts) ? (query.data.alerts as Row[]) : []
+  const backendId = query.data?.backend_id ? String(query.data.backend_id) : ''
+  const relatedAttempts = (attempts.data ?? []).filter((row) =>
+    backendId ? String(row.backend_id || '') === backendId : false,
+  )
+  const resolved = status.toUpperCase() === 'RESOLVED' || status.toUpperCase() === 'CLOSED'
+  const nextTitle = resolved
+    ? 'Incident closed'
+    : status.toUpperCase() === 'INVESTIGATING'
+      ? 'Mitigate and resolve'
+      : status.toUpperCase() === 'ACKNOWLEDGED'
+        ? 'Start investigation'
+        : 'Acknowledge / triage'
+  const nextBody = resolved
+    ? 'Review evidence and audit. Reopen only if policy allows.'
+    : 'Capture notes, link affected jobs/attempts, then advance status. Acknowledge ≠ resolve.'
+
   return (
     <Page
-      eyebrow="Operations"
+      eyebrow="Operations · Incidents"
       title={String(query.data?.title || incidentId)}
-      description={String(query.data?.summary || 'Incident detail')}
+      description={String(query.data?.summary || 'Operational exception lifecycle — links alerts, backends, and dispatch context.')}
+      steps={INCIDENT_FLOW}
+      stepIndex={incidentStepIndex(status)}
       actions={
-        <Link to="/qrp/incidents" className="text-sm font-medium text-primary hover:underline">
-          All incidents
-        </Link>
+        <span className="flex flex-wrap gap-2">
+          <CopyableId value={incidentId} keep={14} />
+          
+          <Link to="/qrp/incidents" className="btn-secondary">
+            All incidents
+          </Link>
+        </span>
       }
+      updatedAt={query.dataUpdatedAt}
     >
       <QueryBody query={query}>
         {query.data && (
-          <>
-            <Card className="space-y-3">
-              <StatusBadge tone={stateTone(status.toLowerCase())} label={stateLabel(status)} />
-              <p className="text-sm text-muted-foreground">
-                {text(query.data, 'backend_id')} · owner {text(query.data, 'owner')}
-              </p>
-              <input className={fieldClass} value={note} placeholder="Note" onChange={(event) => setNote(event.target.value)} />
-              <div className="flex flex-wrap gap-2">
-                {status !== 'RESOLVED' && status !== 'ACKNOWLEDGED' && status !== 'INVESTIGATING' && (
-                  <button type="button" className={buttonClass} disabled={act.isPending} onClick={() => act.mutate('acknowledge')}>
-                    Acknowledge
-                  </button>
-                )}
-                {status !== 'RESOLVED' && status !== 'INVESTIGATING' && (
-                  <button type="button" className={buttonClass} disabled={act.isPending} onClick={() => act.mutate('investigate')}>
-                    Investigate
-                  </button>
-                )}
-                {status !== 'RESOLVED' && (
-                  <button type="button" className={buttonClass} disabled={act.isPending} onClick={() => act.mutate('resolve')}>
-                    Resolve
-                  </button>
-                )}
+          <RecordWorkspace
+            tabs={[
+              { id: 'overview', label: 'Overview' },
+              { id: 'investigate', label: 'Investigate' },
+              { id: 'alerts', label: 'Alerts', count: alerts.length },
+              { id: 'related', label: 'Related', count: relatedAttempts.length },
+              { id: 'records', label: 'Records' },
+            ]}
+            activeTab={tab}
+            onTabChange={setTab}
+            nextAction={{
+              title: nextTitle,
+              body: nextBody,
+              blockers: undefined,
+              primary: resolved
+                ? { to: '/qrp/evidence', label: 'Evidence' }
+                : status.toUpperCase() === 'INVESTIGATING'
+                  ? { label: 'Resolve', onClick: () => act.mutate('resolve'), disabled: act.isPending }
+                  : status.toUpperCase() === 'ACKNOWLEDGED'
+                    ? { label: 'Investigate', onClick: () => act.mutate('investigate'), disabled: act.isPending }
+                    : { label: 'Acknowledge', onClick: () => act.mutate('acknowledge'), disabled: act.isPending },
+              secondary: { to: '/qrp/incidents', label: 'Queue' },
+            }}
+            related={[
+              ...(backendId
+                ? [{ to: `/qrp/backends/${backendId}`, label: 'Backend', hint: backendId.slice(0, 18) }]
+                : []),
+              { to: '/qrp/support', label: 'Alerts', hint: `${alerts.length} linked` },
+              { to: '/qrp/reconciliation', label: 'Reconciliation', hint: `${relatedAttempts.length} same backend` },
+              { to: '/qrp/jobs', label: 'Provider jobs', hint: 'Execution catalogue' },
+              { to: '/qrp/evidence', label: 'Evidence', hint: 'Capture / retrieve' },
+              { to: '/qrp/audit', label: 'Audit', hint: 'Consequential actions' },
+              { to: '/qrp/centre', label: 'Ops centre', hint: 'Action cockpit' },
+            ]}
+          >
+            {tab === 'overview' && (
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card className="space-y-3">
+                  <PanelHeader title="Incident summary" />
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge tone={stateTone(status.toLowerCase())} label={stateLabel(status)} />
+                    <StatusBadge
+                      tone={String(query.data.severity || '').toLowerCase() === 'critical' ? 'critical' : 'warning'}
+                      label={String(query.data.severity || '—')}
+                    />
+                  </div>
+                  <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Owner</dt>
+                      <dd className="mt-1 font-medium">{text(query.data, 'owner') || 'Unassigned'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Backend</dt>
+                      <dd className="mt-1">
+                        {backendId ? (
+                          <Link className="text-primary hover:underline" to={`/qrp/backends/${backendId}`}>
+                            {backendId}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Alert count</dt>
+                      <dd className="mt-1 tabular-nums font-semibold">{String(query.data.alert_count ?? alerts.length)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Updated</dt>
+                      <dd className="mt-1 text-xs text-muted-foreground">{text(query.data, 'updated_at')}</dd>
+                    </div>
+                  </dl>
+                  <p className="text-sm text-muted-foreground">{text(query.data, 'summary')}</p>
+                </Card>
+                <Card className="space-y-3">
+                  <PanelHeader title="Lifecycle" />
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li>1. Detect / group alerts → open incident</li>
+                    <li>2. Acknowledge (triage) with optional note</li>
+                    <li>3. Investigate linked jobs / dispatch / backends</li>
+                    <li>4. Resolve with reason — distinct from alert ack</li>
+                  </ol>
+                  </Card>
               </div>
-              {act.error && <p className="text-sm text-critical">{message(act.error)}</p>}
-            </Card>
-            <Card>
-              <h2 className="mb-3 text-base font-semibold">Linked alerts</h2>
-              <Table
-                rows={alerts}
-                columns={[
-                  {
-                    key: 'alert_id',
-                    label: 'Alert',
-                    render: (row) => (
-                      <Link className="font-medium text-primary hover:underline" to={`/qrp/support/${row.alert_id}`}>
-                        {text(row, 'alert_id')}
-                      </Link>
-                    ),
-                  },
-                  { key: 'severity', label: 'Severity' },
-                  { key: 'status', label: 'Status' },
-                  { key: 'message', label: 'Message' },
-                ]}
-              />
-            </Card>
-          </>
+            )}
+
+            {tab === 'investigate' && (
+              <Card className="space-y-4">
+                <PanelHeader title="Investigation actions" />
+                <label className="block text-sm">
+                  Note / resolution reason
+                  <input className={fieldClass} value={note} placeholder="Required for resolve when notes expected" onChange={(event) => setNote(event.target.value)} />
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {status !== 'RESOLVED' && status !== 'ACKNOWLEDGED' && status !== 'INVESTIGATING' && (
+                    <button type="button" className={buttonClass} disabled={act.isPending} onClick={() => act.mutate('acknowledge')}>
+                      Acknowledge
+                    </button>
+                  )}
+                  {status !== 'RESOLVED' && status !== 'INVESTIGATING' && (
+                    <button type="button" className={buttonClass} disabled={act.isPending} onClick={() => act.mutate('investigate')}>
+                      Investigate
+                    </button>
+                  )}
+                  {status !== 'RESOLVED' && (
+                    <button
+                      type="button"
+                      className={buttonClass}
+                      disabled={act.isPending}
+                      onClick={() => {
+                        if (!note.trim() && !window.confirm('Resolve without notes?')) return
+                        act.mutate('resolve')
+                      }}
+                    >
+                      Resolve
+                    </button>
+                  )}
+                </div>
+                {act.error && <p className="text-sm text-critical">{message(act.error)}</p>}
+                <ul className="list-inside list-disc text-sm text-muted-foreground">
+                  <li>Checklist: confirm affected backend, open related attempts, capture evidence if required.</li>
+                  <li>Do not mark resolved solely by acknowledging an alert group.</li>
+                </ul>
+              </Card>
+            )}
+
+            {tab === 'alerts' && (
+              <Card>
+                <PanelHeader title="Linked alerts" />
+                <Table
+                  rows={alerts}
+                  emptyTitle="No alerts linked"
+                  emptyBody="Alerts appear when triage attaches detector rows to this case."
+                  columns={[
+                    {
+                      key: 'alert_id',
+                      label: 'Alert',
+                      render: (row) => (
+                        <Link className="font-medium text-primary hover:underline" to={`/qrp/support/${row.alert_id}`}>
+                          {text(row, 'alert_id')}
+                        </Link>
+                      ),
+                    },
+                    { key: 'severity', label: 'Severity' },
+                    { key: 'status', label: 'Status' },
+                    { key: 'message', label: 'Message' },
+                  ]}
+                />
+              </Card>
+            )}
+
+            {tab === 'related' && (
+              <Card className="space-y-3">
+                <PanelHeader title="Dispatch attempts on same backend" />
+                <Table
+                  rows={relatedAttempts}
+                  emptyTitle="No matching attempts"
+                  emptyBody="Attempts with this backend appear after authorize → record attempt."
+                  columns={[
+                    {
+                      key: 'attempt_id',
+                      label: 'Attempt',
+                      render: (row) => <CopyableId value={String(row.attempt_id || '')} keep={10} />,
+                    },
+                    {
+                      key: 'workload_id',
+                      label: 'Request',
+                      render: (row) =>
+                        row.workload_id ? (
+                          <Link className="text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
+                            {shortId(String(row.workload_id), 12)}
+                          </Link>
+                        ) : (
+                          '—'
+                        ),
+                    },
+                    {
+                      key: 'dispatch_state',
+                      label: 'State',
+                      render: (row) => (
+                        <StatusBadge tone={stateTone(String(row.dispatch_state || ''))} label={stateLabel(String(row.dispatch_state || '—'))} />
+                      ),
+                    },
+                  ]}
+                />
+                <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/reconciliation">
+                  Open reconciliation →
+                </Link>
+              </Card>
+            )}
+
+            {tab === 'records' && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Card className="space-y-2">
+                  <PanelHeader title="Evidence" />
+                  <p className="text-sm text-muted-foreground">Capture operational snapshots that support this incident claim.</p>
+                  <Link className="btn-secondary" to="/qrp/evidence">
+                    Open evidence
+                  </Link>
+                </Card>
+                <Card className="space-y-2">
+                  <PanelHeader title="Audit" />
+                  <p className="text-sm text-muted-foreground">Acknowledge / investigate / resolve append to the audit trail.</p>
+                  <Link className="btn-secondary" to="/qrp/audit">
+                    Open audit
+                  </Link>
+                </Card>
+              </div>
+            )}
+          </RecordWorkspace>
         )}
       </QueryBody>
     </Page>
@@ -2800,41 +3438,23 @@ export function JobsPage() {
       eyebrow="Operations"
       title="Provider jobs"
       description="Provider execution records (TeleScope job catalogue). Not QRP governance approval state — use Approvals for that."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/dispatch">
-            Dispatch ICD
-          </Link>
-          <Link className="btn-ghost" to="/qrp/approvals">
-            Approvals
-          </Link>
-          <Link className="btn-ghost" to="/qrp/reconciliation">
-            Reconciliation
-          </Link>
-        </span>
-      }
+      updatedAt={query.dataUpdatedAt}
     >
-      <Notice tone="info">
-        Provider status ≠ governance approval. Cross-link via reconciliation when an external_job_id is recorded.
-      </Notice>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <KpiStrip>
         <MetricTile label="Listed" value={query.isError ? '—' : all.length} hint="Sample limit 50" />
         <MetricTile label="Queued" value={query.isError ? '—' : queued} hint="Provider-reported" />
         <MetricTile label="Running" value={query.isError ? '—' : running} hint="Provider-reported" tone="primary" />
         <MetricTile label="Completed" value={query.isError ? '—' : completed} hint="Provider-reported" tone="success" />
-        <MetricTile label="Failed" value={query.isError ? '—' : failed} hint="Provider-reported" tone="warning" />
-      </div>
+        <MetricTile label="Failed" value={query.isError ? '—' : failed} hint="Provider-reported" tone="warning" /></KpiStrip>
       <div className="grid gap-4 xl:grid-cols-3">
-        <Card>
-          <PanelHeader title="Status mix" />
-          {statusChart.length === 0 ? (
-            <EmptyState title="No jobs" body="Empty provider sample." />
-          ) : (
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
+        <ChartPanel title="Status mix" empty={statusChart.length === 0}>
+          {(h) =>
+            statusChart.length === 0 ? (
+              <EmptyState title="No jobs" body="Empty provider sample." />
+            ) : (
+              <ResponsiveContainer width="100%" height={h}>
                 <PieChart>
-                  <Pie data={statusChart} dataKey="value" nameKey="name" innerRadius={42} outerRadius={66} paddingAngle={2}>
+                  <Pie data={statusChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
                     {statusChart.map((d) => (
                       <Cell key={d.name} fill={d.fill} />
                     ))}
@@ -2842,16 +3462,15 @@ export function JobsPage() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
-          )}
-        </Card>
-        <Card className="xl:col-span-2">
-          <PanelHeader title="Jobs by backend" />
-          {backendChart.length === 0 ? (
-            <EmptyState title="No backends" body="Empty sample." />
-          ) : (
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
+            )
+          }
+        </ChartPanel>
+        <ChartPanel className="xl:col-span-2" title="Jobs by backend" empty={backendChart.length === 0}>
+          {(h) =>
+            backendChart.length === 0 ? (
+              <EmptyState title="No backends" body="Empty sample." />
+            ) : (
+              <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
                   <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
@@ -2859,9 +3478,9 @@ export function JobsPage() {
                   <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          )}
-        </Card>
+            )
+          }
+        </ChartPanel>
       </div>
       <Card>
         <FilterBar
@@ -2946,9 +3565,6 @@ export function JobDetailPage() {
           <Link to="/qrp/jobs" className="btn-secondary">
             All jobs
           </Link>
-          <Link to="/qrp/metering" className="btn-ghost">
-            Metering
-          </Link>
         </span>
       }
     >
@@ -2986,10 +3602,7 @@ export function JobDetailPage() {
               </div>
             </dl>
             <p>{text(query.data, 'failure_reason')}</p>
-            <Notice tone="info">
-              Meter samples are not attached to this job schema. Open Metering for rollups; missing meter data is not zero.
-            </Notice>
-          </Card>
+            </Card>
         )}
       </QueryBody>
     </Page>
@@ -3054,23 +3667,17 @@ export function CentrePage() {
       description="Fleet posture, collector health, queue depth, and open exceptions. Not a TeleScope live console."
       actions={
         <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
           <Link className="btn-primary" to="/qrp/approvals">
             Approvals
           </Link>
           <Link className="btn-secondary" to="/qrp/reconciliation">
             Reconciliation
           </Link>
-          <Link className="btn-ghost" to="/qrp/queues">
-            Queues
-          </Link>
-          <Link className="btn-ghost" to="/qrp/support">
-            Alerts
-          </Link>
         </span>
       }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <KpiStrip>
         <MetricTile
           label="Approval queue"
           value={summary.isError ? '—' : summary.data?.queue}
@@ -3100,49 +3707,50 @@ export function CentrePage() {
           value={query.isError ? '—' : ops.open_incidents}
           hint="Tracked cases"
           tone={Number(ops.open_incidents || 0) > 0 ? 'critical' : 'neutral'}
-        />
-      </div>
+        /></KpiStrip>
       <QueryBody query={query}>
         <div className="grid gap-4 xl:grid-cols-3">
-          <Card>
-            <PanelHeader title="Fleet reachability" />
-            {fleetChart.length === 0 ? (
-              <EmptyState title="No fleet sample" body="Centre returned empty fleet counts." />
-            ) : (
-              <div className="h-44">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={44} outerRadius={68} paddingAngle={2}>
-                      {fleetChart.map((d) => (
-                        <Cell key={d.name} fill={d.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-            <p className="mt-1 text-center text-sm tabular-nums">
-              {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
-              {fleet.simulated_catalog != null ? ` · ${String(fleet.simulated_catalog)} simulated` : ''}
-            </p>
-          </Card>
-          <Card className="xl:col-span-2">
-            <PanelHeader
-              title="Queue pending by backend"
-              action={
-                <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/queues">
-                  Queues
-                </Link>
-              }
-            />
-            {queues.isError ? (
-              <EmptyState title="Queues unavailable" body={message(queues.error)} />
-            ) : pendingChart.length === 0 ? (
-              <EmptyState title="No queue samples" body="Telemetry not ingested yet." />
-            ) : (
-              <div className="h-44">
-                <ResponsiveContainer width="100%" height="100%">
+          <ChartPanel title="Fleet reachability" empty={fleetChart.length === 0}>
+            {(h) =>
+              fleetChart.length === 0 ? (
+                <EmptyState title="No fleet sample" body="Centre returned empty fleet counts." />
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
+                    <PieChart>
+                      <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, (h - 28) * 0.28)} outerRadius={Math.max(48, (h - 28) * 0.42)} paddingAngle={2}>
+                        {fleetChart.map((d) => (
+                          <Cell key={d.name} fill={d.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <p className="mt-1 text-center text-sm tabular-nums">
+                    {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
+                    {fleet.simulated_catalog != null ? ` · ${String(fleet.simulated_catalog)} simulated` : ''}
+                  </p>
+                </>
+              )
+            }
+          </ChartPanel>
+          <ChartPanel
+            className="xl:col-span-2"
+            title="Queue pending by backend"
+            empty={queues.isError || pendingChart.length === 0}
+            action={
+              <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/queues">
+                Queues
+              </Link>
+            }
+          >
+            {(h) =>
+              queues.isError ? (
+                <EmptyState title="Queues unavailable" body={message(queues.error)} />
+              ) : pendingChart.length === 0 ? (
+                <EmptyState title="No queue samples" body="Telemetry not ingested yet." />
+              ) : (
+                <ResponsiveContainer width="100%" height={h}>
                   <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={48} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
@@ -3150,17 +3758,16 @@ export function CentrePage() {
                     <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-            )}
-          </Card>
+              )
+            }
+          </ChartPanel>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiStrip>
           <MetricTile label="Backends" value={fleet.total} hint="Registered in catalogue" />
           <MetricTile label="Online" value={fleet.online} hint="Currently reachable" tone="success" />
           <MetricTile label="Assets (gov)" value={summary.data?.inventory_assets} hint="From governance summary" />
-          <MetricTile label="Providers active" value={summary.data?.providers_active} hint="Catalogue active" />
-        </div>
+          <MetricTile label="Providers active" value={summary.data?.providers_active} hint="Catalogue active" /></KpiStrip>
 
         <Card className="text-sm text-muted-foreground">
           Generated {text(query.data ?? {}, 'generated_at')} · mode {text(platform, 'platform_data_mode')} · storage{' '}
@@ -3296,12 +3903,7 @@ export function CentrePage() {
         <Card>
           <PanelHeader
             title="Open incidents"
-            action={
-              <Link className="btn-ghost" to="/qrp/incidents">
-                View all
-              </Link>
-            }
-          />
+/>
           <Table
             rows={asList(query.data?.incidents)}
             emptyTitle="No open incidents"
@@ -3385,22 +3987,9 @@ export function BackendsPage() {
       eyebrow="Operations"
       title="Backends"
       description="Catalogue QPUs. Operational status is provider/catalogue state — not QRP governance eligibility or live dispatch claim."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/queues">
-            Queues
-          </Link>
-          <Link className="btn-ghost" to="/qrp/centre">
-            Ops centre
-          </Link>
-          <Link className="btn-ghost" to="/qrp/inventory">
-            Inventory
-          </Link>
-        </span>
-      }
+      updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="Catalogue" value={query.isError ? '—' : all.length} hint={`${providers.length} providers`} />
         <MetricTile label="Online" value={query.isError ? '—' : online} hint="Catalogue ONLINE" tone="success" />
         <MetricTile label="Qubits (sum)" value={query.isError ? '—' : qubitTotal} hint="Catalogue qubit_count" />
@@ -3409,8 +3998,7 @@ export function BackendsPage() {
           value={queues.isError ? '—' : pendingTotal}
           hint="From telemetry samples"
           tone={pendingTotal ? 'warning' : 'neutral'}
-        />
-      </div>
+        /></KpiStrip>
       <Card>
         <FilterBar
           options={providerOptions}
@@ -3552,21 +4140,15 @@ export function BackendDetailPage() {
       description="Catalogue record and topology from returned fields. Wait estimates come from Queues telemetry samples."
       actions={
         <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={backend.dataUpdatedAt || queue.dataUpdatedAt} />
           <CopyableId value={backendId} keep={14} />
           <Link to="/qrp/backends" className="btn-secondary">
             All backends
           </Link>
-          <Link to="/qrp/queues" className="btn-ghost">
-            Queues
-          </Link>
-          <Link to="/qrp/support" className="btn-ghost">
-            Alerts
-          </Link>
         </span>
       }
+      updatedAt={backend.dataUpdatedAt || queue.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="Pending" value={pending} hint="Queue sample" tone={Number(pending) > 0 ? 'warning' : 'neutral'} />
         <MetricTile
           label="Wait (est.)"
@@ -3583,8 +4165,7 @@ export function BackendDetailPage() {
           value={alerts.isError || backendAlerts == null ? '—' : backendAlerts}
           hint="From alerts summary by_backend"
           tone={Number(backendAlerts) > 0 ? 'warning' : 'neutral'}
-        />
-      </div>
+        /></KpiStrip>
       <QueryBody query={backend}>
         {backend.data && (
           <Card className="space-y-3 text-sm">
@@ -3635,19 +4216,15 @@ export function BackendDetailPage() {
                 </dd>
               </div>
             </dl>
-            <Notice tone="info">
-              Catalogue status ≠ governance eligibility. Prefer Queues for wait provenance — `/backends/.../status` zeros missing wait.
-            </Notice>
-          </Card>
+            </Card>
         )}
       </QueryBody>
-      {healthChart.length > 0 && (
-        <Card>
-          <PanelHeader title="Qubit health mix" />
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
+      {healthChart.length > 0 ? (
+        <ChartPanel title="Qubit health mix" empty={false}>
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
               <PieChart>
-                <Pie data={healthChart} dataKey="value" nameKey="name" innerRadius={42} outerRadius={66} paddingAngle={2}>
+                <Pie data={healthChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
                   {healthChart.map((d) => (
                     <Cell key={d.name} fill={d.fill} />
                   ))}
@@ -3655,9 +4232,9 @@ export function BackendDetailPage() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
+          )}
+        </ChartPanel>
+      ) : null}
       <Card>
         <h2 className="mb-3 text-base font-semibold">
           Qubits {topology.data ? `${String(topology.data.node_count)} nodes · ${String(topology.data.edge_count)} edges` : ''}
@@ -3721,7 +4298,6 @@ export function QueuesPage() {
         .includes(q),
     )
   })
-  const missingWait = all.some((row) => row.estimated_wait_time == null || row.estimated_wait_time === '')
   const pendingTotal = all.reduce((sum, row) => sum + (Number(row.pending_jobs) || 0), 0)
   const withPending = all.filter((row) => Number(row.pending_jobs) > 0).length
   const moderateOrWorse = all.filter((row) => {
@@ -3759,27 +4335,10 @@ export function QueuesPage() {
     <Page
       eyebrow="Operations"
       title="Queues"
-      description="Pending jobs and condition from the latest BackendTelemetry sample per backend — not a live provider SLA."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/centre">
-            Ops centre
-          </Link>
-          <Link className="btn-ghost" to="/qrp/backends">
-            Backends
-          </Link>
-        </span>
-      }
+      description="Pending jobs and queue condition from latest telemetry per backend."
+      updatedAt={query.dataUpdatedAt}
     >
-      <Notice tone="info">
-        Wait times are estimated from stored telemetry samples (often simulated ingest). Prefer pending count and
-        condition. Missing samples show as Unavailable, never zero.
-      </Notice>
-      {missingWait && !query.isPending && !query.isError && (
-        <Notice tone="warning">One or more backends have no wait sample. Treat those rows as Unavailable.</Notice>
-      )}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <KpiStrip>
         <MetricTile label="Backends sampled" value={query.isError ? '—' : all.length} hint="Latest telemetry row each" />
         <MetricTile label="Pending jobs" value={query.isError ? '—' : pendingTotal} hint={`${withPending} backends with work`} tone={pendingTotal ? 'warning' : 'neutral'} />
         <MetricTile
@@ -3793,19 +4352,22 @@ export function QueuesPage() {
           value={query.isError || maxWait == null ? '—' : formatQueueWait({ estimated_wait_time: maxWait })}
           hint="Max among samples with wait"
         />
-      </div>
+      </KpiStrip>
       <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <PanelHeader title="Pending by backend" />
-          {query.isError ? (
-            <EmptyState title="Queues unavailable" body={message(query.error)} />
-          ) : query.isPending ? (
-            <div className="h-48 animate-pulse rounded-lg bg-muted" />
-          ) : pendingChart.length === 0 ? (
-            <EmptyState title="No queue samples" body="Register backends and wait for telemetry ingest." />
-          ) : (
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
+        <ChartPanel
+          className="xl:col-span-2"
+          title="Pending by backend"
+          empty={query.isError || query.isPending || pendingChart.length === 0}
+        >
+          {(h) =>
+            query.isError ? (
+              <EmptyState title="Queues unavailable" body={message(query.error)} />
+            ) : query.isPending ? (
+              <div className="h-full animate-pulse rounded-lg bg-muted" />
+            ) : pendingChart.length === 0 ? (
+              <EmptyState title="No queue samples" body="Register backends and wait for telemetry ingest." />
+            ) : (
+              <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-16} textAnchor="end" height={52} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
@@ -3818,38 +4380,41 @@ export function QueuesPage() {
                   <Bar dataKey="pending" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          )}
-        </Card>
-        <Card>
-          <PanelHeader title="Condition mix" />
-          {query.isPending ? (
-            <div className="h-48 animate-pulse rounded-lg bg-muted" />
-          ) : conditionChart.length === 0 ? (
-            <EmptyState title="No conditions" body="Empty sample set." />
-          ) : (
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={conditionChart} dataKey="value" nameKey="name" innerRadius={44} outerRadius={68} paddingAngle={2}>
-                    {conditionChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-            {conditionChart.map((d) => (
-              <li key={d.name} className="flex justify-between gap-2">
-                <span>{d.name}</span>
-                <span className="tabular-nums font-medium text-foreground">{d.value}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
+            )
+          }
+        </ChartPanel>
+        <ChartPanel title="Condition mix" empty={query.isPending || conditionChart.length === 0}>
+          {(h) =>
+            query.isPending ? (
+              <div className="h-full animate-pulse rounded-lg bg-muted" />
+            ) : conditionChart.length === 0 ? (
+              <EmptyState title="No conditions" body="Empty sample set." />
+            ) : (
+              <div className="flex h-full flex-col gap-2">
+                <div className="min-h-0 flex-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={conditionChart} dataKey="value" nameKey="name" innerRadius={Math.max(32, h * 0.2)} outerRadius={Math.max(52, h * 0.32)} paddingAngle={2}>
+                        {conditionChart.map((d) => (
+                          <Cell key={d.name} fill={d.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <ul className="shrink-0 space-y-1 text-xs text-muted-foreground">
+                  {conditionChart.map((d) => (
+                    <li key={d.name} className="flex justify-between gap-2">
+                      <span>{d.name}</span>
+                      <span className="tabular-nums font-medium text-foreground">{d.value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+        </ChartPanel>
       </div>
       <Card>
         <FilterBar
@@ -3868,7 +4433,7 @@ export function QueuesPage() {
             emptyBody={
               search || condition !== 'all'
                 ? 'No rows match filters.'
-                : 'Register backends and wait for telemetry ingest. Empty here means no samples, not zero wait.'
+                : 'Register backends and wait for telemetry ingest. No telemetry samples for this filter.'
             }
             columns={[
               {
@@ -3943,6 +4508,7 @@ export function QueuesPage() {
 export function EvidencePage() {
   const client = useQueryClient()
   const [label, setLabel] = useState('')
+  const [captureOpen, setCaptureOpen] = useState(false)
   const query = useQuery({
     queryKey: ['evidence'],
     queryFn: () => qre<unknown>('/evidence/snapshots'),
@@ -3955,6 +4521,7 @@ export function EvidencePage() {
       }),
     onSuccess: () => {
       setLabel('')
+      setCaptureOpen(false)
       void client.invalidateQueries({ queryKey: ['evidence'] })
     },
   })
@@ -3972,46 +4539,47 @@ export function EvidencePage() {
     .at(-1)
   return (
     <Page
-      eyebrow="Records"
+      crumbs={[{ label: 'Records', to: '/qrp/audit' }, { label: 'Evidence' }]}
       title="Evidence"
-      description="Fleet/backend sealed snapshots on disk — not approval-package evidence unless a snapshot is bound to an approval."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <DataFreshness updatedAt={query.dataUpdatedAt} />
-          <Link className="btn-ghost" to="/qrp/audit">
-            Audit trail
-          </Link>
-          <Link className="btn-ghost" to="/system/status">
-            Platform status
-          </Link>
-        </span>
+        <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
+          Capture snapshot
+        </button>
       }
+      updatedAt={query.dataUpdatedAt}
     >
-      <Notice tone="info">
-        Capture packages the current fleet scope returned by the evidence API. This is TeleScope-style snapshot evidence, separate from governance audit export.
-      </Notice>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricTile label="Snapshots" value={query.isError ? '—' : rows.length} hint="On disk" />
-        <MetricTile label="Fleet scope" value={query.isError ? '—' : fleetScoped} hint="No backend id" />
-        <MetricTile label="Backend scope" value={query.isError ? '—' : backendScoped} hint="Scoped captures" />
-        <MetricTile label="Latest created" value={latest ? latest.slice(0, 19).replace('T', ' ') : '—'} hint="UTC sample" />
-      </div>
-      <Card>
-        <PanelHeader title="Capture snapshot" />
+      <Modal open={captureOpen} title="Capture snapshot" onClose={() => setCaptureOpen(false)}>
         <form
-          className="mt-2 flex flex-wrap gap-2"
+          className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault()
             capture.mutate()
           }}
         >
-          <input className={fieldClass} value={label} placeholder="Label (optional)" onChange={(event) => setLabel(event.target.value)} />
-          <button type="submit" className={buttonClass} disabled={capture.isPending}>
-            {capture.isPending ? 'Capturing…' : 'Capture snapshot'}
-          </button>
-          {capture.error && <p className="w-full text-sm text-critical">{message(capture.error)}</p>}
+          <input
+            className={fieldClass}
+            value={label}
+            placeholder="Label (optional)"
+            onChange={(event) => setLabel(event.target.value)}
+            autoFocus
+          />
+          {capture.error ? <p className="text-sm text-critical">{message(capture.error)}</p> : null}
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost" onClick={() => setCaptureOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className={buttonClass} disabled={capture.isPending}>
+              {capture.isPending ? 'Capturing…' : 'Capture'}
+            </button>
+          </div>
         </form>
-      </Card>
+      </Modal>
+      <KpiStrip>
+        <MetricTile label="Snapshots" value={query.isError ? '—' : rows.length} />
+        <MetricTile label="Fleet scope" value={query.isError ? '—' : fleetScoped} />
+        <MetricTile label="Backend scope" value={query.isError ? '—' : backendScoped} />
+        <MetricTile label="Latest" value={latest ? latest.slice(0, 19).replace('T', ' ') : '—'} />
+      </KpiStrip>
       <Card>
         {download.error && <Notice>{message(download.error)}</Notice>}
         <QueryBody query={query}>
@@ -4066,74 +4634,32 @@ export function EvidencePage() {
 
 export function SettingsPage() {
   const navigate = useNavigate()
-  const client = useQueryClient()
   const session = getSessionUser()
-  const [seedNote, setSeedNote] = useState<string | null>(null)
   const boundary = useQuery({
     queryKey: ['institution-boundary'],
     queryFn: () => qre<Row>('/governance/institution-boundary'),
     retry: false,
   })
-  const release = useQuery({
-    queryKey: ['release-evidence'],
-    queryFn: () => qre<Row>('/governance/release-evidence'),
-    retry: false,
-  })
-  const seedDemo = useMutation({
-    mutationFn: seedPortalDemo,
-    onSuccess: (result) => {
-      setSeedNote(
-        `Demo loaded: ${result.projects} projects · ${result.approvals} reviews · ${result.reservations} holds · ${result.pools} pools · ${result.assets} assets` +
-          (result.errors.length ? ` (${result.errors.length} skipped)` : ''),
-      )
-      void client.invalidateQueries()
-    },
-    onError: (err) => setSeedNote(message(err)),
-  })
   const fed = (boundary.data?.federation as Row | undefined) ?? {}
-  const env = (release.data?.environment as Row | undefined) ?? {}
-  const checks = (release.data?.automated_checks as Row | undefined) ?? {}
-  const modules = Array.isArray(checks.pytest_modules) ? (checks.pytest_modules as string[]) : []
   return (
     <Page
-      eyebrow="Workspace"
+      crumbs={[{ label: 'Admin' }, { label: 'Settings' }]}
       title="Settings"
-      description="Read-only institution boundary and release pointers. No secret values. Configuration editing is not enabled here."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={seedDemo.isPending}
-            onClick={() => {
-              setSeedNote(null)
-              seedDemo.mutate()
-            }}
-          >
-            {seedDemo.isPending ? 'Loading demo…' : 'Load demo workspace'}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => {
-              clearSession()
-              navigate('/login')
-            }}
-          >
-            Sign out
-          </button>
-        </span>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => {
+            clearSession()
+            navigate('/login')
+          }}
+        >
+          Sign out
+        </button>
       }
     >
-      {seedNote && <Notice tone="info">{seedNote}</Notice>}
       <Card className="space-y-2 text-sm">
-        <h2 className="text-base font-semibold">Demo workspace</h2>
-        <p className="text-muted-foreground">
-          Creates labeled demo projects, approval reviews, reservation holds, a pool, and inventory assets via real APIs so list pages look populated for walkthroughs.
-        </p>
-      </Card>
-      <Card className="space-y-2 text-sm">
-        <h2 className="text-base font-semibold">Session</h2>
+        <PanelHeader title="Session" />
         {session ? (
           <dl className="grid gap-2 sm:grid-cols-2">
             <div>
@@ -4146,11 +4672,12 @@ export function SettingsPage() {
             </div>
           </dl>
         ) : (
-          <p className="text-muted-foreground">No signed-in session in local storage.</p>
+          <p className="text-muted-foreground">No session.</p>
         )}
       </Card>
+      <AccountSecurity />
       <Card className="space-y-2 text-sm">
-        <h2 className="text-base font-semibold">Institution boundary</h2>
+        <PanelHeader title="Institution" />
         {boundary.data ? (
           <>
             <p>
@@ -4160,42 +4687,24 @@ export function SettingsPage() {
               Site {text(fed, 'local_site_name')} · peers {String(fed.peer_sites_reporting ?? '—')}/
               {String(fed.peer_sites_configured ?? '—')}
             </p>
-            <p>{fed.read_only ? 'Federation reads are aggregate only.' : text(fed, 'disclaimer')}</p>
           </>
         ) : (
-          <p className="text-muted-foreground">{boundary.isError ? message(boundary.error) : 'Loading boundary…'}</p>
+          <p className="text-muted-foreground">{boundary.isError ? message(boundary.error) : 'Loading…'}</p>
         )}
       </Card>
-      <Card className="space-y-2 text-sm">
-        <h2 className="text-base font-semibold">Release evidence</h2>
-        {release.data ? (
-          <>
-            <p>
-              Product {text(release.data, 'product')} · RBAC {env.enforce_rbac ? 'enforced' : 'open'} · DB{' '}
-              {env.database_url_is_sqlite_default ? 'sqlite default' : 'configured'}
-            </p>
-            <ul className="list-inside list-disc text-muted-foreground">
-              {modules.slice(0, 5).map((mod) => (
-                <li key={mod} className="font-mono text-xs">
-                  {mod}
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="text-muted-foreground">{release.isError ? message(release.error) : 'Loading release pointers…'}</p>
-        )}
+      <Card className="space-y-3">
+        <PanelHeader title="Health" />
+        <StatusPage framed />
       </Card>
       <Card className="space-y-2 text-sm">
-        <p>
-          <Link className="font-medium text-primary hover:underline" to="/system/status">
-            Platform status
+        <PanelHeader title="Records" />
+        <p className="flex flex-wrap gap-3">
+          <Link className="font-medium text-primary hover:underline" to="/qrp/users">
+            Users & Roles
           </Link>
-          {' · '}
           <Link className="font-medium text-primary hover:underline" to="/qrp/audit">
-            Audit log
+            Audit
           </Link>
-          {' · '}
           <Link className="font-medium text-primary hover:underline" to="/qrp/evidence">
             Evidence
           </Link>

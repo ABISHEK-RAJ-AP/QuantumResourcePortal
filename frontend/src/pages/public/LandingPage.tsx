@@ -106,7 +106,7 @@ export function LandingPage() {
               Quantum Resource Portal
             </h1>
             <p className={cn('mt-4 text-pretty text-base sm:text-lg', dark ? 'text-white/70' : 'text-muted-foreground')}>
-              Institution-wide governance for quantum workloads — approvals, capacity, operations, and evidence in one
+              Institution-wide governance for quantum workloads: approvals, capacity, operations, and evidence in one
               place.
             </p>
             <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">

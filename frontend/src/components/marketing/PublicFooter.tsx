@@ -66,7 +66,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
               </div>
             </Link>
             <p className={cn('max-w-sm text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>
-              Institution-wide governance for quantum workloads — multi-stage approvals, quotas, fleet operations, and
+              Institution-wide governance for quantum workloads: multi-stage approvals, quotas, fleet operations, and
               audit evidence.
             </p>
             <p className={cn('text-xs', dark ? 'text-white/40' : 'text-muted-foreground')}>

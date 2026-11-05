@@ -1,9 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
+import type { Crumb } from '@/components/layout/Breadcrumbs'
+
 export type PageChrome = {
   eyebrow?: string
   title?: string
   description?: string
+  crumbs?: Crumb[]
+  /** Query refresh time — rendered once in the app header, not in page body. */
+  updatedAt?: number
+  /** Nested panels (e.g. Health inside Settings) must not overwrite shell chrome. */
+  skip?: boolean
 }
 
 type PageChromeApi = {
@@ -25,13 +32,16 @@ export function usePageChrome() {
   return ctx
 }
 
-/** Publishes title/description into the app header. No-op outside the shell provider. */
-export function useSetPageChrome({ eyebrow, title, description }: PageChrome) {
+/** Publishes title/description/freshness into the app header. No-op outside the shell provider. */
+export function useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, skip }: PageChrome) {
   const ctx = useContext(PageChromeContext)
   const setChrome = ctx?.setChrome
+  const crumbKey = crumbs?.map((c) => `${c.label}:${c.to ?? ''}`).join('|') ?? ''
   useEffect(() => {
-    if (!setChrome) return
-    setChrome({ eyebrow, title, description })
+    if (!setChrome || skip) return
+    setChrome({ eyebrow, title, description, crumbs, updatedAt })
     return () => setChrome({})
-  }, [eyebrow, title, description, setChrome])
+    // crumbs serialized via crumbKey to avoid identity churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eyebrow, title, description, crumbKey, updatedAt, skip, setChrome])
 }

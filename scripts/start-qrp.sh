@@ -30,7 +30,16 @@ spawn_term() {
   bash -lc "$cmd"
 }
 
-command -v npm >/dev/null || pause_fail "npm not found"
+# Prefer monorepo PATH bootstrap (nvm / miniforge) when available
+MONOREPO_ENV="$(cd "$ROOT/.." 2>/dev/null && pwd)/scripts/_dev-env.sh"
+if [[ -f "$MONOREPO_ENV" ]]; then
+  # shellcheck source=/dev/null
+  source "$MONOREPO_ENV"
+elif [[ -s "$HOME/.nvm/nvm.sh" ]]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.nvm/nvm.sh" >/dev/null 2>&1 || true
+fi
+command -v npm >/dev/null || pause_fail "npm not found (install Node or nvm; PATH=$PATH)"
 
 VENV="$ROOT/backend/.venv"
 PY="$VENV/bin/python"

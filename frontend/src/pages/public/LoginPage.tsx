@@ -24,17 +24,28 @@ export function LoginPage() {
   const [captchaLoading, setCaptchaLoading] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [mfaToken, setMfaToken] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
+  const [ldapHint, setLdapHint] = useState('')
 
-  async function loadCaptcha() {
+  async function loadCaptcha(attempt = 0) {
     setCaptchaLoading(true)
     try {
       const next = await authFetch<Captcha>('/auth/captcha')
+      if (!next?.captcha_id || !next?.captcha_image) {
+        throw new Error('Captcha response incomplete')
+      }
       setCaptcha(next)
       setCaptchaInput('')
       setError('')
     } catch (err) {
       setCaptcha(null)
-      setError(err instanceof Error ? err.message : 'Could not load captcha')
+      const msg = err instanceof Error ? err.message : 'Could not load captcha'
+      if (attempt < 1) {
+        await new Promise((r) => setTimeout(r, 600))
+        return loadCaptcha(attempt + 1)
+      }
+      setError(msg)
     } finally {
       setCaptchaLoading(false)
     }
@@ -42,15 +53,35 @@ export function LoginPage() {
 
   useEffect(() => {
     void loadCaptcha()
+    void authFetch<{ ldap?: { enabled?: boolean; host?: string | null } }>('/auth/config-status')
+      .then((cfg) => {
+        if (cfg.ldap?.enabled) {
+          setLdapHint(cfg.ldap.host ? `Directory login on (${cfg.ldap.host})` : 'Directory login on')
+        }
+      })
+      .catch(() => undefined)
   }, [])
+
+  function finish(user: SessionUser) {
+    setSession(user)
+    navigate(from.startsWith('/') ? from : '/qrp', { replace: true })
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!captcha) return
     setBusy(true)
     setError('')
     try {
-      const body = await authFetch<{ user: SessionUser }>('/auth/login', {
+      if (mfaToken) {
+        const body = await authFetch<{ user: SessionUser }>('/auth/login/mfa', {
+          method: 'POST',
+          body: JSON.stringify({ mfa_token: mfaToken, code: mfaCode }),
+        })
+        finish(body.user)
+        return
+      }
+      if (!captcha) return
+      const body = await authFetch<{ status?: string; mfa_token?: string; user?: SessionUser }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           username,
@@ -59,11 +90,15 @@ export function LoginPage() {
           captcha_code: captchaInput,
         }),
       })
-      setSession(body.user)
-      navigate(from.startsWith('/') ? from : '/qrp', { replace: true })
+      if (body.status === 'MFA_REQUIRED' && body.mfa_token) {
+        setMfaToken(body.mfa_token)
+        return
+      }
+      if (!body.user) throw new Error('Sign in returned no session')
+      finish(body.user)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed')
-      void loadCaptcha()
+      if (!mfaToken) void loadCaptcha()
     } finally {
       setBusy(false)
     }
@@ -93,9 +128,28 @@ export function LoginPage() {
             </div>
             <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
             <p className={cn('mt-1 text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
-              Use your portal credentials and captcha.
+              {mfaToken ? 'Enter the authenticator code.' : 'Portal or directory credentials, plus captcha.'}
             </p>
+            {ldapHint ? (
+              <p className={cn('mt-2 text-xs', dark ? 'text-white/55' : 'text-muted-foreground')} title="LDAP_URL is set on the API">
+                {ldapHint}
+              </p>
+            ) : null}
             <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+              {mfaToken ? (
+                <label className="block text-sm font-medium">
+                  Authenticator code
+                  <input
+                    required
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    className={cn('field-input font-mono', dark && 'border-white/15 bg-white/5 text-white')}
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value)}
+                  />
+                </label>
+              ) : (
+              <>
               <label className="block text-sm font-medium">
                 Username
                 <input
@@ -139,10 +193,25 @@ export function LoginPage() {
                   placeholder="Enter the code"
                 />
               </div>
+              </>
+              )}
               {error && <p className="text-sm text-critical">{error}</p>}
               <button type="submit" disabled={busy} className="btn-primary w-full py-2.5">
-                {busy ? 'Signing in…' : 'Sign in'}
+                {busy ? 'Signing in…' : mfaToken ? 'Verify' : 'Sign in'}
               </button>
+              {mfaToken ? (
+                <button
+                  type="button"
+                  className="btn-ghost w-full"
+                  onClick={() => {
+                    setMfaToken('')
+                    setMfaCode('')
+                    void loadCaptcha()
+                  }}
+                >
+                  Start over
+                </button>
+              ) : null}
             </form>
             <p className={cn('mt-4 rounded-lg px-3 py-2 text-center text-xs', dark ? 'bg-white/5 text-white/55' : 'bg-muted text-muted-foreground')}>
               Demo: <span className="font-mono font-medium">admin</span> / <span className="font-mono font-medium">quantum2026</span>
@@ -151,6 +220,10 @@ export function LoginPage() {
               No account?{' '}
               <Link className="font-medium text-primary hover:underline" to="/register">
                 Create one
+              </Link>
+              {' · '}
+              <Link className="font-medium text-primary hover:underline" to="/forgot-password">
+                Forgot password
               </Link>
               {' · '}
               <Link className="font-medium text-primary hover:underline" to="/">

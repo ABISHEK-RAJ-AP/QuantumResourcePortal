@@ -63,7 +63,24 @@ export async function qre<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function authFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const h = new Headers({ Accept: 'application/json' })
   if (init.body) h.set('Content-Type', 'application/json')
-  const response = await fetch(`/api/v1${path}`, { ...init, headers: h })
+  const timeoutMs = 12_000
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  if (init.signal) {
+    init.signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
+  let response: Response
+  try {
+    response = await fetch(`/api/v1${path}`, { ...init, headers: h, signal: controller.signal })
+  } catch (err) {
+    clearTimeout(timer)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new QreError(0, 'API timeout. Start backend on port 8000 and retry.')
+    }
+    throw new QreError(0, 'API unreachable. Start backend on port 8000 and retry.')
+  } finally {
+    clearTimeout(timer)
+  }
   const textBody = await response.text()
   let body: unknown = null
   try {
@@ -75,7 +92,9 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     const detail =
       body && typeof body === 'object' && 'detail' in body && typeof (body as { detail: unknown }).detail === 'string'
         ? (body as { detail: string }).detail
-        : response.statusText
+        : response.status === 502 || response.status === 503
+          ? 'API down (proxy). Start TeleScope on port 8000.'
+          : response.statusText
     throw new QreError(response.status, detail || `Request failed (${response.status})`)
   }
   return body as T

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import type { Crumb } from '@/components/layout/Breadcrumbs'
 import { StatusBadge, type StatusTone } from '@/components/status/StatusBadge'
 import { WorkflowSteps, type WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { useSetPageChrome } from '@/components/layout/page-context'
@@ -9,6 +10,8 @@ export function Page({
   eyebrow,
   title,
   description,
+  crumbs,
+  updatedAt,
   steps,
   stepIndex,
   actions,
@@ -17,23 +20,25 @@ export function Page({
   eyebrow?: string
   title: string
   description?: string
+  crumbs?: Crumb[]
+  /** Shown in shell header only — do not also render DataFreshness in the body. */
+  updatedAt?: number
   steps?: WorkflowStep[]
   stepIndex?: number | null
+  /** Primary work only (create / decide). Nav links belong in the quick-actions dock. */
   actions?: ReactNode
   children: ReactNode
 }) {
-  useSetPageChrome({ eyebrow, title, description })
+  useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt })
 
   return (
     <div className="flex w-full max-w-none flex-col gap-4">
-      {actions && (
-        <div className="-mt-1 flex flex-wrap items-center justify-end gap-2">{actions}</div>
-      )}
-      {steps && steps.length > 0 && (
+      {actions ? <div className="-mt-1 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null}
+      {steps && steps.length > 0 ? (
         <section className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />
         </section>
-      )}
+      ) : null}
       {children}
     </div>
   )
@@ -180,11 +185,14 @@ const STATE_TONE: Record<string, StatusTone> = {
   completed: 'success',
   optimal: 'success',
   healthy: 'success',
+  running: 'success',
   degraded: 'warning',
   unavailable: 'critical',
   offline: 'critical',
   congested: 'critical',
   busy: 'warning',
+  paused: 'warning',
+  queued: 'warning',
   moderate: 'info',
   submitted_for_review: 'warning',
   in_review: 'warning',
@@ -194,6 +202,9 @@ const STATE_TONE: Record<string, StatusTone> = {
   rejected: 'critical',
   withdrawn: 'critical',
   suspended: 'critical',
+  failed: 'critical',
+  cancelled: 'critical',
+  canceled: 'critical',
 }
 
 export function stateTone(state: string): StatusTone {

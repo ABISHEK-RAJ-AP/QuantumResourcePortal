@@ -20,36 +20,47 @@ import {
   Sun,
   Users,
 } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import type { LucideIcon } from 'lucide-react'
 
 import { asList, qre } from '@/api/qre'
 import { LogoMark } from '@/components/brand/LogoMark'
+import { DataFreshness } from '@/components/data/DataFreshness'
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
+import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
 import { clearSession, getSessionUser } from '@/lib/session'
 import { cn } from '@/lib/utils'
 
-/** Operator-first rail. Charter routes stay off the nav but remain URL-reachable. */
+/**
+ * Lifecycle rail — Submit → Review → Hold → Dispatch → Reconcile → Audit.
+ * Users/roles sit under Admin (directory work), not Review. Status lives inside Settings.
+ */
 const NAV: {
   label: string
   items: { to: string; label: string; icon: LucideIcon; end?: boolean; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
 }[] = [
   {
-    label: 'Workspace',
+    label: 'Command',
     items: [
       { to: '/qrp', label: 'Overview', icon: LayoutDashboard, end: true },
-      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals' },
-      { to: '/qrp/projects', label: 'Projects', icon: Users },
-      { to: '/qrp/users', label: 'Users & Roles', icon: Users },
+      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge },
     ],
   },
   {
-    label: 'Operations',
+    label: 'Review',
     items: [
-      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge },
+      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals' },
+      { to: '/qrp/projects', label: 'Projects', icon: Users },
+    ],
+  },
+  {
+    label: 'Operate',
+    items: [
       { to: '/qrp/backends', label: 'Backends', icon: Server },
       { to: '/qrp/queues', label: 'Queues', icon: Gauge },
       { to: '/qrp/jobs', label: 'Dispatch & Jobs', icon: ClipboardList },
@@ -59,17 +70,22 @@ const NAV: {
     ],
   },
   {
-    label: 'Governance',
+    label: 'Schedule',
+    items: [
+      { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
+      { to: '/qrp/scheduling', label: 'Schedule hold', icon: CalendarClock },
+    ],
+  },
+  {
+    label: 'Govern',
     items: [
       { to: '/qrp/policies', label: 'Policies', icon: Shield },
       { to: '/qrp/quotas', label: 'Quotas & Usage', icon: Gauge },
-      { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
-      { to: '/qrp/scheduling', label: 'Schedule hold', icon: CalendarClock },
       { to: '/qrp/metering', label: 'Metering', icon: Gauge },
     ],
   },
   {
-    label: 'Resource Catalogue',
+    label: 'Catalogue',
     items: [
       { to: '/qrp/inventory', label: 'Inventory', icon: Boxes },
       { to: '/qrp/pools', label: 'Resource Pools', icon: Boxes },
@@ -85,13 +101,20 @@ const NAV: {
     ],
   },
   {
-    label: 'Administration',
+    label: 'Admin',
     items: [
-      { to: '/qrp/settings', label: 'Platform Settings', icon: Settings2 },
-      { to: '/system/status', label: 'Platform Status', icon: Settings2 },
+      { to: '/qrp/users', label: 'Users & Roles', icon: Users },
+      { to: '/qrp/settings', label: 'Settings', icon: Settings2 },
     ],
   },
 ]
+
+function pathInGroup(pathname: string, items: { to: string; end?: boolean }[]) {
+  return items.some((item) => {
+    if (item.end) return pathname === item.to
+    return pathname === item.to || pathname.startsWith(`${item.to}/`)
+  })
+}
 
 const OPEN_KEY = 'qrp_nav_open'
 const COLLAPSE_KEY = 'qrp_nav_collapsed'
@@ -113,13 +136,17 @@ function initials(name: string) {
 
 function ShellInner() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = getSessionUser()
   const { chrome } = usePageChrome()
   const { theme, toggleTheme } = useTheme()
+  const prefs = useWorkspacePrefs()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
-    return Object.fromEntries(NAV.map((g) => [g.label, saved[g.label] ?? true]))
+    return Object.fromEntries(
+      NAV.map((g) => [g.label, saved[g.label] ?? (g.label === 'Command' || g.label === 'Review')]),
+    )
   })
 
   useEffect(() => {
@@ -129,6 +156,16 @@ function ShellInner() {
   useEffect(() => {
     localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0')
   }, [collapsed])
+
+  useEffect(() => {
+    setOpen((prev) => {
+      const next = { ...prev }
+      for (const g of NAV) {
+        if (pathInGroup(location.pathname, g.items)) next[g.label] = true
+      }
+      return next
+    })
+  }, [location.pathname])
 
   const queue = useQuery({
     queryKey: ['governance-summary'],
@@ -191,6 +228,7 @@ function ShellInner() {
                   <button
                     type="button"
                     className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase hover:bg-accent"
+                    title={group.label}
                     aria-expanded={expanded}
                     onClick={() => setOpen((prev) => ({ ...prev, [group.label]: !expanded }))}
                   >
@@ -212,7 +250,7 @@ function ShellInner() {
                           <NavLink
                             to={item.to}
                             end={item.end}
-                            title={collapsed ? item.label : undefined}
+                            title={item.label}
                             className={({ isActive }) =>
                               cn(
                                 'relative flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
@@ -314,37 +352,50 @@ function ShellInner() {
         <header className="sticky top-8 z-10 border-b border-border/80 bg-card/90 px-6 py-4 backdrop-blur-md">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              {chrome.eyebrow && (
+              {chrome.crumbs && chrome.crumbs.length > 0 ? (
+                <Breadcrumbs items={chrome.crumbs} />
+              ) : chrome.eyebrow ? (
                 <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
-              )}
+              ) : null}
               <h1 className="text-2xl font-semibold tracking-tight text-balance">{chrome.title || 'Workspace'}</h1>
-              {chrome.description && (
-                <p className="mt-1 max-w-4xl text-sm leading-relaxed text-muted-foreground">{chrome.description}</p>
-              )}
+              {chrome.description ? (
+                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{chrome.description}</p>
+              ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
-                aria-label="Refresh page"
-                title="Refresh"
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw className="size-4" />
-              </button>
-              <button
-                type="button"
-                className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
-                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-                onClick={toggleTheme}
-              >
-                {theme === 'dark' ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
-              </button>
+            <div className="flex min-w-0 max-w-full shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <DataFreshness updatedAt={chrome.updatedAt} />
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <WorkspaceLayoutControls />
+                <button
+                  type="button"
+                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
+                  aria-label="Refresh page"
+                  title="Refresh"
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
+                  aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                  title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+                  onClick={toggleTheme}
+                >
+                  {theme === 'dark' ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </header>
-        <div id="page-content" className="shell-canvas min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-6 pb-24" tabIndex={-1}>
+        <div
+          id="page-content"
+          className="shell-canvas min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-6 pb-24"
+          data-density={prefs.density}
+          data-chart-size={prefs.chartSize}
+          data-kpi={prefs.kpiLayout}
+          tabIndex={-1}
+        >
           <Outlet />
         </div>
       </div>

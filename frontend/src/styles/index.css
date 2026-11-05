@@ -231,7 +231,9 @@
   body.a11y-hide-images svg:not(.lucide):not([aria-hidden='false']),
   body.a11y-hide-images .theme-wave-fallback,
   body.a11y-hide-images .hover-grid,
-  body.a11y-hide-images .cyber-matrix-tiles {
+  body.a11y-hide-images .cyber-matrix-tiles,
+  body.a11y-hide-images .cyber-matrix-orbs,
+  body.a11y-hide-images .cyber-matrix-spot {
     visibility: hidden !important;
   }
   body.a11y-high-contrast {
@@ -263,6 +265,30 @@
     radial-gradient(ellipse 50% 35% at 0% 100%, rgb(32 184 213 / 0.05), transparent 50%);
 }
 
+/* Workspace density (Cert Studio–style compact lists) */
+.shell-canvas[data-density='compact'] {
+  --qrp-cell-y: 0.35rem;
+  --qrp-gap: 0.75rem;
+}
+.shell-canvas[data-density='comfortable'] {
+  --qrp-cell-y: 0.625rem;
+  --qrp-gap: 1rem;
+}
+.shell-canvas[data-density='compact'] .flex.w-full.max-w-none.flex-col {
+  gap: var(--qrp-gap);
+}
+.shell-canvas[data-density='compact'] .data-table th,
+.shell-canvas[data-density='compact'] .data-table td {
+  padding-block: var(--qrp-cell-y);
+}
+.shell-canvas[data-density='compact'] .rounded-xl.border.border-border.bg-card.p-4 {
+  padding: 0.75rem;
+}
+.shell-canvas[data-density='compact'] .text-3xl {
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
 .landing-grid {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
@@ -283,56 +309,107 @@
   animation: landing-rise 0.65s ease-out both;
 }
 
-/* Cyber matrix tile grid (login / register / optional hero) */
+/* Soft orbs behind auth matrix */
+.cyber-matrix-orbs {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cyber-matrix-orbs__a,
+.cyber-matrix-orbs__b {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+  opacity: 0.45;
+  transform: translateZ(0);
+}
+
+.cyber-matrix-orbs__a {
+  width: min(50vw, 480px);
+  height: min(50vw, 480px);
+  top: -10%;
+  left: -8%;
+  background: color-mix(in srgb, var(--brand-primary) 70%, transparent);
+}
+
+.cyber-matrix-orbs__b {
+  width: min(42vw, 400px);
+  height: min(42vw, 400px);
+  right: -6%;
+  bottom: 4%;
+  background: color-mix(in srgb, var(--brand-cyan) 65%, transparent);
+}
+
+/* Dense cyber matrix (login / register) — cursor sets --intensity per tile */
 .cyber-matrix-tiles {
   display: grid;
-  grid-template-columns: repeat(var(--columns), 1fr);
-  grid-template-rows: repeat(var(--rows), 1fr);
-  width: 100vw;
-  height: 100vh;
+  grid-template-columns: repeat(var(--columns, 24), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 14), minmax(0, 1fr));
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
   contain: strict;
+  mask-image: radial-gradient(ellipse 78% 74% at 50% 45%, black 30%, transparent 82%);
 }
 
 .cyber-matrix-tiles .tile {
-  position: relative;
-  cursor: default;
+  --intensity: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  min-width: 0;
+  min-height: 0;
   font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
-  font-size: 1rem;
-  /* Static opacity — animated text-shadow/transform per tile was janky on Chrome/Edge */
-  opacity: 0.22;
-  color: hsl(185, 70%, 48%);
-  transform: translateZ(0);
-  contain: layout paint;
+  font-size: clamp(0.6rem, 1vw, 0.78rem);
+  line-height: 1;
+  opacity: calc(0.14 + var(--intensity) * 0.86);
+  color: color-mix(in srgb, var(--brand-cyan) calc(55% + var(--intensity) * 45%), white);
+  text-shadow: 0 0 calc(var(--intensity) * 14px) color-mix(in srgb, var(--brand-cyan) 70%, transparent);
+  transform: translateZ(0) scale(calc(1 + var(--intensity) * 0.28));
+  user-select: none;
+  will-change: opacity, transform;
 }
 
-.cyber-matrix-tiles .tile.glitch {
-  animation: cyber-glitch 0.2s ease;
+.cyber-matrix-tiles .tile--hot {
+  color: #fff;
 }
 
-@keyframes cyber-glitch {
-  0% {
-    transform: scale(1);
-    color: var(--brand-cyan);
+/* Soft radial glow under cursor */
+.cyber-matrix-spot {
+  --sx: 50%;
+  --sy: 40%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: radial-gradient(
+    circle 180px at var(--sx) var(--sy),
+    color-mix(in srgb, var(--brand-cyan) 28%, transparent),
+    transparent 70%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-matrix-tiles .tile {
+    transform: none;
+    text-shadow: none;
   }
-  50% {
-    transform: scale(1.2);
-    color: #fff;
-    text-shadow: 0 0 10px #fff;
-  }
-  100% {
-    transform: scale(1);
-    color: var(--brand-cyan);
+  .cyber-matrix-spot {
+    display: none;
   }
 }
 
-/* CSS cube-wave — cheap: few cells, transform-only, no per-frame filter/blur anim (Chrome/Edge). */
+body.a11y-pause-anim .cyber-matrix-spot {
+  display: none;
+}
+
+/* Soft orb backdrop under WebGL CubeWave (or alone when WebGL off). */
 .theme-wave-fallback {
   z-index: 0;
   contain: paint;
@@ -344,7 +421,6 @@
 .theme-wave-fallback__orb {
   position: absolute;
   border-radius: 9999px;
-  /* Static soft discs — animated blur kills Edge/Chrome compositing */
   filter: blur(48px);
   opacity: 0.5;
   transform: translateZ(0);
@@ -366,68 +442,23 @@
   background: color-mix(in srgb, var(--brand-cyan) 70%, transparent);
 }
 
-.theme-wave-fallback__cubes {
-  position: absolute;
-  inset: 12% 8% 14% 8%;
-  display: grid;
-  gap: clamp(6px, 1vw, 12px);
-  transform: perspective(1100px) rotateX(58deg) rotateZ(-22deg) scale(1.05);
-  transform-origin: center 55%;
-  mask-image: radial-gradient(ellipse 75% 70% at 50% 42%, black 40%, transparent 82%);
-}
-
-.theme-wave-fallback__cubes > span {
-  aspect-ratio: 1;
-  border-radius: 3px;
-  background: linear-gradient(145deg, var(--brand-primary), var(--brand-cyan));
-  opacity: 0.85;
-  transform-origin: center bottom;
-  transform: translateZ(0) translateY(10%) scaleY(0.7);
-  will-change: transform;
-  backface-visibility: hidden;
-  animation: theme-wave-cube 5.5s ease-in-out infinite;
-  animation-fill-mode: both;
-}
-
-/* Only animate a subset — cuts compositor work on Chrome/Edge */
-.theme-wave-fallback__cubes > span:nth-child(3n) {
-  animation: none;
-  transform: translateZ(0) translateY(8%) scaleY(0.75);
-  opacity: 0.55;
-}
-
-.dark .theme-wave-fallback__cubes > span {
-  opacity: 0.95;
-}
-
-@keyframes theme-wave-cube {
-  0%,
-  100% {
-    transform: translateZ(0) translateY(14%) scaleY(0.65);
-  }
-  50% {
-    transform: translateZ(0) translateY(-18%) scaleY(1.05);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .theme-wave-fallback__cubes > span {
-    animation: none !important;
-  }
-}
-
-/* Cap simultaneous work on weaker GPUs / Edge */
-@media (max-width: 900px) {
-  .theme-wave-fallback__cubes > span {
-    animation: none;
-    transform: translateZ(0) translateY(6%) scaleY(0.8);
-  }
-}
-
 html:not(.dark) .cyber-matrix-tiles .tile {
-  color: hsl(225, 70%, calc(35% + var(--intensity) * 25%));
-  text-shadow: 0 0 calc(var(--intensity) * 12px) var(--brand-primary);
-  opacity: calc(0.12 + var(--intensity) * 0.75);
+  color: color-mix(in srgb, var(--brand-primary) calc(45% + var(--intensity) * 55%), #1e3a5f);
+  opacity: calc(0.12 + var(--intensity) * 0.82);
+  text-shadow: 0 0 calc(var(--intensity) * 12px) color-mix(in srgb, var(--brand-primary) 55%, transparent);
+}
+
+html:not(.dark) .cyber-matrix-orbs__a,
+html:not(.dark) .cyber-matrix-orbs__b {
+  opacity: 0.28;
+}
+
+html:not(.dark) .cyber-matrix-spot {
+  background: radial-gradient(
+    circle 180px at var(--sx) var(--sy),
+    color-mix(in srgb, var(--brand-primary) 22%, transparent),
+    transparent 70%
+  );
 }
 
 .hover-grid {

@@ -50,6 +50,8 @@ import {
 } from '@/pages/workspace/screens'
 import { LandingPage } from '@/pages/public/LandingPage'
 import { LoginPage } from '@/pages/public/LoginPage'
+import { ForgotPasswordPage } from '@/pages/public/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { RouteError } from '@/components/routing/RouteError'
@@ -78,6 +80,20 @@ export const router = createBrowserRouter([
         <RegisterPage />
       </PublicOnly>
     ),
+    errorElement: <RouteError />,
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <PublicOnly>
+        <ForgotPasswordPage />
+      </PublicOnly>
+    ),
+    errorElement: <RouteError />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
     errorElement: <RouteError />,
   },
   {

@@ -6,6 +6,7 @@ export type SeedDemoResult = {
   reservations: number
   pools: number
   assets: number
+  members: number
   errors: string[]
 }
 
@@ -21,17 +22,22 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
   let reservations = 0
   let pools = 0
   let assets = 0
+  let members = 0
+
+  const projectSpecs = [
+    { name: `Demo Lab ${stamp}`, description: 'Materials simulation lab — seeded for UI walkthrough', project_type: 'quantum_circuit' },
+    { name: `Demo Ops ${stamp}`, description: 'Operations rehearsal project', project_type: 'quantum_circuit' },
+    { name: `Demo Research ${stamp}`, description: 'Researcher request sandbox', project_type: 'quantum_circuit' },
+    { name: `Demo Calibration ${stamp}`, description: 'Backend calibration workloads', project_type: 'quantum_circuit' },
+    { name: `Demo Education ${stamp}`, description: 'Teaching / outreach queue', project_type: 'quantum_circuit' },
+  ]
 
   const projectIds: string[] = []
-  for (const name of [`Demo Lab ${stamp}`, `Demo Ops ${stamp}`, `Demo Research ${stamp}`]) {
+  for (const spec of projectSpecs) {
     try {
       const row = await qre<Record<string, unknown>>('/projects', {
         method: 'POST',
-        body: JSON.stringify({
-          name,
-          description: 'Seeded demo project for portal UI walkthrough',
-          project_type: 'quantum_circuit',
-        }),
+        body: JSON.stringify(spec),
       })
       if (row.project_id) {
         projectIds.push(String(row.project_id))
@@ -42,11 +48,10 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
     }
   }
 
-  // Prefer existing project if create failed
   if (projectIds.length === 0) {
     try {
       const listed = asList(await qre<unknown>('/projects'))
-      for (const row of listed.slice(0, 2)) {
+      for (const row of listed.slice(0, 4)) {
         if (row.project_id) projectIds.push(String(row.project_id))
       }
     } catch {
@@ -54,18 +59,45 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
     }
   }
 
+  // Members on first projects so Members tab is not empty.
   for (const projectId of projectIds.slice(0, 3)) {
-    try {
-      const draft = await qre<Record<string, unknown>>('/workload-submissions', {
-        method: 'POST',
-        body: JSON.stringify({ project_id: projectId }),
-      })
-      await qre(`/workload-submissions/${encodeURIComponent(String(draft.submission_id))}/submit-for-review`, {
-        method: 'POST',
-      })
-      approvals += 1
-    } catch (e) {
-      errors.push(e instanceof Error ? e.message : 'approval seed failed')
+    for (const [username, role] of [
+      ['researcher', 'editor'],
+      ['reviewer', 'viewer'],
+    ] as const) {
+      try {
+        await qre(`/projects/${encodeURIComponent(projectId)}/members`, {
+          method: 'POST',
+          body: JSON.stringify({ username, role }),
+        })
+        members += 1
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'member seed failed')
+      }
+    }
+  }
+
+  // Multiple reviews per project so Review Queue / Overview look populated.
+  for (const projectId of projectIds) {
+    for (let n = 0; n < 3; n++) {
+      try {
+        const draft = await qre<Record<string, unknown>>('/workload-submissions', {
+          method: 'POST',
+          body: JSON.stringify({
+            project_id: projectId,
+            metadata: {
+              purpose: `Seeded demo request ${stamp} #${n + 1}`,
+              resource_hint: n % 2 === 0 ? 'simulator' : 'qpu-pool',
+            },
+          }),
+        })
+        await qre(`/workload-submissions/${encodeURIComponent(String(draft.submission_id))}/submit-for-review`, {
+          method: 'POST',
+        })
+        approvals += 1
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'approval seed failed')
+      }
     }
   }
 
@@ -73,7 +105,7 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
   try {
     const pool = await qre<Record<string, unknown>>('/virtual-pools', {
       method: 'POST',
-      body: JSON.stringify({ name: `Demo pool ${stamp}` }),
+      body: JSON.stringify({ name: `Demo pool ${stamp}`, purpose: 'Seeded eligible resource group' }),
     })
     if (pool.pool_id) {
       pools += 1
@@ -83,9 +115,19 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
     errors.push(e instanceof Error ? e.message : 'pool create failed')
   }
 
+  // Second pool for catalogue fullness
+  try {
+    const pool2 = await qre<Record<string, unknown>>('/virtual-pools', {
+      method: 'POST',
+      body: JSON.stringify({ name: `Demo simulators ${stamp}` }),
+    })
+    if (pool2.pool_id) pools += 1
+  } catch (e) {
+    errors.push(e instanceof Error ? e.message : 'pool2 create failed')
+  }
+
   const now = Date.now()
-  // Spread across several local days so the month-grid calendar looks populated.
-  const dayOffsets = [0, 1, 2, 5, 8]
+  const dayOffsets = [0, 1, 2, 3, 5, 8, 12]
   for (let i = 0; i < dayOffsets.length; i++) {
     try {
       const dayStart = new Date(now)
@@ -95,7 +137,7 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
       await qre('/reservations', {
         method: 'POST',
         body: JSON.stringify({
-          resource_ref: `demo-backend-${(i % 3) + 1}`,
+          resource_ref: `demo-backend-${(i % 4) + 1}`,
           project_id: projectIds[i % Math.max(projectIds.length, 1)] || projectIds[0] || null,
           window_start: dayStart.toISOString(),
           window_end: dayEnd.toISOString(),
@@ -109,9 +151,13 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
   }
 
   const assetIds: string[] = []
-  for (const [cls, exec] of [
-    ['QPU', 'hardware'],
-    ['Simulator', 'simulated'],
+  for (const [cls, exec, provider] of [
+    ['QPU', 'hardware', 'cdac_quantum'],
+    ['Simulator', 'simulated', 'cdac_quantum'],
+    ['QPU', 'hardware', 'ibm_quantum'],
+    ['Simulator', 'simulated', 'rigetti_quantum'],
+    ['QPU', 'hardware', 'ionq'],
+    ['Simulator', 'simulated', 'cdac_quantum'],
   ] as const) {
     try {
       const asset = await qre<Record<string, unknown>>('/inventory/assets', {
@@ -119,7 +165,7 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
         body: JSON.stringify({
           asset_class: cls,
           execution_class: exec,
-          provider_id: 'cdac_quantum',
+          provider_id: provider,
           native_asset_id: `demo-${exec}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
         }),
       })
@@ -140,6 +186,16 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
       errors.push(e instanceof Error ? e.message : 'pool member failed')
     }
   }
+  if (poolId && assetIds[1]) {
+    try {
+      await qre(`/virtual-pools/${encodeURIComponent(poolId)}/members`, {
+        method: 'POST',
+        body: JSON.stringify({ asset_id: assetIds[1] }),
+      })
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : 'pool member2 failed')
+    }
+  }
 
-  return { projects, approvals, reservations, pools, assets, errors }
+  return { projects, approvals, reservations, pools, assets, members, errors }
 }

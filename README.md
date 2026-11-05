@@ -66,3 +66,15 @@ Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000
 When developing inside the larger Quantum Monitoring monorepo, use
 `Quantum_Monitoring-main/scripts/start-qrp.sh` so shared Postgres/Redis and the
 integrated TeleScope API on `:8000` start with the portal.
+
+## VM
+
+```bash
+git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
+cd QuantumResourcePortal
+# API is Q-TeleScope on :8000 (portal proxies /api)
+export TELESCOPE_ROOT=/path/to/QTelescope
+bash scripts/vm-setup.sh
+```
+
+Portal: http://\<host\>:5176/qrp
