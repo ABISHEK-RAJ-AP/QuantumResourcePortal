@@ -17,3 +17,4 @@ frontend/coverage/
 # Editors / OS
 .DS_Store
 *.swp
+.cursor/
