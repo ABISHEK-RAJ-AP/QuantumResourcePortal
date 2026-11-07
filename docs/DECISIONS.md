@@ -30,3 +30,28 @@ Status: **Proposed** = default I am building toward until told otherwise. **Appl
 | P1-b | HTTP 405 mapping (no catalogue code) | Applied | Problem body code `MALFORMED_REQUEST`, HTTP status kept at 405 |
 | P1-c | Brand vs shadcn tokens | Applied | shadcn `--accent`/`--secondary` are subtle tints; brand violet/cyan exposed as `--brand-violet`/`--brand-cyan` |
 | P1-d | Fonts | Applied | Self-hosted via @fontsource (LLD CSP allows only `'self'`) |
+
+## RBAC decisions (05-Nov-2026)
+
+Context: `RBAC_IMPLEMENTATION_PLAN.md` §12. **Approved** = confirmed by the project owner on 05-Nov-2026; not yet in code.
+
+| ID | Decision | Status | Default |
+|---|---|---|---|
+| R-01 | DB-managed roles/permissions vs LLD fixed role codes + `permissions.yaml` | Approved | Hybrid: `role`, `permission`, `role_permission` tables; 9 LLD roles seeded as immutable system roles; PLATFORM_ADMIN creates tenant custom roles; LLD change request |
+| R-02 | Permission identifier style | Approved | LLD `resource:action` (e.g. `asset:create`) |
+| R-03 | Super Administrator role | Proposed | Not introduced; installer `bootstrap` command per tenant |
+| R-04 | Support Administrator role | Proposed | Not introduced; OPERATOR triages tickets; may be a custom role |
+| R-05 | User create/deactivate endpoints | Proposed | Additive `/admin/users` (PLATFORM_ADMIN), marked extension |
+| R-06 | Self-registration | Approved | No role choice; creates `PENDING` user without roles; off in production unless enabled |
+| R-07 | Backend that serves the existing module pages | Approved (partial) | Build RBAC here now (RBAC-2…6); module ownership still to be decided before RBAC-7 |
+| R-08 | Researcher read of asset catalogue | Proposed | Tenant-wide catalogue read; project-only for workloads/usage/reservations |
+| R-09 | Pools, alerts, incidents (not QRP SVCs in LLD) | Proposed | Permissions defined; enforced where their backend lives |
+| R-10 | PROVIDER_ADMIN creating a new provider | Proposed | Creator auto-assigned PROVIDER_ADMIN of the DRAFT provider, audited |
+| R-11 | Project creation in QRP | Proposed | PLATFORM_ADMIN only |
+| R-12 | D-02 escalation vs LLD (PA cannot decide approvals) | Proposed | Escalation notifies PA to reassign; PA does not decide |
+| R-13 | Reservation confirmation | Proposed | PLATFORM_ADMIN and OPERATOR |
+| R-14 | Usage adjustment / report export | Proposed | As in plan §4 matrix |
+| R-15 | Entitlement grant | Proposed | RESOURCE_MANAGER, QUOTA_APPROVER, PLATFORM_ADMIN |
+| R-16 | Response for out-of-scope (cross-project) ids | Proposed | 404 if no read on the resource; 403 if visible but not actionable |
+| R-17 | LLD `uq_role_assignment_1` blocks re-grant, allows NULL-scope duplicates | Proposed | Partial unique index on active rows with `COALESCE(scope_id,'*')`; LLD change request |
+| R-18 | `permissions.yaml` parser | Proposed | Add `PyYAML`; alternative: JSON file, no new dependency |

@@ -16,7 +16,7 @@ import {
 
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
-import { getSessionUser } from '@/lib/session'
+import { useAuth } from '@/auth/hooks'
 import { cn } from '@/lib/utils'
 import { CopyableId } from '@/components/data/CopyableId'
 import { ChartPanel } from '@/components/data/ChartPanel'
@@ -178,8 +178,8 @@ const APPROVAL_PATH: WorkflowStep[] = [
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
 export function OverviewPage() {
-  const user = getSessionUser()
-  const focus = overviewFocus(user?.role || 'Operator')
+  const { user } = useAuth()
+  const focus = overviewFocus(user?.roles?.[0] || 'Operator')
   const summary = useQuery({
     queryKey: ['governance-summary'],
     queryFn: () => qre<Row>('/governance/summary'),
@@ -276,7 +276,7 @@ export function OverviewPage() {
     <Page
       crumbs={[{ label: 'Command', to: '/qrp' }, { label: 'Overview' }]}
       title="Overview"
-      description={`${user?.role || 'Operator'} · ${user?.username || '—'}`}
+      description={`${user?.roles?.[0] || 'Operator'} · ${user?.principal_id || '—'}`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
       <Card>

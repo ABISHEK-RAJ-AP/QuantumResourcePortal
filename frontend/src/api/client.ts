@@ -100,6 +100,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     finalHeaders.set('Content-Type', 'application/json')
     body = JSON.stringify(json)
   }
+  // CSRF synchroniser token on unsafe methods (LLD §11.6). The token lives in memory only; the
+  // AuthProvider sets it after login and refreshes it on reload via GET /auth/csrf.
+  const method = (init.method ?? 'GET').toUpperCase()
+  if (_csrfToken && method !== 'GET' && method !== 'HEAD' && !finalHeaders.has('X-CSRF-Token')) {
+    finalHeaders.set('X-CSRF-Token', _csrfToken)
+  }
 
   let response: Response
   try {
@@ -113,6 +119,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     })
   }
 
+  // An authenticated session that has expired or been revoked: let the app send the user to login.
+  if (response.status === 401 && !init.method?.toString().includes('__login')) {
+    _onUnauthorized?.()
+  }
   if (!response.ok && !acceptStatuses.includes(response.status)) {
     throw await toApiError(response)
   }
@@ -123,4 +133,19 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 /** Convenience wrapper returning only the body. */
 export async function apiGet<T>(path: string, options: RequestOptions = {}): Promise<T> {
   return (await apiRequest<T>(path, { ...options, method: 'GET' })).data
+}
+
+// ---- CSRF token and 401 handling (set by the AuthProvider) --------------------------------------
+
+let _csrfToken: string | null = null
+let _onUnauthorized: (() => void) | null = null
+
+/** Store the in-memory CSRF token used for unsafe requests. Never persisted (LLD §11.6). */
+export function setCsrfToken(token: string | null): void {
+  _csrfToken = token
+}
+
+/** Register a callback invoked when the API returns 401 (session expired/revoked). */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  _onUnauthorized = handler
 }

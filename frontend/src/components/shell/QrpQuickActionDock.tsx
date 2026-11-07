@@ -14,7 +14,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { seedPortalDemo } from '@/api/seedDemo'
 import { asList, qre } from '@/api/qre'
-import { getSessionUser } from '@/lib/session'
+import { useAuth } from '@/auth/hooks'
 import { cn } from '@/lib/utils'
 
 type DockAction = {
@@ -31,7 +31,7 @@ type DockAction = {
 /** Lifecycle actions only — not a second sidebar. */
 export function QrpQuickActionDock() {
   const client = useQueryClient()
-  const user = getSessionUser()
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [seedMsg, setSeedMsg] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -81,7 +81,7 @@ export function QrpQuickActionDock() {
   const incidents = centre.isError ? 0 : Number(centre.data?.operations?.open_incidents ?? 0)
   const alerts = centre.isError ? 0 : Number(centre.data?.operations?.active_alerts ?? 0)
   const unresolved = reconcile.isError ? 0 : Number(reconcile.data ?? 0)
-  const role = (user?.role || '').toLowerCase()
+  const role = (user?.roles?.[0] || '').toLowerCase()
   const isAdmin = role.includes('admin')
 
   const actions = useMemo((): DockAction[] => {

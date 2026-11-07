@@ -32,8 +32,8 @@ import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { useAuth } from '@/auth/hooks'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
-import { clearSession, getSessionUser } from '@/lib/session'
 import { cn } from '@/lib/utils'
 
 /**
@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils'
  */
 const NAV: {
   label: string
-  items: { to: string; label: string; icon: LucideIcon; end?: boolean; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
+  items: { to: string; label: string; icon: LucideIcon; end?: boolean; perm?: string; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
 }[] = [
   {
     label: 'Command',
@@ -101,10 +101,19 @@ const NAV: {
     ],
   },
   {
-    label: 'Admin',
+    label: 'Access Control',
     items: [
-      { to: '/qrp/users', label: 'Users & Roles', icon: Users },
-      { to: '/qrp/settings', label: 'Settings', icon: Settings2 },
+      { to: '/qrp/admin/roles', label: 'Roles', icon: Shield, perm: 'role:read' },
+      { to: '/qrp/admin/permissions', label: 'Permissions', icon: Shield, perm: 'permission:read' },
+      { to: '/qrp/admin/users', label: 'Users & Roles', icon: Users, perm: 'user:read' },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { to: '/qrp/profile', label: 'My Profile', icon: Users },
+      { to: '/qrp/settings', label: 'Platform Settings', icon: Settings2 },
+      { to: '/system/status', label: 'Platform Status', icon: Settings2 },
     ],
   },
 ]
@@ -136,8 +145,11 @@ function initials(name: string) {
 
 function ShellInner() {
   const navigate = useNavigate()
+  const { user: authUser, permissions, logout: authLogout } = useAuth()
+  const user = authUser
+    ? { username: authUser.principal_id, role: authUser.roles[0] ?? 'User', full_name: '' }
+    : null
   const location = useLocation()
-  const user = getSessionUser()
   const { chrome } = usePageChrome()
   const { theme, toggleTheme } = useTheme()
   const prefs = useWorkspacePrefs()
@@ -196,8 +208,8 @@ function ShellInner() {
   }
   const displayName = user?.full_name || user?.username || 'Signed in'
 
-  function logout() {
-    clearSession()
+  async function logout() {
+    await authLogout()
     navigate('/login')
   }
 
@@ -221,6 +233,9 @@ function ShellInner() {
 
         <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3" aria-label="Workspace">
           {NAV.map((group) => {
+            // Hide items the principal lacks the permission for; drop a group that ends up empty.
+            const items = group.items.filter((item) => !item.perm || permissions.has(item.perm))
+            if (items.length === 0) return null
             const expanded = collapsed || open[group.label] !== false
             return (
               <div key={group.label}>
@@ -243,7 +258,7 @@ function ShellInner() {
                   )}
                 >
                   <ul className="min-h-0 space-y-0.5 overflow-hidden">
-                    {group.items.map((item) => {
+                    {items.map((item) => {
                       const Icon = item.icon
                       return (
                         <li key={item.to}>
@@ -330,7 +345,6 @@ function ShellInner() {
                     <p className="truncate text-sm font-medium">{displayName}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {user?.role || 'Operator'}
-                      {user?.org ? ` · ${user.org}` : ''}
                     </p>
                   </div>
                 </div>

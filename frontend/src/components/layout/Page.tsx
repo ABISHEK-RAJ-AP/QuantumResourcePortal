@@ -27,7 +27,7 @@ export function Page({
   stepIndex?: number | null
   /** Primary work only (create / decide). Nav links belong in the quick-actions dock. */
   actions?: ReactNode
-  children: ReactNode
+  children?: ReactNode
 }) {
   useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt })
 

@@ -1,0 +1,510 @@
+# QRP RBAC — permission catalogue and system-role matrix
+#
+# Single source of truth for the RBAC-3 seed migration and the generated
+# docs/RBAC_PERMISSION_MATRIX.md. Implements SRS Appendix B (normative) and
+# LLD v1.1.0 §11.2 / §8.2 authorisation column. See docs/RBAC_IMPLEMENTATION_PLAN.md §3–§5.
+#
+# Decisions applied (docs/DECISIONS.md): R-01 hybrid DB roles (these 9 are seeded
+# as immutable system roles), R-02 `resource:action` identifiers.
+#
+# Rules this file must satisfy (checked by scripts/validate_permissions.py):
+#   1. Every permission code is unique.               (DB: uq_permission_1)
+#   2. Every code in a role's grant list is defined.
+#   3. Every scope in `assignable_scope` is TENANT|PROJECT|PROVIDER.
+#   4. No SRS Appendix B cell is reduced (srs_appendix_b below).
+#   5. PLATFORM_ADMIN does NOT hold approval:decide (SoD / least privilege, LLD §11.2).
+#
+# SCOPING: a role's permissions apply within the role's assignable_scope as recorded on
+# each role_assignment. A PROJECT-scoped role (e.g. RESEARCHER) holding `workload:read`
+# can read workloads only in its assigned project(s); a TENANT-scoped role holding the
+# same permission reads tenant-wide. The permission list is therefore scope-agnostic;
+# scope is enforced by the Authorizer from role_assignment.scope_type (plan §5.2).
+
+version: 1
+identifier_style: "resource:action"   # R-02
+
+# ---------------------------------------------------------------------------
+# Modules (QRP functional areas). `flagged` modules are served only when their
+# feature flag is on (SVC-05 behind QRE_FEATURE_SVC05_ENABLED); `deferred`
+# modules have their permissions defined now but enforced where their backend
+# lives (R-09 / Phase 7 — e.g. pools, alerts, incidents served by TeleScope).
+# ---------------------------------------------------------------------------
+modules:
+  dashboard:      { label: "Governance dashboard" }
+  users:          { label: "User management" }
+  membership:     { label: "Role assignment (memberships)" }
+  roles:          { label: "Role management" }
+  permissions:    { label: "Permission catalogue" }
+  projects:       { label: "Projects" }
+  inventory:      { label: "Resource inventory" }
+  pools:          { label: "Resource pools", deferred: true }
+  providers:      { label: "Provider management" }
+  backends:       { label: "Backends" }
+  connectors:     { label: "Connectors" }
+  policies:       { label: "Approval policies" }
+  quotas:         { label: "Quotas" }
+  workloads:      { label: "Workloads" }
+  approvals:      { label: "Approvals" }
+  reservations:   { label: "Reservations / scheduling" }
+  dispatch:       { label: "Dispatch & reconciliation" }
+  metering:       { label: "Usage metering" }
+  sla:            { label: "SLA management" }
+  procurement:    { label: "Procurement references", flagged: "QRE_FEATURE_SVC05_ENABLED" }
+  entitlements:   { label: "Entitlements", flagged: "QRE_FEATURE_SVC05_ENABLED" }
+  support:        { label: "Support tickets" }
+  incidents:      { label: "Incidents / alerts", deferred: true }
+  audit:          { label: "Audit logs" }
+  settings:       { label: "System settings" }
+
+# ---------------------------------------------------------------------------
+# Permission catalogue. `privileged: true` marks a permission that may only be
+# granted by PLATFORM_ADMIN and that the anti-escalation policy guards (plan §9 S-2).
+# `basis` cites the governing source.
+# ---------------------------------------------------------------------------
+permissions:
+  # Dashboard
+  - { code: "governance:read",            module: dashboard,    action: read,    name: "Read governance dashboard",            basis: "API-GOV-01; SRS App.B QRP R" }
+  # Users (R-05 extension)
+  - { code: "user:read",                  module: users,        action: read,    name: "Read user accounts",                   basis: "ext R-05" }
+  - { code: "user:create",                module: users,        action: create,  name: "Create user accounts",                 basis: "ext R-05", privileged: true }
+  - { code: "user:update",                module: users,        action: update,  name: "Update / activate / deactivate users", basis: "ext R-05", privileged: true }
+  # Membership (role assignment)
+  - { code: "membership:read",            module: membership,   action: read,    name: "View role assignments",                basis: "API-IAM-07" }
+  - { code: "membership:admin",           module: membership,   action: assign,  name: "Grant / revoke roles",                 basis: "API-IAM-07; LLD §11.2", privileged: true }
+  # Roles (R-01)
+  - { code: "role:read",                  module: roles,        action: read,    name: "Read roles",                           basis: "ext R-01" }
+  - { code: "role:create",                module: roles,        action: create,  name: "Create custom roles",                  basis: "ext R-01", privileged: true }
+  - { code: "role:update",                module: roles,        action: update,  name: "Edit custom roles / permissions",      basis: "ext R-01", privileged: true }
+  - { code: "role:delete",                module: roles,        action: delete,  name: "Delete custom roles",                  basis: "ext R-01", privileged: true }
+  # Permission catalogue (read-only for everyone)
+  - { code: "permission:read",            module: permissions,  action: read,    name: "Read permission catalogue",            basis: "ext R-01" }
+  # Projects
+  - { code: "project:read",               module: projects,     action: read,    name: "Read projects",                        basis: "API-PRJ-01; SRS App.B" }
+  - { code: "project:create",             module: projects,     action: create,  name: "Create projects",                      basis: "R-11", privileged: true }
+  - { code: "project:update",             module: projects,     action: update,  name: "Update projects",                      basis: "LLD §11.2 project:write" }
+  # Inventory
+  - { code: "asset:read",                 module: inventory,    action: read,    name: "Read assets",                          basis: "API-INV-01 readers; R-08" }
+  - { code: "asset:create",               module: inventory,    action: create,  name: "Create assets",                        basis: "API-INV-01; LLD asset:write" }
+  - { code: "asset:update",               module: inventory,    action: update,  name: "Update assets",                        basis: "API-INV-01" }
+  - { code: "asset:retire",               module: inventory,    action: delete,  name: "Retire (deactivate) assets",           basis: "D-06" }
+  - { code: "asset:import",               module: inventory,    action: create,  name: "Bulk import assets",                   basis: "API-INV-02" }
+  - { code: "topology:write",             module: inventory,    action: update,  name: "Write declared topology",              basis: "API-INV-04" }
+  # Pools (deferred enforcement)
+  - { code: "pool:read",                  module: pools,        action: read,    name: "Read resource pools",                  basis: "R-09 (frontend module)" }
+  - { code: "pool:manage",                module: pools,        action: manage,  name: "Manage resource pools",                basis: "R-09", privileged: true }
+  # Providers
+  - { code: "provider:read",              module: providers,    action: read,    name: "Read providers",                       basis: "SRS App.B QRP R" }
+  - { code: "provider:create",            module: providers,    action: create,  name: "Create provider (DRAFT)",              basis: "API-PRV-01; R-10" }
+  - { code: "provider:manifest:write",    module: providers,    action: update,  name: "Submit onboarding / manifests",        basis: "API-PRV-02; LLD §11.2" }
+  - { code: "provider:state:transition",  module: providers,    action: manage,  name: "Transition provider state",            basis: "API-PRV-03; REQ-036", privileged: true }
+  # Backends
+  - { code: "backend:read",               module: backends,     action: read,    name: "Read backends",                        basis: "LLD §11.2 backends:read" }
+  # Connectors
+  - { code: "connector:read",             module: connectors,   action: read,    name: "Read connector status",                basis: "SRS App.B (OP/AU/PV)" }
+  - { code: "connector:configure",        module: connectors,   action: manage,  name: "Configure connectors / schedules",     basis: "API-CON-01..05", privileged: true }
+  - { code: "connector:credential:rotate",module: connectors,   action: manage,  name: "Rotate connector credentials",         basis: "API-CON-02", privileged: true }
+  # Policies
+  - { code: "policy:read",                module: policies,     action: read,    name: "Read approval policies",               basis: "SRS App.B QRP R" }
+  - { code: "policy:publish",             module: policies,     action: create,  name: "Publish versioned policies",           basis: "API-APR-05", privileged: true }
+  # Quotas
+  - { code: "quota:read",                 module: quotas,       action: read,    name: "Read quotas",                          basis: "SRS App.B" }
+  - { code: "quota:manage",               module: quotas,       action: manage,  name: "Maintain quota ledger",                basis: "D-07", privileged: true }
+  # Workloads
+  - { code: "workload:read",              module: workloads,    action: read,    name: "Read workloads",                       basis: "API-APR-02" }
+  - { code: "workload:create",            module: workloads,    action: create,  name: "Create draft workloads",               basis: "API-WKL-01; LLD §11.2" }
+  - { code: "workload:submit",            module: workloads,    action: execute, name: "Submit workloads for review",          basis: "API-WKL-03; LLD §11.2" }
+  - { code: "workload:withdraw",          module: workloads,    action: update,  name: "Withdraw own workloads",               basis: "API-WKL-03; HLD §8.1" }
+  # Approvals
+  - { code: "approval:read",              module: approvals,    action: read,    name: "Read approval queue / cycles",         basis: "API-APR-01/02; TC-SHL-002" }
+  - { code: "approval:decide",            module: approvals,    action: approve, name: "Decide an approval stage",             basis: "LLD §11.2 (PO stage-1, QA stage-2); PD-25 SoD" }
+  - { code: "workload:authorize",         module: approvals,    action: execute, name: "Authorise dispatch (quota re-eval)",   basis: "API-APR-04" }
+  # Reservations / scheduling
+  - { code: "reservation:read",           module: reservations, action: read,    name: "Read reservations",                    basis: "API-SCH-01" }
+  - { code: "reservation:create",         module: reservations, action: create,  name: "Create reservations",                  basis: "API-SCH-01" }
+  - { code: "reservation:cancel",         module: reservations, action: delete,  name: "Cancel reservations",                  basis: "API-SCH-01" }
+  # Dispatch
+  - { code: "dispatch:read",              module: dispatch,     action: read,    name: "Read dispatch attempts / jobs",        basis: "API-EXE-02/05" }
+  - { code: "workload:dispatch",          module: dispatch,     action: execute, name: "Dispatch an authorised workload",      basis: "API-EXE-01; PD-39/D-09" }
+  - { code: "dispatch:reconcile",         module: dispatch,     action: manage,  name: "Manual dispatch reconciliation",       basis: "API-EXE-03" }
+  # Metering
+  - { code: "usage:read",                 module: metering,     action: read,    name: "Read usage metering",                  basis: "API-MTR-01 QRP roles" }
+  - { code: "usage:adjust",               module: metering,     action: update,  name: "Adjust usage records",                 basis: "App.F USAGE_ADJUSTED; R-14", privileged: true }
+  - { code: "report:export",              module: metering,     action: export,  name: "Export utilisation reports",           basis: "API-RPT-01; R-14" }
+  # SLA
+  - { code: "sla:read",                   module: sla,          action: read,    name: "Read SLA targets / breaches",          basis: "API-MTR-02 readers" }
+  - { code: "sla:target:write",           module: sla,          action: update,  name: "Write SLA targets",                    basis: "API-MTR-02" }
+  # Procurement (SVC-05, flagged)
+  - { code: "procurement:read",           module: procurement,  action: read,    name: "Read procurement references",          basis: "API-PRC-01" }
+  - { code: "procurement:write",          module: procurement,  action: update,  name: "Write procurement references",         basis: "LLD §11.2" }
+  # Entitlements (SVC-05, flagged)
+  - { code: "entitlement:read",           module: entitlements, action: read,    name: "Read entitlements",                    basis: "API-PRC-03" }
+  - { code: "entitlement:grant",          module: entitlements, action: assign,  name: "Grant entitlements",                   basis: "API-PRC-03; R-15", privileged: true }
+  # Support tickets
+  - { code: "ticket:read",                module: support,      action: read,    name: "Read support tickets",                 basis: "API-SUP-01" }
+  - { code: "ticket:create",              module: support,      action: create,  name: "Create support tickets",               basis: "API-SUP-01" }
+  - { code: "ticket:update",              module: support,      action: update,  name: "Triage / update tickets",              basis: "R-04" }
+  - { code: "ticket:escalate",            module: support,      action: manage,  name: "Escalate tickets",                     basis: "R-04" }
+  # Incidents / alerts (deferred enforcement — TeleScope, R-09)
+  - { code: "alert:read",                 module: incidents,    action: read,    name: "Read alerts",                          basis: "LLD §11.2 (Q-TeleScope)" }
+  - { code: "alert:ack",                  module: incidents,    action: update,  name: "Acknowledge alerts",                   basis: "LLD §11.2" }
+  - { code: "alert:resolve",              module: incidents,    action: update,  name: "Resolve alerts",                       basis: "LLD §11.2" }
+  - { code: "incident:read",              module: incidents,    action: read,    name: "Read incidents",                       basis: "LLD §11.2" }
+  - { code: "incident:manage",            module: incidents,    action: manage,  name: "Manage incidents",                     basis: "LLD §11.2" }
+  # Audit
+  - { code: "audit:read",                 module: audit,        action: read,    name: "Read audit log",                       basis: "API-AUD-01; LLD §11.2" }
+  - { code: "audit:export",               module: audit,        action: export,  name: "Export audit records",                 basis: "SRS App.B Audit export", privileged: true }
+  - { code: "audit:verify",               module: audit,        action: view_audit, name: "Verify audit hash chain",           basis: "API-AUD-01" }
+  # Settings
+  - { code: "settings:read",              module: settings,     action: read,    name: "Read system settings",                 basis: "repo nav map" }
+  - { code: "settings:write",             module: settings,     action: update,  name: "Write system settings",                basis: "repo nav map", privileged: true }
+
+# ---------------------------------------------------------------------------
+# System roles (R-01: seeded immutable; is_system = true). Their permission
+# sets change only through a reviewed migration, so SRS Appendix B is never
+# reduced at runtime. PLATFORM_ADMIN can create tenant custom roles from the
+# catalogue above, but cannot alter these.
+# ---------------------------------------------------------------------------
+roles:
+  PLATFORM_ADMIN:
+    name: "Platform Administrator"
+    assignable_scope: TENANT
+    description: "Connectors, credentials, schedules; provider state; policies; tenant membership admin; custom roles; user lifecycle; settings; audit read + verify. Does NOT decide approvals."
+    permissions:
+      - governance:read
+      - user:read
+      - user:create
+      - user:update
+      - membership:read
+      - membership:admin
+      - role:read
+      - role:create
+      - role:update
+      - role:delete
+      - permission:read
+      - project:read
+      - project:create
+      - project:update
+      - asset:read
+      - asset:create
+      - asset:update
+      - asset:retire
+      - asset:import
+      - topology:write
+      - pool:read
+      - pool:manage
+      - provider:read
+      - provider:create
+      - provider:manifest:write
+      - provider:state:transition
+      - backend:read
+      - connector:read
+      - connector:configure
+      - connector:credential:rotate
+      - policy:read
+      - policy:publish
+      - quota:read
+      - quota:manage
+      - workload:read
+      - workload:create
+      - workload:submit
+      - workload:withdraw
+      - approval:read
+      - workload:authorize
+      - reservation:read
+      - reservation:create
+      - reservation:cancel
+      - dispatch:read
+      - workload:dispatch
+      - dispatch:reconcile
+      - usage:read
+      - usage:adjust
+      - report:export
+      - sla:read
+      - sla:target:write
+      - procurement:read
+      - procurement:write
+      - entitlement:read
+      - entitlement:grant
+      - ticket:read
+      - ticket:create
+      - ticket:update
+      - ticket:escalate
+      - alert:read
+      - alert:ack
+      - alert:resolve
+      - incident:read
+      - incident:manage
+      - audit:read
+      - audit:export
+      - audit:verify
+      - settings:read
+      - settings:write
+
+  OPERATOR:
+    name: "Operator"
+    assignable_scope: TENANT
+    description: "Read QRP; manual dispatch reconciliation; reservations; ticket triage; alert ack/resolve."
+    permissions:
+      - governance:read
+      - project:read
+      - asset:read
+      - pool:read
+      - provider:read
+      - backend:read
+      - connector:read
+      - policy:read
+      - quota:read
+      - workload:read
+      - reservation:read
+      - reservation:create
+      - reservation:cancel
+      - dispatch:read
+      - dispatch:reconcile
+      - usage:read
+      - sla:read
+      - ticket:read
+      - ticket:create
+      - ticket:update
+      - ticket:escalate
+      - alert:read
+      - alert:ack
+      - alert:resolve
+      - incident:read
+      - incident:manage
+
+  RESEARCHER:
+    name: "Researcher / Standard User"
+    assignable_scope: PROJECT
+    description: "Create, submit and withdraw own project's workloads; reserve in project; read project data and catalogue. Cannot approve; cannot see the approval queue."
+    permissions:
+      - governance:read
+      - project:read
+      - asset:read
+      - pool:read
+      - provider:read
+      - backend:read
+      - policy:read
+      - quota:read
+      - workload:read
+      - workload:create
+      - workload:submit
+      - workload:withdraw
+      - reservation:read
+      - reservation:create
+      - reservation:cancel
+      - dispatch:read
+      - usage:read
+      - ticket:read
+      - ticket:create
+
+  PROJECT_OWNER:
+    name: "Project Owner / Project Administrator"
+    assignable_scope: PROJECT
+    description: "Researcher rights plus stage-1 approvals where assigned, project membership admin (project-scoped roles only), dispatch, and project audit read/export. Cannot decide own workloads (SoD)."
+    permissions:
+      - governance:read
+      - user:read
+      - membership:read
+      - membership:admin
+      - project:read
+      - project:update
+      - asset:read
+      - pool:read
+      - provider:read
+      - backend:read
+      - policy:read
+      - quota:read
+      - workload:read
+      - workload:create
+      - workload:submit
+      - workload:withdraw
+      - approval:read
+      - approval:decide
+      - reservation:read
+      - reservation:create
+      - reservation:cancel
+      - dispatch:read
+      - workload:dispatch
+      - usage:read
+      - report:export
+      - entitlement:read
+      - ticket:read
+      - ticket:create
+      - audit:read
+      - audit:export
+
+  QUOTA_APPROVER:
+    name: "Quota Approver"
+    assignable_scope: TENANT
+    description: "Stage-2 (quota/policy) approvals; authorise/re-authorise; quota ledger maintenance; entitlement read/grant. Cannot decide own workloads (SoD)."
+    permissions:
+      - governance:read
+      - project:read
+      - asset:read
+      - provider:read
+      - backend:read
+      - policy:read
+      - quota:read
+      - quota:manage
+      - workload:read
+      - approval:read
+      - approval:decide
+      - workload:authorize
+      - reservation:read
+      - usage:read
+      - report:export
+      - sla:read
+      - procurement:read
+      - entitlement:read
+      - entitlement:grant
+      - ticket:read
+      - ticket:create
+
+  PROVIDER_ADMIN:
+    name: "Provider Administrator"
+    assignable_scope: PROVIDER
+    description: "Create provider (DRAFT); submit onboarding/manifests for own provider; read own provider's backends and connectors. Cannot transition provider state."
+    permissions:
+      - governance:read
+      - asset:read
+      - provider:read
+      - provider:create
+      - provider:manifest:write
+      - backend:read
+      - connector:read
+      - sla:read
+      - ticket:read
+      - ticket:create
+
+  AUDITOR:
+    name: "Auditor"
+    assignable_scope: TENANT
+    description: "Read everything in QRP; audit read, export and chain verification. No writes."
+    permissions:
+      - governance:read
+      - user:read
+      - membership:read
+      - role:read
+      - permission:read
+      - project:read
+      - asset:read
+      - pool:read
+      - provider:read
+      - backend:read
+      - connector:read
+      - policy:read
+      - quota:read
+      - workload:read
+      - approval:read
+      - reservation:read
+      - dispatch:read
+      - usage:read
+      - report:export
+      - sla:read
+      - procurement:read
+      - entitlement:read
+      - ticket:read
+      - alert:read
+      - incident:read
+      - audit:read
+      - audit:export
+      - audit:verify
+      - settings:read
+
+  RESOURCE_MANAGER:
+    name: "Resource Manager"
+    assignable_scope: TENANT
+    description: "Inventory create/update/retire/import, topology, procurement, entitlements, SLA targets. Pending NF-01/CF-09 — kept as specified in LLD. Cannot approve or manage roles."
+    permissions:
+      - governance:read
+      - project:read
+      - asset:read
+      - asset:create
+      - asset:update
+      - asset:retire
+      - asset:import
+      - topology:write
+      - pool:read
+      - pool:manage
+      - provider:read
+      - backend:read
+      - policy:read
+      - usage:read
+      - report:export
+      - sla:read
+      - sla:target:write
+      - procurement:read
+      - procurement:write
+      - entitlement:read
+      - entitlement:grant
+      - ticket:read
+      - ticket:create
+
+  ASSISTANT:
+    name: "Assistant (service)"
+    assignable_scope: PROJECT
+    system_only: true          # seeded, never assignable to a human (plan §3)
+    description: "SVC-19 drafting identity. No QRP permissions (REQ-062)."
+    permissions: []
+
+# ---------------------------------------------------------------------------
+# SRS Appendix B (normative) — asserted so validate_permissions.py fails if any
+# cell is reduced. Each entry: the SRS cell, and the QRP permission(s) that
+# satisfy it for the listed roles. "A" (administer) implies the module's write
+# + manage permissions; "R/W" implies read + the stated write.
+# ---------------------------------------------------------------------------
+srs_appendix_b:
+  # QRP column of the role matrix
+  - cell: "Platform administrator — QRP: A"
+    roles: [PLATFORM_ADMIN]
+    satisfied_by: [governance:read, asset:create, provider:state:transition, policy:publish, membership:admin, settings:write]
+  - cell: "Operator — QRP: R"
+    roles: [OPERATOR]
+    satisfied_by: [governance:read, asset:read, workload:read]
+  - cell: "Researcher/developer — QRP: R (project)"
+    roles: [RESEARCHER]
+    satisfied_by: [governance:read, asset:read, workload:read]
+  - cell: "Project owner — QRP: R/W approvals (stage 1)"
+    roles: [PROJECT_OWNER]
+    satisfied_by: [approval:read, approval:decide]
+  - cell: "Quota approver — QRP: R/W approvals (stage 2)"
+    roles: [QUOTA_APPROVER]
+    satisfied_by: [approval:read, approval:decide, workload:authorize]
+  - cell: "Provider administrator — QRP: R/W manifests"
+    roles: [PROVIDER_ADMIN]
+    satisfied_by: [provider:read, provider:manifest:write]
+  - cell: "Auditor — QRP: R; Audit export: R"
+    roles: [AUDITOR]
+    satisfied_by: [governance:read, asset:read, audit:read, audit:export]
+  # Resource/action/scope table (normative)
+  - cell: "Project — read/write — project membership role"
+    roles: [PLATFORM_ADMIN, PROJECT_OWNER]
+    satisfied_by: [project:read, project:update]
+  - cell: "Workload — submit for review — project permission"
+    roles: [RESEARCHER, PROJECT_OWNER, PLATFORM_ADMIN]
+    satisfied_by: [workload:submit]
+  - cell: "Workload — dispatch — approval + quota policy"
+    roles: [PROJECT_OWNER, PLATFORM_ADMIN]
+    satisfied_by: [workload:dispatch]
+  - cell: "Approval — approve/reject — approver role for stage"
+    roles: [PROJECT_OWNER, QUOTA_APPROVER]
+    satisfied_by: [approval:decide]
+  - cell: "Provider manifest — create/update — provider administrator"
+    roles: [PROVIDER_ADMIN, PLATFORM_ADMIN]
+    satisfied_by: [provider:manifest:write]
+  - cell: "Connector credential — rotate/test — platform administrator"
+    roles: [PLATFORM_ADMIN]
+    satisfied_by: [connector:credential:rotate, connector:configure]
+  - cell: "Audit/export — export — audit export policy"
+    roles: [AUDITOR, PLATFORM_ADMIN, PROJECT_OWNER]
+    satisfied_by: [audit:export]
+  - cell: "Inventory asset — read/write — resource manager role"
+    roles: [RESOURCE_MANAGER, PLATFORM_ADMIN]
+    satisfied_by: [asset:read, asset:create, asset:update]
+
+# ---------------------------------------------------------------------------
+# Invariants asserted by the validator (plan §3, §9).
+# ---------------------------------------------------------------------------
+invariants:
+  platform_admin_must_not_hold: [approval:decide]   # SoD / least privilege (LLD §11.2)
+  deny_by_default: true
