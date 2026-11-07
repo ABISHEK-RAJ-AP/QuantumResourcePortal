@@ -21,8 +21,13 @@ extend-exclude = ["migrations/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "ASYNC"]
-ignore = ["S101"]  # assert is fine in tests
+ignore = [
+    "S101",  # assert is fine in tests
+    "B008",  # Depends()/Field() in argument defaults is the intended FastAPI/Pydantic idiom
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S105", "S106"]
+"tests/**" = ["S105", "S106", "E501"]
 "qre/core/errors.py" = ["E501"]  # catalogue kept one-code-per-line like LLD Appendix C
+"qre/services/*/models.py" = ["E501"]  # one column per line, mirroring LLD Appendix B
+"scripts/validate_permissions.py" = ["E501"]  # generated-doc row templates are long by design

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { seedPortalSession } from './auth'
+import { seedPortalSession } from './auth.js'
 
 test.beforeEach(async ({ page }) => {
   await seedPortalSession(page)

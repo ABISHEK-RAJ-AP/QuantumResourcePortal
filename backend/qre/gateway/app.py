@@ -24,11 +24,74 @@ API_PREFIX = "/api/v1"
 log = logging.getLogger("qre.app")
 
 
-def build_api_router() -> APIRouter:
+def build_api_router(settings: Settings | None = None) -> APIRouter:
     """Versioned API router. Service routers are included here as phases land."""
+    from qre.services.svc02_identity.admin_api import authz_router
+    from qre.services.svc02_identity.admin_api import router as admin_router
+    from qre.services.svc02_identity.api import ping_router
+    from qre.services.svc02_identity.api import router as identity_router
+    from qre.services.svc17_audit.api import router as audit_router
+
     router = APIRouter(prefix=API_PREFIX)
-    # Phase 3+: router.include_router(svc02_identity.api.router) …
+    router.include_router(identity_router)  # /auth/*, /me* (RBAC-4)
+    router.include_router(ping_router)      # demo authorisation gates (RBAC-4)
+    router.include_router(admin_router)     # /admin/* roles, permissions, users, memberships
+    router.include_router(authz_router)     # /authz/check (RBAC-5)
+    router.include_router(audit_router)     # /rbac/audit read/export/verify (RBAC-8)
+    # RBAC-7f: when a TeleScope gateway secret is configured, forward module paths there. Mounted
+    # last so native QRP routes win;
+    # the catch-all depends on get_ctx (session + CSRF), so deny-by-default
+    # and the start-up guard hold. Without the secret the proxy is absent and module paths 404.
+    if settings is not None and settings.telescope_gateway_secret is not None:
+        from qre.gateway.telescope_proxy import build_proxy_router
+
+        router.include_router(build_proxy_router())
     return router
+
+
+# API sub-paths reachable without a session (LLD §4.2 public allow-list). Everything else on the
+# versioned API router must carry an authorisation dependency — asserted at start-up. Health probes
+# live on a separate router and are intentionally public, so they are not part of this check.
+PUBLIC_API_SUFFIXES = frozenset({"/auth/login"})
+
+
+def _iter_api_routes(routes: object):
+    """Yield concrete APIRoute objects, descending through lazily-included router wrappers."""
+    for route in routes or []:
+        inner = getattr(route, "original_router", None)
+        if inner is not None:  # a lazily-included router wrapper (this FastAPI build)
+            yield from _iter_api_routes(getattr(inner, "routes", []))
+        elif getattr(route, "dependant", None) is not None and hasattr(route, "path"):
+            yield route
+
+
+def assert_api_router_guarded(api_router: APIRouter) -> list[str]:
+    """Return API routes that are neither public nor protected by an auth dependency (deny default).
+
+    A non-empty result is a configuration error: a protected route shipped without a guard. Paths
+    the router-relative sub-paths (the /api/v1 prefix is applied by the mount).
+    """
+    from qre.core.deps import get_ctx
+
+    unguarded: list[str] = []
+    for route in _iter_api_routes(api_router.routes):
+        if route.path in PUBLIC_API_SUFFIXES:
+            continue
+        if get_ctx not in _dependency_calls(route.dependant):
+            methods = ','.join(sorted(getattr(route, 'methods', []) or []))
+            unguarded.append(f"{methods} {route.path}")
+    return unguarded
+
+
+def _dependency_calls(dependant: object, seen: set | None = None) -> set:
+    """Flatten the call objects of a route's dependency tree."""
+    seen = seen if seen is not None else set()
+    call = getattr(dependant, "call", None)
+    if call is not None:
+        seen.add(call)
+    for sub in getattr(dependant, "dependencies", []) or []:
+        _dependency_calls(sub, seen)
+    return seen
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -77,5 +140,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(CorrelationMiddleware)
 
     app.include_router(health.router)
-    app.include_router(build_api_router())
+    api_router = build_api_router(settings)
+    app.include_router(api_router)
+
+    # Deny by default: start-up fails if a protected API route lacks an auth dependency (plan §5.3).
+    unguarded = assert_api_router_guarded(api_router)
+    if unguarded:
+        raise RuntimeError(
+            "Unguarded API routes (missing get_ctx / require_* dependency): " + "; ".join(unguarded)
+        )
     return app

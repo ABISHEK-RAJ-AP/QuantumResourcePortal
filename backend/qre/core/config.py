@@ -52,6 +52,21 @@ class Settings(BaseSettings):
     session_absolute_h: int = Field(default=12, ge=1, le=7 * 24)
     mfa_required: bool = False
 
+    # Session cookie and login throttling (LLD §11.3, PD-12). RBAC-4.
+    session_cookie_name: str = "qre_sid"
+    auth_lockout_threshold: int = Field(default=5, ge=1, le=100)
+    auth_lockout_window_min: int = Field(default=15, ge=1, le=24 * 60)
+    auth_lockout_minutes: int = Field(default=15, ge=1, le=24 * 60)
+    captcha_enabled: bool = False  # SRS §4.2.1: CAPTCHA is deployment-configurable
+
+    # RBAC-7f: module endpoints live on the TeleScope backend. The gateway proxies /api/v1 module
+    # paths there, translating the QRP session into a TeleScope service session (shared secret).
+    # the secret is unset the proxy is disabled (module paths 404 as before).
+    telescope_base_url: str = "http://localhost:8000"
+    telescope_gateway_secret: SecretStr | None = None
+    telescope_timeout_s: float = Field(default=30.0, ge=1.0, le=300.0)
+    telescope_token_ttl_s: int = Field(default=600, ge=30, le=3600)
+
     page_size_default: int = Field(default=25, ge=1, le=200)
     page_size_max: int = Field(default=200, ge=1, le=1000)
 
@@ -104,6 +119,11 @@ class Settings(BaseSettings):
             if problems:
                 raise ValueError("production profile: " + "; ".join(problems))
         return self
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Mark the session cookie Secure outside the lab profile (LLD §4.3.6)."""
+        return self.env is not Profile.LAB
 
     @property
     def is_lab(self) -> bool:

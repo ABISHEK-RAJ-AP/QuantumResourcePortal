@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { seedPortalSession } from './auth'
+import { seedPortalSession } from './auth.js'
 
 /**
  * Workflow A (smoke): create project → open approvals → seed demo review when API available.

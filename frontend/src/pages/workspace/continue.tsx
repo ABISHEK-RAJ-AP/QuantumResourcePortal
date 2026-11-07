@@ -37,7 +37,7 @@ import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
-import { clearSession, getSessionUser } from '@/lib/session'
+import { useAuth } from '@/auth/hooks'
 import { message, QueryBody, shortId, Table } from '@/pages/workspace/screens'
 
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
@@ -2599,7 +2599,8 @@ type CatalogRole = { id: string; label: string; builtin?: boolean; permissions?:
 
 export function UsersPage() {
   const client = useQueryClient()
-  const session = getSessionUser()
+  const { user } = useAuth()
+  const session = user ? { username: user.principal_id, role: user.roles?.[0] ?? 'User' } : null
   const canManage = ['Admin', 'SuperAdmin', 'PlatformAdmin'].includes(session?.role || '')
   const [roleFilter, setRoleFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -4634,7 +4635,8 @@ export function EvidencePage() {
 
 export function SettingsPage() {
   const navigate = useNavigate()
-  const session = getSessionUser()
+  const { user, logout } = useAuth()
+  const session = user ? { username: user.principal_id, role: user.roles?.[0] ?? 'User' } : null
   const boundary = useQuery({
     queryKey: ['institution-boundary'],
     queryFn: () => qre<Row>('/governance/institution-boundary'),
@@ -4650,7 +4652,7 @@ export function SettingsPage() {
           type="button"
           className="btn-secondary"
           onClick={() => {
-            clearSession()
+            void logout()
             navigate('/login')
           }}
         >

@@ -55,10 +55,19 @@ import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { RouteError } from '@/components/routing/RouteError'
-import { isSignedIn } from '@/lib/session'
+import { ProtectedRoute } from '@/auth/ProtectedRoute'
+import { useAuth } from '@/auth/hooks'
+import { RolesPage } from '@/pages/admin/RolesPage'
+import { RoleEditorPage } from '@/pages/admin/RoleEditorPage'
+import { PermissionsPage } from '@/pages/admin/PermissionsPage'
+import { UsersAdminPage } from '@/pages/admin/UsersAdminPage'
+import { UserPermissionsPage } from '@/pages/admin/UserPermissionsPage'
+import { ProfilePage } from '@/pages/system/ProfilePage'
+import { AccessDeniedPage } from '@/pages/system/AccessDeniedPage'
 
 function PublicOnly({ children }: { children: ReactNode }) {
-  if (isSignedIn()) return <Navigate to="/qrp" replace />
+  const { loading, user } = useAuth()
+  if (!loading && user) return <Navigate to="/qrp" replace />
   return children
 }
 
@@ -145,6 +154,57 @@ export const router = createBrowserRouter([
           { path: '/qrp/procurement', element: <ProcurementPage /> },
           { path: '/qrp/entitlements', element: <EntitlementsPage /> },
           { path: '/qrp/settings', element: <SettingsPage /> },
+          { path: '/qrp/profile', element: <ProfilePage /> },
+          // RBAC administration (RBAC-6) — each route is permission-gated; the backend also enforces.
+          {
+            path: '/qrp/admin/roles',
+            element: (
+              <ProtectedRoute permission="role:read">
+                <RolesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/qrp/admin/roles/new',
+            element: (
+              <ProtectedRoute permission="role:create">
+                <RoleEditorPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/qrp/admin/roles/:roleId',
+            element: (
+              <ProtectedRoute permission="role:read">
+                <RoleEditorPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/qrp/admin/permissions',
+            element: (
+              <ProtectedRoute permission="permission:read">
+                <PermissionsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/qrp/admin/users',
+            element: (
+              <ProtectedRoute permission="user:read">
+                <UsersAdminPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/qrp/admin/users/:userId',
+            element: (
+              <ProtectedRoute permission="user:read">
+                <UserPermissionsPage />
+              </ProtectedRoute>
+            ),
+          },
+          { path: '/403', element: <AccessDeniedPage /> },
           { path: '/system/status', element: <StatusPage framed /> },
         ],
       },
