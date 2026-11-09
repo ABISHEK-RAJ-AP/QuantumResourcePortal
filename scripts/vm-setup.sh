@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# VM: QRP frontend :5176. API is TeleScope on :8000 (this portal proxies /api).
+# VM: Quantum Resource Portal only (this repo). Starts QRE API :8000 + Vite :5176.
+# Q-TeleScope is a separate application; do not point this portal at TeleScope.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -12,60 +13,51 @@ export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 export PATH="$HOME/miniforge3/bin:$HOME/.local/bin:/usr/local/bin:${PATH:-}"
 
 command -v git >/dev/null && git pull --ff-only || log "git pull skipped"
-command -v npm >/dev/null || die "npm missing"
 
+API_PORT="${API_PORT:-8000}"
+UI_PORT="${UI_PORT:-5176}"
+mkdir -p "$ROOT/logs"
+
+VENV="$ROOT/backend/.venv"
+PY="$VENV/bin/python"
+if [[ ! -x "$PY" ]]; then
+  log "Backend setup"
+  make setup-backend
+fi
+
+[[ -f "$ROOT/backend/.env" ]] || cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
+log "Database migrate"
+make migrate || die "alembic failed — create Postgres database qre per README"
+
+if ! curl -sf -m 1 "http://127.0.0.1:${API_PORT}/healthz" >/dev/null 2>&1; then
+  log "Start QRE API :${API_PORT}"
+  nohup "$PY" -m uvicorn qre.main:app --app-dir "$ROOT/backend" --host 0.0.0.0 --port "$API_PORT" \
+    >"$ROOT/logs/api.log" 2>&1 &
+  echo $! >"$ROOT/logs/api.pid"
+else
+  log "API already on :${API_PORT}"
+fi
+
+command -v npm >/dev/null || die "npm missing"
 if [[ ! -d frontend/node_modules ]]; then
   log "npm install"
   (cd frontend && npm install)
-fi
-
-if [[ -z "${TELESCOPE_ROOT:-}" ]]; then
-  for d in \
-    /home/cloud/QTelescope \
-    /home/cloud/Quantum_Monitoring-main \
-    "$ROOT/../QTelescope" \
-    "$ROOT/../Quantum_Monitoring-main"
-  do
-    if [[ -f "$d/app/main.py" ]]; then
-      TELESCOPE_ROOT="$(cd "$d" && pwd)"
-      break
-    fi
-  done
-fi
-
-UI_PORT="${UI_PORT:-5176}"
-API_PORT="${API_PORT:-8000}"
-mkdir -p "$ROOT/logs"
-
-if [[ -n "$TELESCOPE_ROOT" && -f "$TELESCOPE_ROOT/app/main.py" ]]; then
-  if ! curl -sf -m 1 "http://127.0.0.1:${API_PORT}/healthz" >/dev/null 2>&1; then
-    log "Start TeleScope API from $TELESCOPE_ROOT"
-    (
-      cd "$TELESCOPE_ROOT"
-      export PYTHONPATH="$TELESCOPE_ROOT"
-      export PATH="$HOME/miniforge3/bin:${PATH:-}"
-      nohup python -m uvicorn app.main:app --host 0.0.0.0 --port "$API_PORT" >"$ROOT/logs/api.log" 2>&1 &
-      echo $! >"$ROOT/logs/api.pid"
-    )
-  else
-    log "API already on :${API_PORT}"
-  fi
-else
-  log "No TeleScope tree. Set TELESCOPE_ROOT or start API yourself on :${API_PORT}"
 fi
 
 if curl -sf -m 1 "http://127.0.0.1:${UI_PORT}/" >/dev/null 2>&1; then
   log "UI already on :${UI_PORT}"
 else
   log "Start Vite :${UI_PORT}"
-  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && npm run dev -- --host 0.0.0.0 --port $UI_PORT" >"$ROOT/logs/ui.log" 2>&1 &
+  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && npm run dev -- --host 0.0.0.0 --port $UI_PORT" \
+    >"$ROOT/logs/ui.log" 2>&1 &
   echo $! >"$ROOT/logs/ui.pid"
 fi
 
 log "Portal  http://0.0.0.0:${UI_PORT}/qrp"
-log "Login   admin / quantum2026 (lab; API must be TeleScope)"
+log "API     http://0.0.0.0:${API_PORT}/healthz"
+log "Admin   use seeded lab principal after migrate (see docs/RBAC_DELIVERY.md)"
 echo
 echo "Manual:"
-echo "  bash scripts/vm-setup.sh   # uses /home/cloud/QTelescope when present"
-echo "  # or:"
-echo "  cd frontend && npm install && npm run dev -- --host 0.0.0.0 --port 5176"
+echo "  cd $ROOT && make setup && make migrate"
+echo "  make dev-api    # terminal 1"
+echo "  make dev-web    # terminal 2 (or port 5176: cd frontend && npm run dev -- --host 0.0.0.0 --port 5176)"

@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     session_absolute_h: int = Field(default=12, ge=1, le=7 * 24)
     mfa_required: bool = False
 
+    # Session cookie and login throttling (LLD §11.3, PD-12). RBAC-4.
+    session_cookie_name: str = "qre_sid"
+    auth_lockout_threshold: int = Field(default=5, ge=1, le=100)
+    auth_lockout_window_min: int = Field(default=15, ge=1, le=24 * 60)
+    auth_lockout_minutes: int = Field(default=15, ge=1, le=24 * 60)
+    captcha_enabled: bool = False  # SRS §4.2.1: CAPTCHA is deployment-configurable
+
     page_size_default: int = Field(default=25, ge=1, le=200)
     page_size_max: int = Field(default=200, ge=1, le=1000)
 
@@ -104,6 +111,11 @@ class Settings(BaseSettings):
             if problems:
                 raise ValueError("production profile: " + "; ".join(problems))
         return self
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Mark the session cookie Secure outside the lab profile (LLD §4.3.6)."""
+        return self.env is not Profile.LAB
 
     @property
     def is_lab(self) -> bool:

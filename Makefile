@@ -27,8 +27,8 @@ migrate:  ## Apply database migrations to the development database
 dev-api:  ## Run the FastAPI backend with auto-reload on :8000
 	cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port 8000
 
-dev-web:  ## Run the Vite dev server on :5173 (proxies /api to :8000)
-	cd frontend && npm run dev
+dev-web:  ## Run the Vite dev server on :5176 (proxies /api to :8000)
+	cd frontend && npm run dev -- --host 127.0.0.1 --port 5176
 
 test: test-backend test-frontend  ## Run backend and frontend unit/integration tests
 

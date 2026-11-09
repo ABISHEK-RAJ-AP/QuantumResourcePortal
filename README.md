@@ -1,5 +1,7 @@
 # Quantum Resource Portal (QRP)
 
+**Separate application from Q-TeleScope.** This repository ships its own FastAPI backend (`backend/qre/`) and React frontend. Do not proxy workspace API calls to the TeleScope monorepo.
+
 The **Govern** workspace of the Quantum Resource Ecosystem (QRE): resource inventory, provider onboarding, approvals and quotas, scheduling, metering, SLA, support and audit.
 
 Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`docs/00_REQUIREMENTS_AND_DESIGN.md`](docs/00_REQUIREMENTS_AND_DESIGN.md) for the requirement mapping and design, and [`docs/DECISIONS.md`](docs/DECISIONS.md) for open decisions.

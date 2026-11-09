@@ -1,83 +1,52 @@
-/** Portal client for `/api/v1`. Uses the signed-in session when present. */
+/**
+ * Portal client for the module endpoints under `/api/v1` (inventory, approvals, projects, pools,
+ * dispatch, …).
+ *
+ * RBAC-7g: authenticated module calls go through `api/client.ts` (cookie session + in-memory CSRF) —
+ * the old `X-User-Role` header-trust and localStorage role are gone. `authFetch` remains for the
+ * genuinely unauthenticated public endpoints (login, register, password reset, captcha).
+ */
+import { ApiError, apiRequest } from '@/api/client'
 
-import { getSessionUser, getToken } from '@/lib/session'
+/** Back-compat alias: existing callers import `QreError`; it is now the shared `ApiError`. */
+export { ApiError as QreError }
 
-const ROLE_KEY = 'qre_role'
-const NAME_KEY = 'qre_user'
-
-export const ROLES = ['Admin', 'Researcher', 'Operator', 'Auditor'] as const
-
-export function currentRole() {
-  return getSessionUser()?.role || localStorage.getItem(ROLE_KEY) || 'Admin'
-}
-
-export function setRole(role: string) {
-  localStorage.setItem(ROLE_KEY, role)
-  if (!localStorage.getItem(NAME_KEY)) localStorage.setItem(NAME_KEY, role)
-}
-
-function headers(): Headers {
-  const session = getSessionUser()
-  const role = session?.role || currentRole()
-  const name = session?.username || localStorage.getItem(NAME_KEY) || role
-  const h = new Headers()
-  h.set('Accept', 'application/json')
-  h.set('X-User-Role', role)
-  h.set('X-User-Name', name)
-  const token = getToken()
-  if (token) h.set('Authorization', `Bearer ${token}`)
-  return h
-}
-
-export class QreError extends Error {
-  readonly status: number
-  constructor(status: number, message: string) {
-    super(message)
-    this.name = 'QreError'
-    this.status = status
-  }
-}
-
+/** Call a module endpoint (authenticated). Body (if any) must be a JSON string, as before. */
 export async function qre<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const h = headers()
-  if (init.body) h.set('Content-Type', 'application/json')
-  const response = await fetch(`/api/v1${path}`, { ...init, headers: h })
-  const textBody = await response.text()
-  let body: unknown = null
-  try {
-    body = textBody ? JSON.parse(textBody) : null
-  } catch {
-    body = null
+  const method = (init.method ?? 'GET').toUpperCase()
+  let json: unknown
+  if (init.body != null) {
+    json = typeof init.body === 'string' ? JSON.parse(init.body) : init.body
   }
-  if (!response.ok) {
-    const detail =
-      body && typeof body === 'object' && 'detail' in body && typeof (body as { detail: unknown }).detail === 'string'
-        ? (body as { detail: string }).detail
-        : response.statusText
-    throw new QreError(response.status, detail || `Request failed (${response.status})`)
-  }
-  return body as T
+  const { data } = await apiRequest<T>(`/api/v1${path}`, { method, json })
+  return data
 }
 
-/** Unauthenticated fetch for login/register/captcha. */
+function problemDetail(body: unknown, fallback: string): string {
+  if (body && typeof body === 'object' && 'detail' in body) {
+    const d = (body as { detail: unknown }).detail
+    if (typeof d === 'string' && d) return d
+  }
+  return fallback
+}
+
+/** Unauthenticated fetch for public endpoints (login/register/password-reset/captcha). */
 export async function authFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const h = new Headers({ Accept: 'application/json' })
   if (init.body) h.set('Content-Type', 'application/json')
-  const timeoutMs = 12_000
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  if (init.signal) {
-    init.signal.addEventListener('abort', () => controller.abort(), { once: true })
-  }
+  const timer = setTimeout(() => controller.abort(), 12_000)
+  if (init.signal) init.signal.addEventListener('abort', () => controller.abort(), { once: true })
   let response: Response
   try {
     response = await fetch(`/api/v1${path}`, { ...init, headers: h, signal: controller.signal })
   } catch (err) {
     clearTimeout(timer)
-    if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new QreError(0, 'API timeout. Start backend on port 8000 and retry.')
-    }
-    throw new QreError(0, 'API unreachable. Start backend on port 8000 and retry.')
+    const msg =
+      err instanceof DOMException && err.name === 'AbortError'
+        ? 'API timeout. Start QRE backend on port 8000.'
+        : 'API unreachable. Start QRE backend on port 8000.'
+    throw new ApiError({ code: 'NETWORK_ERROR', title: 'Network error', detail: msg, status: 0 })
   } finally {
     clearTimeout(timer)
   }
@@ -89,13 +58,12 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     body = null
   }
   if (!response.ok) {
-    const detail =
-      body && typeof body === 'object' && 'detail' in body && typeof (body as { detail: unknown }).detail === 'string'
-        ? (body as { detail: string }).detail
-        : response.status === 502 || response.status === 503
-          ? 'API down (proxy). Start TeleScope on port 8000.'
-          : response.statusText
-    throw new QreError(response.status, detail || `Request failed (${response.status})`)
+    throw new ApiError({
+      code: 'REQUEST_FAILED',
+      title: 'Request failed',
+      detail: problemDetail(body, response.statusText || `Request failed (${response.status})`),
+      status: response.status,
+    })
   }
   return body as T
 }
@@ -114,14 +82,18 @@ export function text(row: Record<string, unknown>, key: string) {
   return String(value)
 }
 
-/** Download a CSV (or other text) endpoint under `/api/v1` using session headers. */
+/**
+ * Download a CSV (or other text) endpoint under `/api/v1`. GET only, so no CSRF token is needed; the
+ * session cookie is sent same-origin. Errors surface as `ApiError`.
+ */
 export async function qreDownload(path: string, filename: string): Promise<void> {
-  const h = headers()
-  h.set('Accept', 'text/csv,*/*')
-  const response = await fetch(`/api/v1${path}`, { headers: h })
+  const response = await fetch(`/api/v1${path}`, {
+    credentials: 'same-origin',
+    headers: { Accept: 'text/csv,*/*' },
+  })
   if (!response.ok) {
     const detail = await response.text()
-    throw new QreError(response.status, detail || response.statusText)
+    throw new ApiError({ code: 'DOWNLOAD_FAILED', title: 'Download failed', detail: detail || response.statusText, status: response.status })
   }
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
