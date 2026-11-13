@@ -121,7 +121,7 @@ export function Table({
     <div className="overflow-x-auto rounded-lg border border-border/60">
       <table className="data-table w-full text-left text-sm">
         <thead className="sticky top-0 z-[1] bg-card/95 backdrop-blur-sm">
-          <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
+          <tr className="border-b border-border text-xs text-muted-foreground">
             {columns.map((col) => (
               <th key={col.key} className="px-3 py-2.5 font-semibold first:ps-3 last:pe-3">
                 {col.sortable ? (
@@ -331,8 +331,8 @@ export function OverviewPage() {
                 )}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{step.label}</span>
-                <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
+                <span className="label-quiet block">{step.label}</span>
+              <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
               </Link>
             ))}
           </div>
@@ -812,7 +812,7 @@ export function ApprovalsPage() {
                   key: 'created_at',
                   label: 'Submitted',
                   sortable: true,
-                  render: (row) => <span className="font-mono text-[11px] text-muted-foreground">{text(row, 'created_at')}</span>,
+                  render: (row) => <span className="text-xs tabular-nums text-muted-foreground">{text(row, 'created_at')}</span>,
                 },
                 {
                   key: 'open',
@@ -1003,11 +1003,11 @@ export function ApprovalDetailPage() {
                   <PanelHeader title="Request" />
                   <dl className="grid gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Requester</dt>
+                      <dt className="label-quiet">Requester</dt>
                       <dd className="mt-1 font-medium">{text(row, 'created_by')}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">State</dt>
+                      <dt className="label-quiet">State</dt>
                       <dd className="mt-1">
                         <StatusBadge
                           tone={stateTone(String(row.governance_state || ''))}
@@ -1016,18 +1016,18 @@ export function ApprovalDetailPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Stage</dt>
+                      <dt className="label-quiet">Stage</dt>
                       <dd className="mt-1 font-medium">
                         {text(stage, 'label')} ({String(Number(progress.stage_index ?? 0) + 1)}/
                         {String(progress.stage_total ?? trail.steps.length)})
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Submitted</dt>
+                      <dt className="label-quiet">Submitted</dt>
                       <dd className="mt-1 text-xs text-muted-foreground">{text(row, 'created_at')}</dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Project</dt>
+                      <dt className="label-quiet">Project</dt>
                       <dd className="mt-1">
                         {row.project_id ? (
                           <Link className="font-mono text-xs text-primary hover:underline break-all" to={`/qrp/projects/${row.project_id}`}>
@@ -1039,7 +1039,7 @@ export function ApprovalDetailPage() {
                       </dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Package SHA-256</dt>
+                      <dt className="label-quiet">Package SHA-256</dt>
                       <dd className="mt-1 font-mono text-xs break-all text-muted-foreground">{text(row, 'package_sha256')}</dd>
                     </div>
                   </dl>
@@ -1052,17 +1052,17 @@ export function ApprovalDetailPage() {
                     <PanelHeader title="Policy" />
                     <dl className="grid gap-3 text-sm">
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Policy</dt>
+                        <dt className="label-quiet">Policy</dt>
                         <dd className="mt-1">
                           {text(progress, 'policy_id')} · v{text(progress, 'policy_version')}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Current stage</dt>
+                        <dt className="label-quiet">Current stage</dt>
                         <dd className="mt-1 font-medium">{text(stage, 'label')}</dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Required permission</dt>
+                        <dt className="label-quiet">Required permission</dt>
                         <dd className="mt-1 font-mono text-xs">{text(stage, 'required_permission')}</dd>
                       </div>
                     </dl>
@@ -1087,15 +1087,15 @@ export function ApprovalDetailPage() {
                         />
                         <dl className="grid gap-3 text-sm sm:grid-cols-3">
                           <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Requested</dt>
+                            <dt className="label-quiet">Requested</dt>
                             <dd className="mt-1 font-semibold tabular-nums">{String(quota.data.requested_shots ?? '—')}</dd>
                           </div>
                           <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Remaining</dt>
+                            <dt className="label-quiet">Remaining</dt>
                             <dd className="mt-1 font-semibold tabular-nums">{String(quota.data.remaining_shots ?? '—')}</dd>
                           </div>
                           <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reason</dt>
+                            <dt className="label-quiet">Reason</dt>
                             <dd className="mt-1 font-mono text-xs">{text(quota.data, 'reason_code')}</dd>
                           </div>
                         </dl>
@@ -1816,7 +1816,7 @@ export function ProjectsPage() {
                 {
                   key: 'updated_at',
                   label: 'Updated',
-                  render: (row) => <span className="font-mono text-[11px] text-muted-foreground">{text(row, 'updated_at')}</span>,
+                  render: (row) => <span className="text-xs tabular-nums text-muted-foreground">{text(row, 'updated_at')}</span>,
                 },
               ]}
             />
@@ -1882,22 +1882,22 @@ export function PoliciesPage() {
         <Card className="space-y-4">
           <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Policy</dt>
+              <dt className="label-quiet">Policy</dt>
               <dd className="mt-1 flex items-center gap-2 font-mono text-xs">
                 {text(query.data ?? {}, 'policy_id')}
                 <CopyableId value={String(query.data?.policy_id || '')} />
               </dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Version</dt>
+              <dt className="label-quiet">Version</dt>
               <dd className="mt-1 font-medium">{text(query.data ?? {}, 'version')}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Stages</dt>
+              <dt className="label-quiet">Stages</dt>
               <dd className="mt-1 tabular-nums font-medium">{stages.length}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Name</dt>
+              <dt className="label-quiet">Name</dt>
               <dd className="mt-1 font-medium">{text(query.data ?? {}, 'name')}</dd>
             </div>
           </dl>
@@ -1913,7 +1913,7 @@ export function PoliciesPage() {
                   </span>
                   <span>
                     <span className="font-medium">{text(stage, 'label')}</span>
-                    <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">{text(stage, 'id')}</span>
+                    <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">{text(stage, 'id')}</span>
                   </span>
                 </li>
               ))}
@@ -2005,21 +2005,21 @@ export function QuotasPage() {
             ) : null}
             <dl className="grid gap-2 border-t border-border/70 pt-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Window (UTC)</dt>
+                <dt className="label-quiet">Window (UTC)</dt>
                 <dd className="mt-1 font-mono text-xs">
                   {text(data, 'window_start')} → {text(data, 'window_end')}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Warn threshold</dt>
+                <dt className="label-quiet">Warn threshold</dt>
                 <dd className="mt-1 tabular-nums">{Number.isFinite(warnAt) ? `${warnAt}%` : '—'}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Lifetime used</dt>
+                <dt className="label-quiet">Lifetime used</dt>
                 <dd className="mt-1 tabular-nums">{String(data.used_shots_lifetime ?? '—')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Entries in sample</dt>
+                <dt className="label-quiet">Entries in sample</dt>
                 <dd className="mt-1 tabular-nums">{String(data.entry_count ?? entries.length)}</dd>
               </div>
             </dl>
@@ -2539,7 +2539,7 @@ export function AuditPage() {
               {
                 key: 'timestamp',
                 label: 'When',
-                render: (row) => <span className="font-mono text-[11px]">{text(row, 'timestamp')}</span>,
+                render: (row) => <span className="text-xs tabular-nums">{text(row, 'timestamp')}</span>,
               },
               { key: 'actor', label: 'Actor' },
               { key: 'role', label: 'Role' },

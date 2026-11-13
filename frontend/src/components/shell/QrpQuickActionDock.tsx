@@ -184,7 +184,7 @@ export function QrpQuickActionDock({ onStartTour }: { onStartTour?: () => void }
       {open ? (
         <div className="qrp-quick-dock__panel" role="menu">
           <div className="mb-2 flex items-center justify-between px-1">
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Actions</p>
+            <p className="label-quiet px-1">Actions</p>
             <button type="button" className="btn-ghost grid size-7 place-items-center p-0" aria-label="Close" onClick={() => setOpen(false)}>
               <X className="size-3.5" />
             </button>

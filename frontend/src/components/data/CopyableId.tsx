@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { notifySuccess } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 /** Compact mono ID with one-click copy. */
@@ -20,12 +21,13 @@ export function CopyableId({
       type="button"
       title={copied ? 'Copied' : `Copy ${value}`}
       className={cn(
-        'font-mono text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'mono-id text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         className,
       )}
       onClick={() => {
         void navigator.clipboard.writeText(value).then(() => {
           setCopied(true)
+          notifySuccess('Copied', { toastId: 'copy-id' })
           window.setTimeout(() => setCopied(false), 1200)
         })
       }}

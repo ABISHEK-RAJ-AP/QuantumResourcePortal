@@ -37,6 +37,7 @@ import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { OperatorNoticeBell } from '@/components/shell/OperatorNoticeBell'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
+import { PageEnter } from '@/components/ui/PageEnter'
 import { ToastHost } from '@/components/ui/ToastHost'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useAuth } from '@/auth/hooks'
@@ -81,8 +82,8 @@ const NAV: {
       { to: '/qrp/queues', label: 'Queues', icon: Gauge },
       { to: '/qrp/jobs', label: 'Dispatch & Jobs', icon: ClipboardList },
       { to: '/qrp/reconciliation', label: 'Reconciliation', icon: ClipboardList, badgeKey: 'reconcile' },
-      { to: '/qrp/support', label: 'Alerts', icon: Siren, badgeKey: 'alerts' },
-      { to: '/qrp/incidents', label: 'Incidents', icon: Siren, badgeKey: 'incidents' },
+      { to: '/qrp/support', label: 'Alerts', icon: Siren },
+      { to: '/qrp/incidents', label: 'Incidents', icon: Siren },
     ],
   },
   {
@@ -263,16 +264,12 @@ function ShellInner() {
     },
     retry: false,
   })
-  const opsCentre = useQuery({
-    queryKey: ['operations-centre-nav'],
-    queryFn: () => qre<{ operations?: { active_alerts?: number; open_incidents?: number } }>('/operations/centre'),
-    retry: false,
-  })
+  // Nav badges only for actionable queues — alerts/incidents live in the bell (less chrome noise).
   const badges: Record<'approvals' | 'reconcile' | 'alerts' | 'incidents', number | undefined> = {
     approvals: queue.isError ? undefined : Number(queue.data?.queue ?? queue.data?.in_review ?? 0),
     reconcile: reconcile.isError ? undefined : reconcile.data,
-    alerts: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.active_alerts ?? 0),
-    incidents: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.open_incidents ?? 0),
+    alerts: undefined,
+    incidents: undefined,
   }
   const displayName = user?.full_name || user?.username || 'Signed in'
 
@@ -310,7 +307,7 @@ function ShellInner() {
                 {!collapsed && (
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                    className="label-quiet flex w-full items-center justify-between rounded-lg px-2 py-1.5 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
                     title={group.label}
                     aria-expanded={expanded}
                     onClick={() => setOpen((prev) => ({ ...prev, [group.label]: !expanded }))}
@@ -359,7 +356,7 @@ function ShellInner() {
                                   item.badgeKey &&
                                   typeof badges[item.badgeKey] === 'number' &&
                                   (badges[item.badgeKey] as number) > 0 && (
-                                  <span className="rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                                  <span className="min-w-5 rounded-md bg-primary/15 px-1.5 text-center text-[11px] font-semibold tabular-nums text-primary">
                                     {badges[item.badgeKey]}
                                   </span>
                                 )}
@@ -438,13 +435,13 @@ function ShellInner() {
               {chrome.crumbs && chrome.crumbs.length > 0 ? (
                 <Breadcrumbs items={chrome.crumbs} />
               ) : chrome.eyebrow ? (
-                <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
+                <p className="label-quiet">{chrome.eyebrow}</p>
               ) : null}
-              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]">
+              <h1 className="text-xl font-semibold text-balance sm:text-[1.35rem]">
                 {chrome.title || 'Workspace'}
               </h1>
               {chrome.description ? (
-                <p className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-0.5 line-clamp-2 max-w-prose text-sm leading-snug text-muted-foreground">
                   {chrome.description}
                 </p>
               ) : null}
@@ -514,9 +511,9 @@ function ShellInner() {
           data-kpi={prefs.kpiLayout}
           tabIndex={-1}
         >
-          <div key={location.pathname} className="page-enter">
+          <PageEnter key={location.pathname}>
             <Outlet />
-          </div>
+          </PageEnter>
         </div>
       </div>
       <CommandPalette

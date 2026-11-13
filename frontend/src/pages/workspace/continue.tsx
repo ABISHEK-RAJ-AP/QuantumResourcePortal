@@ -91,15 +91,15 @@ export function AssetDetailPage() {
           <Card className="space-y-4">
             <dl className="grid gap-3 text-sm sm:grid-cols-3">
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Class</dt>
+                <dt className="label-quiet">Class</dt>
                 <dd className="mt-1 font-medium">{text(row, 'asset_class')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Execution</dt>
+                <dt className="label-quiet">Execution</dt>
                 <dd className="mt-1 font-medium">{text(row, 'execution_class')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Provider</dt>
+                <dt className="label-quiet">Provider</dt>
                 <dd className="mt-1 font-mono text-xs">{text(row, 'provider_id')}</dd>
               </div>
             </dl>
@@ -977,15 +977,15 @@ export function ProjectDetailPage() {
                         </ul>
                         <dl className="grid gap-2 border-t border-border pt-3 text-sm sm:grid-cols-2">
                           <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Owner</dt>
+                            <dt className="label-quiet">Owner</dt>
                             <dd className="mt-1 font-medium">{text(project.data, 'owner_username')}</dd>
                           </div>
                           <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Type</dt>
+                            <dt className="label-quiet">Type</dt>
                             <dd className="mt-1">{String(project.data.project_type || '—').replace(/_/g, ' ')}</dd>
                           </div>
                           <div className="sm:col-span-2">
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Description</dt>
+                            <dt className="label-quiet">Description</dt>
                             <dd className="mt-1 text-muted-foreground">{text(project.data, 'description') || '—'}</dd>
                           </div>
                         </dl>
@@ -1015,19 +1015,19 @@ export function ProjectDetailPage() {
                       <PanelHeader title="What needs attention" />
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                         <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('requests')}>
-                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Open reviews</span>
+                          <span className="block label-quiet">Open reviews</span>
                           <span className="text-lg font-semibold tabular-nums">{approvals.isError ? '—' : openApprovals}</span>
                         </button>
                         <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('reservations')}>
-                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Active / requested holds</span>
+                          <span className="block label-quiet">Active / requested holds</span>
                           <span className="text-lg font-semibold tabular-nums">{reservations.isError ? '—' : activeHolds}</span>
                         </button>
                         <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('usage')}>
-                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Shots remaining today</span>
+                          <span className="block label-quiet">Shots remaining today</span>
                           <span className="text-lg font-semibold tabular-nums">{quota.isError ? '—' : String(quota.data?.remaining_shots ?? '—')}</span>
                         </button>
                         <button type="button" className="rounded-lg border border-border px-3 py-2 text-left hover:bg-accent" onClick={() => setTab('activity')}>
-                          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Recent decisions</span>
+                          <span className="block label-quiet">Recent decisions</span>
                           <span className="text-lg font-semibold tabular-nums">{activity.isError ? '—' : activityRows.length}</span>
                         </button>
                       </div>
@@ -1298,19 +1298,19 @@ export function ProjectDetailPage() {
                 ) : (
                   <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Used (today UTC)</dt>
+                      <dt className="label-quiet">Used (today UTC)</dt>
                       <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.used_shots ?? '—')}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Cap</dt>
+                      <dt className="label-quiet">Cap</dt>
                       <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.daily_shots_cap ?? '—')}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Remaining</dt>
+                      <dt className="label-quiet">Remaining</dt>
                       <dd className="mt-1 text-xl font-semibold tabular-nums">{String(quota.data?.remaining_shots ?? '—')}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Window</dt>
+                      <dt className="label-quiet">Window</dt>
                       <dd className="mt-1 font-medium">{String(quota.data?.window || 'today')}</dd>
                     </div>
                   </dl>
@@ -1557,14 +1557,14 @@ export function AlertDetailPage() {
                     <p className="text-sm leading-relaxed">{explainAlert(row, current, threshold)}</p>
                     <dl className="grid gap-3 border-t border-border pt-3 text-sm sm:grid-cols-2">
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Resource</dt>
+                        <dt className="label-quiet">Resource</dt>
                         <dd className="mt-1">
                           <span className="text-xs text-muted-foreground">{text(row, 'resource_type')} · </span>
                           <span className="font-mono text-xs">{text(row, 'resource_id')}</span>
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Backend</dt>
+                        <dt className="label-quiet">Backend</dt>
                         <dd className="mt-1 space-y-1">
                           {backendId ? (
                             <Link className="font-medium text-primary hover:underline" to={`/qrp/backends/${backendId}`}>
@@ -1582,11 +1582,11 @@ export function AlertDetailPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Detected (UTC)</dt>
+                        <dt className="label-quiet">Detected (UTC)</dt>
                         <dd className="mt-1 font-mono text-xs">{text(row, 'detected_at')}</dd>
                       </div>
                       <div>
-                        <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Ack / resolve</dt>
+                        <dt className="label-quiet">Ack / resolve</dt>
                         <dd className="mt-1 text-xs">
                           {text(row, 'acknowledged_by')} · {text(row, 'resolved_at')}
                         </dd>
@@ -2290,7 +2290,7 @@ export function ConnectorsPage() {
                 key: 'last_run',
                 label: 'Last run',
                 render: (row) => (
-                  <span className="font-mono text-[11px] text-muted-foreground">
+                  <span className="text-xs tabular-nums text-muted-foreground">
                     {text((row.integration as Row | undefined) ?? {}, 'collector_last_run_at')}
                   </span>
                 ),
@@ -2561,13 +2561,13 @@ export function DispatchPage() {
               <PanelHeader title="ICD endpoints" />
               <dl className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reconcile outcomes</dt>
+                  <dt className="label-quiet">Reconcile outcomes</dt>
                   <dd className="mt-1 flex flex-wrap gap-1">
                     {outcomes.length ? outcomes.map((o) => <StatusBadge key={o} tone="neutral" label={o} />) : '—'}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Confirmed attempts</dt>
+                  <dt className="label-quiet">Confirmed attempts</dt>
                   <dd className="mt-1 tabular-nums font-medium">{attempts.isError ? '—' : confirmed}</dd>
                 </div>
               </dl>
@@ -2577,7 +2577,7 @@ export function DispatchPage() {
               <p className="text-muted-foreground">{text(query.data ?? {}, 'notes')}</p>
               {required.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Required fields</p>
+                  <p className="label-quiet">Required fields</p>
                   <ul className="mt-1 list-inside list-disc font-mono text-xs text-muted-foreground">
                     {required.map((field) => (
                       <li key={field}>{field}</li>
@@ -3247,11 +3247,11 @@ export function IncidentDetailPage() {
                   </div>
                   <dl className="grid gap-3 text-sm sm:grid-cols-2">
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Owner</dt>
+                      <dt className="label-quiet">Owner</dt>
                       <dd className="mt-1 font-medium">{text(query.data, 'owner') || 'Unassigned'}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Backend</dt>
+                      <dt className="label-quiet">Backend</dt>
                       <dd className="mt-1">
                         {backendId ? (
                           <Link className="text-primary hover:underline" to={`/qrp/backends/${backendId}`}>
@@ -3263,11 +3263,11 @@ export function IncidentDetailPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Alert count</dt>
+                      <dt className="label-quiet">Alert count</dt>
                       <dd className="mt-1 tabular-nums font-semibold">{String(query.data.alert_count ?? alerts.length)}</dd>
                     </div>
                     <div>
-                      <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Updated</dt>
+                      <dt className="label-quiet">Updated</dt>
                       <dd className="mt-1 text-xs text-muted-foreground">{text(query.data, 'updated_at')}</dd>
                     </div>
                   </dl>
@@ -3591,7 +3591,7 @@ export function JobsPage() {
                 key: 'submitted_at',
                 label: 'Submitted',
                 sortable: true,
-                render: (row) => <span className="font-mono text-[11px] text-muted-foreground">{text(row, 'submitted_at')}</span>,
+                render: (row) => <span className="text-xs tabular-nums text-muted-foreground">{text(row, 'submitted_at')}</span>,
               },
             ]}
           />
@@ -3629,7 +3629,7 @@ export function JobDetailPage() {
             </div>
             <dl className="grid gap-3 sm:grid-cols-2">
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Backend</dt>
+                <dt className="label-quiet">Backend</dt>
                 <dd className="mt-1 font-medium">
                   {query.data.backend_id ? (
                     <Link className="text-primary hover:underline" to={`/qrp/backends/${query.data.backend_id}`}>
@@ -3641,15 +3641,15 @@ export function JobDetailPage() {
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Runtime</dt>
+                <dt className="label-quiet">Runtime</dt>
                 <dd className="mt-1 font-medium">{text(query.data, 'runtime')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Failure</dt>
+                <dt className="label-quiet">Failure</dt>
                 <dd className="mt-1">{text(query.data, 'failure_category_label')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Submitted</dt>
+                <dt className="label-quiet">Submitted</dt>
                 <dd className="mt-1 text-muted-foreground">{text(query.data, 'submitted_at')}</dd>
               </div>
             </dl>
@@ -3870,7 +3870,7 @@ export function CentrePage() {
                   key: 'last_success_at',
                   label: 'Last OK',
                   render: (row) => (
-                    <span className="font-mono text-[11px] text-muted-foreground">{text(row, 'last_success_at')}</span>
+                    <span className="text-xs tabular-nums text-muted-foreground">{text(row, 'last_success_at')}</span>
                   ),
                 },
               ]}
@@ -3999,7 +3999,7 @@ export function CentrePage() {
               {
                 key: 'last_detected_at',
                 label: 'Last seen',
-                render: (row) => <span className="font-mono text-[11px] text-muted-foreground">{text(row, 'last_detected_at')}</span>,
+                render: (row) => <span className="text-xs tabular-nums text-muted-foreground">{text(row, 'last_detected_at')}</span>,
               },
             ]}
           />
@@ -4241,7 +4241,7 @@ export function BackendDetailPage() {
             </div>
             <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Provider</dt>
+                <dt className="label-quiet">Provider</dt>
                 <dd className="mt-1">
                   {backend.data.provider_id ? (
                     <Link className="text-primary hover:underline" to={`/qrp/providers/${backend.data.provider_id}`}>
@@ -4253,21 +4253,21 @@ export function BackendDetailPage() {
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Qubits / modality</dt>
+                <dt className="label-quiet">Qubits / modality</dt>
                 <dd className="mt-1">
                   {text(backend.data, 'qubit_count')} · {text(backend.data, 'qpu_modality')}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Topology type</dt>
+                <dt className="label-quiet">Topology type</dt>
                 <dd className="mt-1">{text(backend.data, 'topology_type')}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Queue trend</dt>
+                <dt className="label-quiet">Queue trend</dt>
                 <dd className="mt-1">{queue.data ? text(queue.data, 'trend') : '—'}</dd>
               </div>
               <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Healthy qubits</dt>
+                <dt className="label-quiet">Healthy qubits</dt>
                 <dd className="mt-1 tabular-nums">
                   {topology.isError ? '—' : `${healthy}/${nodes.length || '—'}`}
                 </dd>
@@ -4686,7 +4686,7 @@ export function EvidencePage() {
               {
                 key: 'created_at',
                 label: 'Created',
-                render: (row) => <span className="font-mono text-[11px]">{text(row, 'created_at')}</span>,
+                render: (row) => <span className="text-xs tabular-nums">{text(row, 'created_at')}</span>,
               },
               { key: 'created_by', label: 'By' },
               {
@@ -4748,11 +4748,11 @@ export function SettingsPage() {
         {session ? (
           <dl className="grid gap-2 sm:grid-cols-2">
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">User</dt>
+              <dt className="label-quiet">User</dt>
               <dd className="mt-1 font-medium">{session.username}</dd>
             </div>
             <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Role</dt>
+              <dt className="label-quiet">Role</dt>
               <dd className="mt-1 font-medium">{session.role}</dd>
             </div>
           </dl>

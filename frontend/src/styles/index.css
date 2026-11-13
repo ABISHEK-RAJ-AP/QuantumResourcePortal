@@ -17,68 +17,83 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Brand palette — primary nudged darker so white label text hits WCAG AA on buttons */
+  /*
+   * Design system — OKLCH where it helps ramps; hex kept for known AA pairs.
+   * Spacing: --space-1…6. Radius: outer = inner + pad (concentric).
+   * One filled CTA hue (--primary). Brand cyan is the secondary accent only.
+   */
   --brand-primary: #4a63f0;
   --brand-violet: #7957e8;
-  --brand-cyan: #20b8d5;
-  --brand-gradient: linear-gradient(135deg, #4a63f0 0%, #7957e8 100%);
+  --brand-cyan: #0f8fa8; /* darker cyan for AA on soft surfaces */
+  --brand-gradient: linear-gradient(135deg in oklab, #4a63f0 0%, #7957e8 100%);
 
-  /* Surfaces and text */
   --background: #ffffff;
-  --surface: #f7f9fc;
-  --foreground: #172033;
+  --surface: #f5f7fb;
+  --foreground: #121926;
   --card: #ffffff;
-  --card-foreground: #172033;
+  --card-foreground: #121926;
   --popover: #ffffff;
-  --popover-foreground: #172033;
+  --popover-foreground: #121926;
 
-  /* shadcn semantic tokens */
-  --primary: #4a63f0;
+  --primary: #3d56e8;
   --primary-foreground: #ffffff;
-  --secondary: #f1f3f9;
-  --secondary-foreground: #172033;
-  --muted: #f1f3f9;
-  /* Was #788397 (~3.8:1 on white). #5f6e86 clears 4.5:1 on white, surface, and muted. */
-  --muted-foreground: #5f6e86;
-  --accent: #eef1ff;
-  --accent-foreground: #3a4fd6;
-  --destructive: #e05252;
-  --border: #e8ecf3;
-  --input: #e8ecf3;
-  --ring: #4a63f0;
+  --secondary: #eef1f7;
+  --secondary-foreground: #121926;
+  --muted: #eef1f7;
+  /* ~7:1 on white — quieter chrome, still readable */
+  --muted-foreground: #4a5568;
+  --accent: #e8ecff;
+  --accent-foreground: #2f44c9;
+  --destructive: #d64545;
+  --border: #dde3ee;
+  --input: #dde3ee;
+  --ring: #3d56e8;
 
-  /* Status colours: solid (icons, bars) / soft (badge background) / text (AA on soft) */
-  --success: #16a36a;
-  --success-soft: #e7f6ef;
-  --success-text: #0e7a4f;
-  --warning: #e9a23b;
+  --success: #15803d;
+  --success-soft: #e8f5ee;
+  --success-text: #166534;
+  --warning: #c27a12;
   --warning-soft: #fdf4e6;
-  --warning-text: #925c0e;
-  --critical: #e05252;
+  --warning-text: #92400e;
+  --critical: #d64545;
   --critical-soft: #fcebeb;
-  --critical-text: #b33636;
-  --info: #20b8d5;
-  --info-soft: #e6f7fa;
-  --info-text: #0b7286;
+  --critical-text: #b91c1c;
+  --info: #0f8fa8;
+  --info-soft: #e6f5f8;
+  --info-text: #0b6b7c;
 
-  /* Charts: series order primary → violet → cyan → green → amber */
-  --chart-1: #4a63f0;
+  --chart-1: #3d56e8;
   --chart-2: #7957e8;
-  --chart-3: #20b8d5;
-  --chart-4: #16a36a;
-  --chart-5: #e9a23b;
+  --chart-3: #0f8fa8;
+  --chart-4: #15803d;
+  --chart-5: #c27a12;
 
-  /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #172033;
-  --sidebar-primary: #4a63f0;
+  --sidebar-foreground: #121926;
+  --sidebar-primary: #3d56e8;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef1ff;
-  --sidebar-accent-foreground: #3a4fd6;
-  --sidebar-border: #e8ecf3;
-  --sidebar-ring: #4a63f0;
+  --sidebar-accent: #e8ecff;
+  --sidebar-accent-foreground: #2f44c9;
+  --sidebar-border: #dde3ee;
+  --sidebar-ring: #3d56e8;
 
+  /* Spacing scale (group with space, not lines) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-group: var(--space-5);
+  --space-stack: var(--space-4);
+
+  /* Concentric: card pad 16px → inner = outer − pad */
   --radius: 0.75rem;
+  --card-pad: 1rem;
+  --radius-inner: max(0.25rem, calc(var(--radius) - var(--card-pad)));
+  --touch: 2.5rem; /* 40px min control */
+  --measure: 65ch;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --a11y-preheader-height: 32px;
 }
 
@@ -180,13 +195,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --radius-sm: calc(var(--radius) - 6px);
+  --radius-sm: var(--radius-inner);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --shadow-card: 0 1px 2px rgb(23 32 51 / 0.04), 0 4px 16px rgb(23 32 51 / 0.06);
-  --shadow-raised: 0 2px 4px rgb(23 32 51 / 0.05), 0 12px 32px rgb(23 32 51 / 0.1);
+  /* Elevation only — structure uses borders */
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 260 / 0.04);
+  --shadow-raised: 0 8px 24px oklch(0.2 0.02 260 / 0.08);
 }
 
 @layer base {
@@ -201,7 +217,35 @@
   }
   body {
     @apply bg-surface text-foreground font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    font-kerning: normal;
+    font-optical-sizing: auto;
+    font-feature-settings: 'cv11', 'ss01', 'tnum' 0;
+    text-rendering: optimizeLegibility;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+  p {
+    text-wrap: pretty;
+    max-width: var(--measure);
+    line-height: 1.55;
+  }
+  .tabular,
+  .tabular-nums,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+  .mono-id {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
   body.a11y-pause-anim *,
   body.a11y-pause-anim *::before,
@@ -271,11 +315,11 @@
 }
 
 .shell-canvas {
-  --qrp-canvas-pad-y: 1rem;
+  --qrp-canvas-pad-y: var(--space-4);
   padding-top: var(--qrp-canvas-pad-y);
-  background-image:
-    radial-gradient(ellipse 70% 40% at 100% 0%, rgb(83 109 254 / 0.06), transparent 55%),
-    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(32 184 213 / 0.05), transparent 50%);
+  /* Flat surface — no decorative wash (antislop) */
+  background: var(--surface);
+  scroll-padding-block-start: calc(var(--a11y-preheader-height) + 4.5rem);
 }
 
 /* Ops chrome header: tight vertical pad, controls share one toolbar row */
@@ -961,38 +1005,143 @@ html:not(.dark) .cyber-matrix-spot {
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50;
+  display: inline-flex;
+  min-height: var(--touch);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--primary);
+  padding: 0.5rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  box-shadow: none;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms var(--ease-out),
+    opacity 150ms var(--ease-out);
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-input bg-card px-4 py-2 text-sm font-medium transition hover:bg-accent disabled:opacity-50;
+  display: inline-flex;
+  min-height: var(--touch);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--input);
+  background: var(--card);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  transition: background-color 150ms var(--ease-out), opacity 150ms var(--ease-out);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--accent);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
 }
 
 .btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-primary transition hover:bg-accent;
+  display: inline-flex;
+  min-height: var(--touch);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-inner);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  transition: background-color 120ms var(--ease-out);
+}
+.btn-ghost:hover {
+  background: var(--accent);
 }
 
 .field-input {
-  @apply mt-1 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30;
+  @apply mt-1 w-full border border-input bg-card px-3 py-2 text-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30;
+  min-height: var(--touch);
+  border-radius: var(--radius-inner);
+  font-size: 1rem; /* iOS zoom guard */
 }
 
 .data-table tbody tr {
   @apply transition-colors hover:bg-muted/45;
 }
-
-.page-enter {
-  animation: qrp-page-enter 220ms ease-out;
+.data-table td:has([data-tabular]),
+.data-table .tabular {
+  font-variant-numeric: tabular-nums;
 }
 
-@keyframes qrp-page-enter {
-  from {
+/* Interruptible page enter (opacity only under reduced-motion) */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: none;
+  transition:
+    opacity 280ms var(--ease-out),
+    transform 280ms var(--ease-out);
+}
+.page-enter.is-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stagger-in > * {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(10px);
+    transition:
+      opacity 300ms var(--ease-out),
+      transform 300ms var(--ease-out);
   }
-  to {
+  .stagger-in.is-in > *:nth-child(1) {
+    transition-delay: 0ms;
+  }
+  .stagger-in.is-in > *:nth-child(2) {
+    transition-delay: 100ms;
+  }
+  .stagger-in.is-in > *:nth-child(3) {
+    transition-delay: 200ms;
+  }
+  .stagger-in.is-in > *:nth-child(4) {
+    transition-delay: 300ms;
+  }
+  .stagger-in.is-in > * {
     opacity: 1;
     transform: none;
   }
+}
+
+.surface-card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: var(--card-pad);
+  box-shadow: var(--shadow-card);
+}
+.surface-card > .surface-inset {
+  border-radius: var(--radius-inner);
+}
+
+.label-quiet {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,11 +4,10 @@ import { AlertTriangle, CheckCircle2, CircleDashed, Info, XCircle, type LucideIc
 import { cn } from '@/lib/utils'
 
 /**
- * Status indicator that never relies on colour alone: icon + text + colour (REQ-004, REQ-N031).
- * Text is uppercase by convention (e.g. ACTIVE, DEGRADED) and always readable by screen readers.
+ * Status: icon + text + colour (never colour alone). Natural case — no shouty ALL CAPS.
  */
 const badge = cva(
-  'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase whitespace-nowrap',
+  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium',
   {
     variants: {
       tone: {
@@ -42,7 +41,7 @@ export function StatusBadge({ label, tone = 'neutral', className }: StatusBadgeP
   const Icon = ICONS[tone ?? 'neutral']
   return (
     <span className={cn(badge({ tone }), className)}>
-      <Icon aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
+      <Icon aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2} />
       {label}
     </span>
   )

@@ -37,13 +37,10 @@ export function FilterBar({
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2" role="search">
       {onSearch && (
-        <label className="relative inline-flex h-9 max-w-xs min-w-0 flex-1 items-center rounded-lg border border-input bg-card px-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
-          <span className="pointer-events-none absolute -top-2 left-2 bg-card px-1 text-xs font-medium text-muted-foreground">
-            Search
-          </span>
+        <label className="inline-flex min-h-[var(--touch)] max-w-xs min-w-0 flex-1 items-center rounded-[var(--radius-inner)] border border-input bg-card px-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
           <input
             type="search"
-            className="w-full bg-transparent text-sm text-foreground outline-none"
+            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
             value={search ?? ''}
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
@@ -52,17 +49,24 @@ export function FilterBar({
           />
         </label>
       )}
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          type="button"
-          className={cn(value === opt.id ? 'btn-secondary' : 'btn-ghost')}
-          aria-pressed={value === opt.id}
-          onClick={() => onChange(opt.id)}
-        >
-          {opt.label}
-        </button>
-      ))}
+      <div className="inline-flex flex-wrap gap-1 rounded-[var(--radius-inner)] border border-border bg-muted/40 p-1" role="group" aria-label="Filters">
+        {options.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={cn(
+              'min-h-8 rounded-md px-2.5 text-sm font-medium transition-colors',
+              value === opt.id
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+            aria-pressed={value === opt.id}
+            onClick={() => onChange(opt.id)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
       {dirty && (
         <button
           type="button"
@@ -72,7 +76,7 @@ export function FilterBar({
             onSearch?.('')
           }}
         >
-          Clear filters
+          Clear
         </button>
       )}
       {trailing}

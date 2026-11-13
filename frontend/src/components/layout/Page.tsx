@@ -46,7 +46,7 @@ export function Page({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <section className={cn('rounded-xl border border-border bg-card p-4 shadow-card', className)}>{children}</section>
+    <section className={cn('surface-card', className)}>{children}</section>
   )
 }
 
@@ -63,21 +63,21 @@ export function MetricTile({
 }) {
   const toneClass =
     tone === 'primary'
-      ? 'border-primary/25 bg-gradient-to-br from-accent/80 to-card'
+      ? 'border-primary/20'
       : tone === 'success'
-        ? 'border-success/20 bg-gradient-to-br from-success-soft/60 to-card'
+        ? 'border-success/25'
         : tone === 'warning'
-          ? 'border-warning/25 bg-gradient-to-br from-warning-soft/70 to-card'
+          ? 'border-warning/30'
           : tone === 'critical'
-            ? 'border-critical/25 bg-gradient-to-br from-critical-soft/70 to-card'
+            ? 'border-critical/30'
             : ''
   return (
-    <Card className={cn('relative overflow-hidden py-4', toneClass)}>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+    <Card className={cn('relative py-4', toneClass)}>
+      <p className="label-quiet">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight">
         {value == null || value === '' ? '—' : String(value)}
       </p>
-      {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">{hint}</p>}
     </Card>
   )
 }
@@ -91,7 +91,7 @@ export function PanelHeader({
 }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <h2 className="text-base font-semibold">{title}</h2>
       {action}
     </div>
   )
