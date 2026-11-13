@@ -117,11 +117,23 @@ export function EmptyState({
   )
 }
 
-export function Notice({ tone = 'critical', children }: { tone?: StatusTone; children: ReactNode }) {
+export function Notice({
+  tone = 'critical',
+  children,
+  action,
+}: {
+  tone?: StatusTone
+  children: ReactNode
+  /** Optional control under the message (for example Retry on a failed query). */
+  action?: ReactNode
+}) {
   return (
     <Card className="flex items-start gap-3">
       <StatusBadge tone={tone} label={tone === 'critical' ? 'Unavailable' : 'Note'} />
-      <div className="text-sm text-muted-foreground">{children}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm text-muted-foreground">{children}</div>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
     </Card>
   )
 }

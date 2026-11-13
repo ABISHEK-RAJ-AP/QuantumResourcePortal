@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–5 are done. Do not start phase 6 until this commit is accepted.
+Phases 3–6 are done. Do not start phase 7 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -84,12 +84,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Shipped:** `index.css` light `--muted-foreground` darkened to `#5f6e86` (AA on white/surface/muted). Light `--primary` / brand / ring nudged to `#4a63f0` so white button labels clear AA. Dark `--info` / `--info-text` set to brand cyan so labels work on navy. `LandingPage.tsx` drops hardcoded `#0b1220` / `text-white/*` / `text-cyan-*` for background, card, muted, info-text, and primary tokens. `chrome.tsx` eyebrows and kbd use `text-xs` with the stronger muted token; theme sun uses `text-warning` (dark chrome only). Indigo/cyan brand kept. Command palette behavior unchanged.
 - **Skipped (outside file list):** auth heroes and login copy still use their own pages; name for a later polish if needed.
 
-### Phase 6 — Query errors can retry
+### Phase 6 — Query errors can retry (done)
 
 - **Who:** operator whose summary request failed.
-- **Evidence:** `QueryBody` in `frontend/src/pages/workspace/screens.tsx` renders `Notice` with no action. Q-TeleScope `ErrorState.jsx` has `onRetry`.
-- **Size:** small, `QueryBody` and `Notice` or `Page.tsx`.
-- **Risk:** medium. **Changes behavior** (a failed panel can refetch). Retry must call the query’s refetch, not reload the browser.
+- **Shipped:** `Notice` accepts optional `action`. `QueryBody` on error shows the message plus a `btn-secondary` Retry that calls `query.refetch` (not a full page reload). Loading still uses `LoadingLine`. Other `Notice` call sites unchanged. Call sites that already pass a TanStack query keep working because `refetch` is on the result.
 
 ### Phase 7 — Empty copy says what is actually empty
 

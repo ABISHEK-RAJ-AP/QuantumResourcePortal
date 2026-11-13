@@ -161,11 +161,28 @@ export function QueryBody({
   query,
   children,
 }: {
-  query: { isPending: boolean; error: unknown; data?: unknown }
+  query: {
+    isPending: boolean
+    error: unknown
+    data?: unknown
+    refetch: () => unknown
+  }
   children: ReactNode
 }) {
   if (query.isPending) return <LoadingLine />
-  if (query.error) return <Notice>{message(query.error)}</Notice>
+  if (query.error) {
+    return (
+      <Notice
+        action={
+          <button type="button" className="btn-secondary" onClick={() => void query.refetch()}>
+            Retry
+          </button>
+        }
+      >
+        {message(query.error)}
+      </Notice>
+    )
+  }
   return children
 }
 
