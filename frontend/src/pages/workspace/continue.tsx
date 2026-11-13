@@ -38,7 +38,7 @@ import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
-import { CHART_COLORS } from '@/lib/chartTheme'
+import { CHART_COLORS, rechartsAxisTick, rechartsTooltipStyles } from '@/lib/chartTheme'
 import { message, QueryBody, shortId, Table } from '@/pages/workspace/screens'
 
 type Row = Record<string, unknown>
@@ -1000,7 +1000,7 @@ export function ProjectDetailPage() {
                                     <Cell key={d.name} fill={d.fill} />
                                   ))}
                                 </Pie>
-                                <Tooltip />
+                                <Tooltip {...rechartsTooltipStyles()} />
                               </PieChart>
                             </ResponsiveContainer>
                           </div>
@@ -2203,7 +2203,7 @@ export function ConnectorsPage() {
                         <Cell key={d.name} fill={d.fill} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip {...rechartsTooltipStyles()} />
                   </PieChart>
                 </ResponsiveContainer>
               )
@@ -2416,7 +2416,7 @@ export function DispatchPage() {
                           <Cell key={d.name} fill={d.fill} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip {...rechartsTooltipStyles()} />
                     </PieChart>
                   </ResponsiveContainer>
                 )
@@ -2808,7 +2808,7 @@ export function UsersPage() {
                     <Cell key={d.name} fill={d.fill} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip {...rechartsTooltipStyles()} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -2992,7 +2992,7 @@ export function IncidentsPage() {
                       <Cell key={d.name} fill={d.fill} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip {...rechartsTooltipStyles()} />
                 </PieChart>
               </ResponsiveContainer>
             )
@@ -3005,9 +3005,9 @@ export function IncidentsPage() {
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={statusChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                  <Tooltip />
+                  <XAxis dataKey="name" tick={rechartsAxisTick(11)} />
+                  <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                  <Tooltip {...rechartsTooltipStyles()} />
                   <Bar dataKey="value" fill="var(--chart-3)" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -3459,7 +3459,7 @@ export function JobsPage() {
                       <Cell key={d.name} fill={d.fill} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip {...rechartsTooltipStyles()} />
                 </PieChart>
               </ResponsiveContainer>
             )
@@ -3472,9 +3472,12 @@ export function JobsPage() {
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
-                  <Tooltip labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')} />
+                  <XAxis type="number" allowDecimals={false} tick={rechartsAxisTick(11)} />
+                  <YAxis type="category" dataKey="name" width={100} tick={rechartsAxisTick(10)} />
+                  <Tooltip
+                    {...rechartsTooltipStyles()}
+                    labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')}
+                  />
                   <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -3723,7 +3726,7 @@ export function CentrePage() {
                           <Cell key={d.name} fill={d.fill} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip {...rechartsTooltipStyles()} />
                     </PieChart>
                   </ResponsiveContainer>
                   <p className="mt-1 text-center text-sm tabular-nums">
@@ -3752,9 +3755,9 @@ export function CentrePage() {
               ) : (
                 <ResponsiveContainer width="100%" height={h}>
                   <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={48} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                    <Tooltip />
+                    <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-18} textAnchor="end" height={48} />
+                    <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                    <Tooltip {...rechartsTooltipStyles()} />
                     <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -4229,7 +4232,7 @@ export function BackendDetailPage() {
                     <Cell key={d.name} fill={d.fill} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip {...rechartsTooltipStyles()} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -4369,9 +4372,10 @@ export function QueuesPage() {
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-16} textAnchor="end" height={52} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+                  <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-16} textAnchor="end" height={52} />
+                  <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
                   <Tooltip
+                    {...rechartsTooltipStyles()}
                     formatter={(value, name) => {
                       if (name === 'wait') return [value == null ? 'Unavailable' : formatQueueWait({ estimated_wait_time: value }), 'Wait (est.)']
                       return [value, 'Pending']
@@ -4399,7 +4403,7 @@ export function QueuesPage() {
                           <Cell key={d.name} fill={d.fill} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip {...rechartsTooltipStyles()} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
