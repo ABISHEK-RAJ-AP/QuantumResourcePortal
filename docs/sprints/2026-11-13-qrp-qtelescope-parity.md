@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–10 are done. Do not start phase 11 until this commit is accepted.
+Phases 3–11 are done. Do not start phase 12 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -109,12 +109,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator who refreshed and lost in-page scroll and form state.
 - **Shipped:** header Refresh calls `queryClient.invalidateQueries()` (TanStack Query) instead of `window.location.reload()`. Same button label and placement. Active queries refetch; scroll and form state stay. Unmounted queries are not faked as fresh.
 
-### Phase 11 — Relative time on freshness
+### Phase 11 — Relative time on freshness (done)
 
 - **Who:** operator comparing “updated just now” with Q-TeleScope’s clock.
-- **Evidence:** `DataFreshness` used in `chrome.tsx`. Q-TeleScope `IstClock.jsx` and commit `2ec79c9`.
-- **Size:** small, the freshness component only. Read it before editing. Do not add a second clock.
-- **Risk:** low.
+- **Shipped:** `DataFreshness.tsx` shows `Updated` plus a narrow `Intl.RelativeTimeFormat` age (for example `2m ago`). Absolute stamp stays on `title` and `aria-label`. Ticks every 15s while mounted. No second clock. No new dependency.
 
 ### Phase 12 — Chart series follow the active theme
 
