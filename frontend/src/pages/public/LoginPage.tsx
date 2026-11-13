@@ -43,32 +43,23 @@ export function LoginPage() {
           showDefaultContent={false}
           className={cn('min-h-[calc(100svh-104px)]', !dark && 'bg-surface')}
         >
-          <div
-            className={cn(
-              'fade-up auth-panel-rise mx-auto w-full max-w-md rounded-2xl border p-8 shadow-raised backdrop-blur-md',
-              dark ? 'border-white/15 bg-black/75 text-white' : 'border-border bg-card/95 text-foreground',
-            )}
-          >
+          <div className="fade-up auth-panel-rise mx-auto w-full max-w-md rounded-2xl border border-border bg-card/95 p-8 text-foreground shadow-raised backdrop-blur-md">
             <div className="mb-6 flex items-center gap-3">
               <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />
               <div>
                 <p className="text-sm font-semibold">C-DAC</p>
-                <p className={cn('text-xs', dark ? 'text-white/55' : 'text-muted-foreground')}>
-                  Sign in to Quantum Resource Portal
-                </p>
+                <p className="text-xs text-muted-foreground">Sign in to Quantum Resource Portal</p>
               </div>
             </div>
             <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
-            <p className={cn('mt-1 text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
-              Use your portal credentials.
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Use your portal credentials.</p>
             <form className="mt-6 space-y-4" onSubmit={onSubmit}>
               <label className="block text-sm font-medium">
                 Username
                 <input
                   required
                   autoComplete="username"
-                  className={cn('field-input', dark && 'border-white/15 bg-white/5 text-white')}
+                  className="field-input"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -79,7 +70,7 @@ export function LoginPage() {
                   required
                   type="password"
                   autoComplete="current-password"
-                  className={cn('field-input', dark && 'border-white/15 bg-white/5 text-white')}
+                  className="field-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -89,7 +80,7 @@ export function LoginPage() {
                 {busy ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
-            <p className={cn('mt-4 text-center text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               Need an account?{' '}
               <Link className="font-medium text-primary hover:underline" to="/register">
                 Request access

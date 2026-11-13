@@ -124,6 +124,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** anyone loading the Vite app (Landing and auth were blocked by the overlay).
 - **Shipped:** `ForgotPasswordPage.tsx` renamed illegal `function motionless-brand` to `BrandHeader` so it matches the JSX call site. No copy or layout change.
 
+### Phase 14 — Auth panels use theme tokens (done)
+
+- **Who:** visitor signing in in light or dark.
+- **Shipped:** `LoginPage.tsx`, `RegisterPage.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx` drop hardcoded `border-white/15`, `bg-black/75`, `text-white/*` panel and field overrides. Panels use `border-border bg-card/95 text-foreground`; body copy uses `text-muted-foreground`; inputs use `field-input` alone. Logo invert on dark stays. PublicHeader/PublicFooter hardcodes left for Phase 15.
+
 ## Untangle (gated)
 
 Waiting on the user: Comments, Tests, or neither. Do not delete comments or tests until they choose.

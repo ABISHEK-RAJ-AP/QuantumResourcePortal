@@ -40,12 +40,7 @@ export function ResetPasswordPage() {
     <PublicShell>
       <div className="relative flex-1">
         <CyberMatrixHero showDefaultContent={false} className={cn('min-h-[calc(100svh-104px)]', !dark && 'bg-surface')}>
-          <div
-            className={cn(
-              'fade-up mx-auto w-full max-w-md rounded-2xl border p-8 shadow-raised backdrop-blur-md',
-              dark ? 'border-white/15 bg-black/75 text-white' : 'border-border bg-card/95 text-foreground',
-            )}
-          >
+          <div className="fade-up mx-auto w-full max-w-md rounded-2xl border border-border bg-card/95 p-8 text-foreground shadow-raised backdrop-blur-md">
             <div className="mb-6 flex items-center gap-3">
               <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />
               <p className="text-sm font-semibold">C-DAC</p>
@@ -56,7 +51,7 @@ export function ResetPasswordPage() {
                 Reset token
                 <input
                   required
-                  className={cn('field-input font-mono text-xs', dark && 'border-white/15 bg-white/5 text-white')}
+                  className="field-input font-mono text-xs"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                 />
@@ -68,7 +63,7 @@ export function ResetPasswordPage() {
                   type="password"
                   minLength={6}
                   autoComplete="new-password"
-                  className={cn('field-input', dark && 'border-white/15 bg-white/5 text-white')}
+                  className="field-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -80,7 +75,7 @@ export function ResetPasswordPage() {
                   type="password"
                   minLength={6}
                   autoComplete="new-password"
-                  className={cn('field-input', dark && 'border-white/15 bg-white/5 text-white')}
+                  className="field-input"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                 />
@@ -90,7 +85,7 @@ export function ResetPasswordPage() {
                 {busy ? 'Saving…' : 'Update password'}
               </button>
             </form>
-            <p className={cn('mt-4 text-center text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
               <Link className="font-medium text-primary hover:underline" to="/login">
                 Back to sign in
               </Link>
