@@ -18,3 +18,7 @@ frontend/coverage/
 .DS_Store
 *.swp
 .cursor/
+
+# local user-space postgres
+.pgdata/
+logs/

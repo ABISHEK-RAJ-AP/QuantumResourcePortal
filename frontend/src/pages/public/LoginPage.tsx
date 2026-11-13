@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/hooks'
+import { CaptchaField } from '@/components/auth/CaptchaField'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -19,6 +20,9 @@ export function LoginPage() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaId, setCaptchaId] = useState('')
+  const [captchaCode, setCaptchaCode] = useState('')
+  const [captchaOn, setCaptchaOn] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -27,7 +31,11 @@ export function LoginPage() {
     setBusy(true)
     setError('')
     try {
-      await login(username.trim(), password)
+      const captcha =
+        captchaOn && captchaId && captchaCode
+          ? { captcha_id: captchaId, captcha_code: captchaCode }
+          : undefined
+      await login(username.trim(), password, captcha)
       navigate(from.startsWith('/') ? from : '/qrp', { replace: true })
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : 'Sign in failed')
@@ -75,6 +83,12 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </label>
+              <CaptchaField
+                value={captchaCode}
+                onChange={setCaptchaCode}
+                onChallenge={setCaptchaId}
+                onAvailability={setCaptchaOn}
+              />
               {error && <p className="text-sm text-critical">{error}</p>}
               <button type="submit" disabled={busy} className="btn-primary w-full py-2.5">
                 {busy ? 'Signing in…' : 'Sign in'}

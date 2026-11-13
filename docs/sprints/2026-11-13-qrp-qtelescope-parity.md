@@ -154,6 +154,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator in the shell; pointer trail without a second hero on Landing.
 - **Shipped:** `GridPulse` mounted in `chrome.tsx` `#page-content` under the outlet. Title and description carry `data-grid-avoid`. Landing/auth heroes unchanged.
 
+### Phase 20 — Soft captcha + freshness guard (done)
+
+- **Who:** operator signing in; shell freshness line.
+- **Shipped:** `CaptchaField` probes `GET /api/v1/auth/captcha` and only renders when the API serves a challenge (lab QRP has captcha off). Login/RBAC accept optional `captcha_id`/`captcha_code`. `DataFreshness` ignores TanStack `dataUpdatedAt === 0`. Lab verify: QRP API on `:8001` (user-space Postgres `:5433`), Vite `QRP_API_TARGET=http://127.0.0.1:8001` — do not proxy TeleScope `:8000`.
+
 ## Untangle (closed: neither)
 
 User asked to continue necessary work without picking Comments or Tests. **Choice recorded: neither.** No comment deletion. No test deletion. Structural monolith split (`continue.tsx` / `screens.tsx`) stays backlog, not this sprint.

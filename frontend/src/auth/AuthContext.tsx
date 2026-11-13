@@ -15,7 +15,11 @@ export interface AuthState {
   user: rbac.Me | null
   permissions: Set<string>
   roles: Set<string>
-  login: (username: string, password: string) => Promise<void>
+  login: (
+    username: string,
+    password: string,
+    captcha?: { captcha_id: string; captcha_code: string },
+  ) => Promise<void>
   logout: () => Promise<void>
   refresh: () => Promise<void>
   hasPermission: (code: string) => boolean
@@ -63,11 +67,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadSession])
 
-  const login = useCallback(async (username: string, password: string) => {
-    const result = await rbac.login(username, password)
-    setCsrfToken(result.csrf_token)
-    await loadSession()
-  }, [loadSession])
+  const login = useCallback(
+    async (
+      username: string,
+      password: string,
+      captcha?: { captcha_id: string; captcha_code: string },
+    ) => {
+      const result = await rbac.login(username, password, captcha)
+      setCsrfToken(result.csrf_token)
+      await loadSession()
+    },
+    [loadSession],
+  )
 
   const logout = useCallback(async () => {
     try {

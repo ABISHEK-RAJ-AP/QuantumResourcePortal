@@ -18,19 +18,22 @@ function formatRelativeAge(updatedAt: number, now: number): string {
 export function DataFreshness({ updatedAt }: { updatedAt?: number }) {
   const [now, setNow] = useState(() => Date.now())
 
+  // TanStack Query uses 0 before the first successful fetch — treat as "no time yet".
+  const at = updatedAt != null && updatedAt > 0 ? updatedAt : null
+
   useEffect(() => {
-    if (updatedAt == null) return
+    if (at == null) return
     const tick = () => setNow(Date.now())
     tick()
     const id = window.setInterval(tick, 15_000)
     return () => window.clearInterval(id)
-  }, [updatedAt])
+  }, [at])
 
-  if (updatedAt == null) return null
+  if (at == null) return null
 
-  const when = new Date(updatedAt)
+  const when = new Date(at)
   const absolute = when.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-  const relative = formatRelativeAge(updatedAt, now)
+  const relative = formatRelativeAge(at, now)
 
   return (
     <p className="text-xs text-muted-foreground tabular-nums" title={absolute}>

@@ -83,10 +83,19 @@ export const getMyGrants = () =>
   apiGet<{ permissions: string[]; grants: Grant[] }>(`${BASE}/me/permissions`)
 export const getCsrf = () => apiGet<{ csrf_token: string }>(`${BASE}/auth/csrf`)
 
-export async function login(username: string, password: string) {
+export async function login(
+  username: string,
+  password: string,
+  captcha?: { captcha_id: string; captcha_code: string },
+) {
+  const body: Record<string, string> = { username, password }
+  if (captcha?.captcha_id && captcha.captcha_code) {
+    body.captcha_id = captcha.captcha_id
+    body.captcha_code = captcha.captcha_code
+  }
   const res = await apiRequest<{ status: string; principal: Me; csrf_token: string }>(
     `${BASE}/auth/login`,
-    { method: 'POST', json: { username, password } },
+    { method: 'POST', json: body },
   )
   return res.data
 }
