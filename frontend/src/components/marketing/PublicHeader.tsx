@@ -23,16 +23,13 @@ export function PublicHeader({ className }: { className?: string }) {
   const onLogin = pathname.startsWith('/login')
   const onRegister = pathname.startsWith('/register')
 
-  const iconBtn = cn(
-    'grid size-9 shrink-0 place-items-center rounded-lg border transition',
-    dark ? 'border-white/15 hover:bg-white/10' : 'border-input bg-card hover:bg-accent',
-  )
+  const iconBtn =
+    'grid size-9 shrink-0 place-items-center rounded-lg border border-input bg-card text-foreground transition hover:bg-accent'
 
   return (
     <header
       className={cn(
-        'sticky top-8 z-50 w-full border-b backdrop-blur-xl',
-        dark ? 'border-white/10 bg-[#0b1220]/90 text-white' : 'border-border bg-card/95 text-foreground',
+        'sticky top-8 z-50 w-full border-b border-border bg-card/95 text-foreground backdrop-blur-xl',
         className,
       )}
     >
@@ -44,12 +41,7 @@ export function PublicHeader({ className }: { className?: string }) {
               <p className="truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-xl">
                 Quantum Resource Portal
               </p>
-              <p
-                className={cn(
-                  'hidden truncate text-[11px] font-semibold tracking-wider uppercase whitespace-nowrap sm:block',
-                  dark ? 'text-white/50' : 'text-muted-foreground',
-                )}
-              >
+              <p className="hidden truncate text-xs font-semibold tracking-wider uppercase whitespace-nowrap text-muted-foreground sm:block">
                 C-DAC Governance
               </p>
             </div>
@@ -65,10 +57,7 @@ export function PublicHeader({ className }: { className?: string }) {
               <a
                 key={link.label}
                 href={link.href}
-                className={cn(
-                  'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
-                  dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
+                className="rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap text-muted-foreground transition hover:bg-accent hover:text-foreground"
               >
                 {link.label}
               </a>
@@ -84,20 +73,14 @@ export function PublicHeader({ className }: { className?: string }) {
             title={dark ? 'Light theme' : 'Dark theme'}
             onClick={toggleTheme}
           >
-            {dark ? <Sun className="size-4 text-amber-300" /> : <Moon className="size-4" />}
+            {dark ? <Sun className="size-4 text-warning" /> : <Moon className="size-4" />}
           </button>
 
           <Link
             to="/login"
             className={cn(
               'hidden rounded-lg px-3.5 py-2 text-sm font-semibold whitespace-nowrap md:inline-flex',
-              onLogin
-                ? dark
-                  ? 'bg-white/15 text-white'
-                  : 'bg-accent text-accent-foreground'
-                : dark
-                  ? 'text-white/85 hover:bg-white/10'
-                  : 'text-foreground hover:bg-accent',
+              onLogin ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-accent',
             )}
           >
             Sign in
@@ -105,8 +88,7 @@ export function PublicHeader({ className }: { className?: string }) {
           <Link
             to="/register"
             className={cn(
-              'hidden items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap md:inline-flex',
-              dark ? 'bg-white text-[#0b1220] hover:bg-white/90' : 'bg-primary text-primary-foreground hover:brightness-95',
+              'hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold whitespace-nowrap text-primary-foreground hover:brightness-95 md:inline-flex',
               onRegister && 'ring-2 ring-primary/40',
             )}
           >
@@ -127,19 +109,19 @@ export function PublicHeader({ className }: { className?: string }) {
       </div>
 
       {open && (
-        <div className={cn('border-t px-4 py-4 sm:px-6 xl:hidden', dark ? 'border-white/10' : 'border-border')}>
+        <div className="border-t border-border px-4 py-4 sm:px-6 xl:hidden">
           <nav className="flex flex-col gap-1" aria-label="Mobile">
             {NAV.map((link) => (
               <a
                 key={link.label}
                 href={link.href}
-                className={cn('rounded-lg px-3 py-2.5 text-base font-semibold', dark ? 'hover:bg-white/10' : 'hover:bg-accent')}
+                className="rounded-lg px-3 py-2.5 text-base font-semibold hover:bg-accent"
                 onClick={() => setOpen(false)}
               >
                 {link.label}
               </a>
             ))}
-            <div className="mt-2 flex gap-2 border-t pt-3" style={{ borderColor: 'inherit' }}>
+            <div className="mt-2 flex gap-2 border-t border-border pt-3">
               <Link to="/login" className="btn-secondary flex-1 justify-center" onClick={() => setOpen(false)}>
                 Sign in
               </Link>
