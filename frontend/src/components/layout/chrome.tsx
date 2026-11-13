@@ -31,6 +31,7 @@ import { LogoMark } from '@/components/brand/LogoMark'
 import { DataFreshness } from '@/components/data/DataFreshness'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { CommandPalette, type PaletteNavStatus } from '@/components/layout/command-palette'
+import { GridPulse } from '@/components/ui/grid-pulse'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
@@ -401,11 +402,19 @@ function ShellInner() {
               ) : chrome.eyebrow ? (
                 <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
-              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]">
+              <h1
+                data-grid-avoid
+                className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]"
+              >
                 {chrome.title || 'Workspace'}
               </h1>
               {chrome.description ? (
-                <p className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm">{chrome.description}</p>
+                <p
+                  data-grid-avoid
+                  className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm"
+                >
+                  {chrome.description}
+                </p>
               ) : null}
             </div>
             <div className="workspace-toolbar">
@@ -464,13 +473,16 @@ function ShellInner() {
         </header>
         <div
           id="page-content"
-          className="shell-canvas min-w-0 flex-1 px-4 sm:px-5 lg:px-6 pb-24"
+          className="shell-canvas relative min-w-0 flex-1 px-4 sm:px-5 lg:px-6 pb-24"
           data-density={prefs.density}
           data-chart-size={prefs.chartSize}
           data-kpi={prefs.kpiLayout}
           tabIndex={-1}
         >
-          <Outlet />
+          <GridPulse className="opacity-80" />
+          <div className="relative z-10">
+            <Outlet />
+          </div>
         </div>
       </div>
       <CommandPalette

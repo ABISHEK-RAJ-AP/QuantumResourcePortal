@@ -144,11 +144,21 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator reading governance charts without duplicate KPIs or theme-blind tooltips.
 - **Shipped:** `lib/chartTheme.ts` (shared `CHART_COLORS`, semantic colours, Recharts tooltip/axis). `ChartPanel` gains `state` / Retry / empty copy (TeleScope-style). Overview drops the second KPI strip that repeated Pipeline counts; My requests stays in the strip. Overview + Approvals + Metering charts use the shared theme. Metering adds an Area chart for sample depth (2D only). No ECharts dep. No new 3D ops charts (CubeWave / CyberMatrix stay decorative heroes).
 
-## Untangle (gated)
+### Phase 18 — Remaining ChartPanels use state + Retry (done)
 
-Waiting on the user: Comments, Tests, or neither. Do not delete comments or tests until they choose.
+- **Who:** operator on connectors, dispatch, users, incidents, jobs, centre, backends, queues.
+- **Shipped:** Every `ChartPanel` in `continue.tsx` uses `state` / `onRetry` / empty titles. No nested EmptyState for chart load. Roles and qubit health charts always mount (empty state instead of hiding).
 
-Structural notes only (no refactor this sprint until that choice):
+### Phase 19 — GridPulse under workspace canvas (done)
+
+- **Who:** operator in the shell; pointer trail without a second hero on Landing.
+- **Shipped:** `GridPulse` mounted in `chrome.tsx` `#page-content` under the outlet. Title and description carry `data-grid-avoid`. Landing/auth heroes unchanged.
+
+## Untangle (closed: neither)
+
+User asked to continue necessary work without picking Comments or Tests. **Choice recorded: neither.** No comment deletion. No test deletion. Structural monolith split (`continue.tsx` / `screens.tsx`) stays backlog, not this sprint.
+
+Structural notes (not executed):
 
 - **Surplus:** `frontend/src/pages/workspace/continue.tsx` and `screens.tsx` hold most workspace screens, empty branches, and chart setup in two files.
 - **Surplus decoration:** landing hero runs `CubeWaveHero` plus a gradient veil (`LandingPage.tsx`); feature cards also mount `HoverGrid`.
@@ -160,7 +170,7 @@ Structural notes only (no refactor this sprint until that choice):
 - No Unsplash or other stock photos. GridPulse has no images. Do not add any.
 - No new `lucide-react` usage for GridPulse. Do not add the dependency (it is already installed for the rest of the app).
 - No new marketing page.
-- No push, no pull request, no deploy.
+- No pull request / deploy pipeline change unless asked. Branch push to `origin` allowed when the user requests VM sync.
 - No second component root.
 - No edit to the dirty `main` checkout.
 - Q-TeleScope files stay read-only.

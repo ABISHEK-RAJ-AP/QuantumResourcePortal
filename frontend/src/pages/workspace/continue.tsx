@@ -2191,23 +2191,34 @@ export function ConnectorsPage() {
         <MetricTile label="Circuit open" value={query.isError ? '—' : circuitOpen} hint="Breaker state" tone={circuitOpen ? 'critical' : 'neutral'} /></KpiStrip>
       <QueryBody query={query}>
         <div className="grid gap-4 xl:grid-cols-3">
-          <ChartPanel title="Stage mix" empty={stageChart.length === 0}>
-            {(h) =>
-              stageChart.length === 0 ? (
-                <EmptyState title="No connectors" body="No connector stages in the catalogue yet." />
-              ) : (
-                <ResponsiveContainer width="100%" height={h}>
-                  <PieChart>
-                    <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                      {stageChart.map((d) => (
-                        <Cell key={d.name} fill={d.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip {...rechartsTooltipStyles()} />
-                  </PieChart>
-                </ResponsiveContainer>
-              )
+          <ChartPanel
+            title="Stage mix"
+            state={
+              query.isError
+                ? 'error'
+                : query.isPending
+                  ? 'loading'
+                  : stageChart.length === 0
+                    ? 'empty'
+                    : 'ready'
             }
+            errorMessage={message(query.error)}
+            onRetry={() => void query.refetch()}
+            emptyTitle="No connectors"
+            emptyBody="No connector stages in the catalogue yet."
+          >
+            {(h) => (
+              <ResponsiveContainer width="100%" height={h}>
+                <PieChart>
+                  <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                    {stageChart.map((d) => (
+                      <Cell key={d.name} fill={d.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip {...rechartsTooltipStyles()} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </ChartPanel>
           <Card className="xl:col-span-2 space-y-1 text-sm">
             <PanelHeader title="Stage legend" />
@@ -2404,23 +2415,34 @@ export function DispatchPage() {
       {view === 'overview' && (
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-3">
-            <ChartPanel title="Attempt state mix" empty={stateChart.length === 0}>
-              {(h) =>
-                stateChart.length === 0 ? (
-                  <EmptyState title="No attempts yet" body="Attempts appear after approve → authorize → record attempt." />
-                ) : (
-                  <ResponsiveContainer width="100%" height={h}>
-                    <PieChart>
-                      <Pie data={stateChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                        {stateChart.map((d) => (
-                          <Cell key={d.name} fill={d.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip {...rechartsTooltipStyles()} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )
+            <ChartPanel
+              title="Attempt state mix"
+              state={
+                attempts.isError
+                  ? 'error'
+                  : attempts.isPending
+                    ? 'loading'
+                    : stateChart.length === 0
+                      ? 'empty'
+                      : 'ready'
               }
+              errorMessage={message(attempts.error)}
+              onRetry={() => void attempts.refetch()}
+              emptyTitle="No attempts yet"
+              emptyBody="Attempts appear after approve → authorize → record attempt."
+            >
+              {(h) => (
+                <ResponsiveContainer width="100%" height={h}>
+                  <PieChart>
+                    <Pie data={stateChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                      {stateChart.map((d) => (
+                        <Cell key={d.name} fill={d.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...rechartsTooltipStyles()} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </ChartPanel>
             <div className="grid gap-2 sm:grid-cols-3">
               <MetricTile label="Unresolved path" value={unresolved} hint="Needs operator" tone={unresolved ? 'critical' : 'neutral'} />
@@ -2798,22 +2820,35 @@ export function UsersPage() {
         <MetricTile label="Orgs" value={query.isError ? '—' : orgs} />
         <MetricTile label="MFA on" value={query.isError ? '—' : mfaOn} />
       </KpiStrip>
-      {roleChart.length > 0 ? (
-        <ChartPanel title="Roles" empty={false}>
-          {(h) => (
-            <ResponsiveContainer width="100%" height={h}>
-              <PieChart>
-                <Pie data={roleChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={62} paddingAngle={2}>
-                  {roleChart.map((d) => (
-                    <Cell key={d.name} fill={d.fill} />
-                  ))}
-                </Pie>
-                <Tooltip {...rechartsTooltipStyles()} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ChartPanel>
-      ) : null}
+      <ChartPanel
+        title="Roles"
+        state={
+          query.isError
+            ? 'error'
+            : query.isPending
+              ? 'loading'
+              : roleChart.length === 0
+                ? 'empty'
+                : 'ready'
+        }
+        errorMessage={message(query.error)}
+        onRetry={() => void query.refetch()}
+        emptyTitle="No role mix"
+        emptyBody="No users with roles to chart."
+      >
+        {(h) => (
+          <ResponsiveContainer width="100%" height={h}>
+            <PieChart>
+              <Pie data={roleChart} dataKey="value" nameKey="name" innerRadius={40} outerRadius={62} paddingAngle={2}>
+                {roleChart.map((d) => (
+                  <Cell key={d.name} fill={d.fill} />
+                ))}
+              </Pie>
+              <Tooltip {...rechartsTooltipStyles()} />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </ChartPanel>
       <Card>
         <FilterBar
           options={roleOptions}
@@ -2980,39 +3015,61 @@ export function IncidentsPage() {
           tone="warning"
         /></KpiStrip>
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartPanel title="By severity" empty={severityChart.length === 0}>
-          {(h) =>
-            severityChart.length === 0 ? (
-              <EmptyState title="No incidents" body="Cases appear when triage opens an incident." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <PieChart>
-                  <Pie data={severityChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                    {severityChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip {...rechartsTooltipStyles()} />
-                </PieChart>
-              </ResponsiveContainer>
-            )
+        <ChartPanel
+          title="By severity"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : severityChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No incidents"
+          emptyBody="Cases appear when triage opens an incident."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <PieChart>
+                <Pie data={severityChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                  {severityChart.map((d) => (
+                    <Cell key={d.name} fill={d.fill} />
+                  ))}
+                </Pie>
+                <Tooltip {...rechartsTooltipStyles()} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
-        <ChartPanel title="By status" empty={statusChart.length === 0}>
-          {(h) =>
-            statusChart.length === 0 ? (
-              <EmptyState title="No incident statuses" body="No incidents to chart by status yet." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={statusChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={rechartsAxisTick(11)} />
-                  <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
-                  <Tooltip {...rechartsTooltipStyles()} />
-                  <Bar dataKey="value" fill="var(--chart-3)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
+        <ChartPanel
+          title="By status"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : statusChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No incident statuses"
+          emptyBody="No incidents to chart by status yet."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={statusChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <XAxis dataKey="name" tick={rechartsAxisTick(11)} />
+                <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                <Tooltip {...rechartsTooltipStyles()} />
+                <Bar dataKey="value" fill="var(--chart-3)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
       </div>
       <Card>
@@ -3447,42 +3504,65 @@ export function JobsPage() {
         <MetricTile label="Completed" value={query.isError ? '—' : completed} hint="Provider-reported" tone="success" />
         <MetricTile label="Failed" value={query.isError ? '—' : failed} hint="Provider-reported" tone="warning" /></KpiStrip>
       <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Status mix" empty={statusChart.length === 0}>
-          {(h) =>
-            statusChart.length === 0 ? (
-              <EmptyState title="No provider jobs" body="No provider jobs in this sample window." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <PieChart>
-                  <Pie data={statusChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                    {statusChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip {...rechartsTooltipStyles()} />
-                </PieChart>
-              </ResponsiveContainer>
-            )
+        <ChartPanel
+          title="Status mix"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : statusChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No provider jobs"
+          emptyBody="No provider jobs in this sample window."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <PieChart>
+                <Pie data={statusChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                  {statusChart.map((d) => (
+                    <Cell key={d.name} fill={d.fill} />
+                  ))}
+                </Pie>
+                <Tooltip {...rechartsTooltipStyles()} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
-        <ChartPanel className="xl:col-span-2" title="Jobs by backend" empty={backendChart.length === 0}>
-          {(h) =>
-            backendChart.length === 0 ? (
-              <EmptyState title="No backends with jobs" body="No backends reported jobs in this sample window." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" allowDecimals={false} tick={rechartsAxisTick(11)} />
-                  <YAxis type="category" dataKey="name" width={100} tick={rechartsAxisTick(10)} />
-                  <Tooltip
-                    {...rechartsTooltipStyles()}
-                    labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')}
-                  />
-                  <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
+        <ChartPanel
+          className="xl:col-span-2"
+          title="Jobs by backend"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : backendChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No backends with jobs"
+          emptyBody="No backends reported jobs in this sample window."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
+                <XAxis type="number" allowDecimals={false} tick={rechartsAxisTick(11)} />
+                <YAxis type="category" dataKey="name" width={100} tick={rechartsAxisTick(10)} />
+                <Tooltip
+                  {...rechartsTooltipStyles()}
+                  labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')}
+                />
+                <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
       </div>
       <Card>
@@ -3713,56 +3793,73 @@ export function CentrePage() {
         /></KpiStrip>
       <QueryBody query={query}>
         <div className="grid gap-4 xl:grid-cols-3">
-          <ChartPanel title="Fleet reachability" empty={fleetChart.length === 0}>
-            {(h) =>
-              fleetChart.length === 0 ? (
-                <EmptyState title="No fleet counts" body="Operations Centre returned no fleet reachability counts." />
-              ) : (
-                <>
-                  <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
-                    <PieChart>
-                      <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, (h - 28) * 0.28)} outerRadius={Math.max(48, (h - 28) * 0.42)} paddingAngle={2}>
-                        {fleetChart.map((d) => (
-                          <Cell key={d.name} fill={d.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip {...rechartsTooltipStyles()} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <p className="mt-1 text-center text-sm tabular-nums">
-                    {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
-                    {fleet.simulated_catalog != null ? ` · ${String(fleet.simulated_catalog)} simulated` : ''}
-                  </p>
-                </>
-              )
+          <ChartPanel
+            title="Fleet reachability"
+            state={
+              query.isError
+                ? 'error'
+                : query.isPending
+                  ? 'loading'
+                  : fleetChart.length === 0
+                    ? 'empty'
+                    : 'ready'
             }
+            errorMessage={message(query.error)}
+            onRetry={() => void query.refetch()}
+            emptyTitle="No fleet counts"
+            emptyBody="Operations Centre returned no fleet reachability counts."
+          >
+            {(h) => (
+              <>
+                <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
+                  <PieChart>
+                    <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, (h - 28) * 0.28)} outerRadius={Math.max(48, (h - 28) * 0.42)} paddingAngle={2}>
+                      {fleetChart.map((d) => (
+                        <Cell key={d.name} fill={d.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...rechartsTooltipStyles()} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <p className="mt-1 text-center text-sm tabular-nums">
+                  {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
+                  {fleet.simulated_catalog != null ? ` · ${String(fleet.simulated_catalog)} simulated` : ''}
+                </p>
+              </>
+            )}
           </ChartPanel>
           <ChartPanel
             className="xl:col-span-2"
             title="Queue pending by backend"
-            empty={queues.isError || pendingChart.length === 0}
             action={
               <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/queues">
                 Queues
               </Link>
             }
-          >
-            {(h) =>
-              queues.isError ? (
-                <EmptyState title="Queues unavailable" body={message(queues.error)} />
-              ) : pendingChart.length === 0 ? (
-                <EmptyState title="No queue samples" body="Telemetry not ingested yet." />
-              ) : (
-                <ResponsiveContainer width="100%" height={h}>
-                  <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                    <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-18} textAnchor="end" height={48} />
-                    <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
-                    <Tooltip {...rechartsTooltipStyles()} />
-                    <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )
+            state={
+              queues.isError
+                ? 'error'
+                : queues.isPending
+                  ? 'loading'
+                  : pendingChart.length === 0
+                    ? 'empty'
+                    : 'ready'
             }
+            errorMessage={message(queues.error)}
+            onRetry={() => void queues.refetch()}
+            emptyTitle="No queue samples"
+            emptyBody="Telemetry not ingested yet."
+          >
+            {(h) => (
+              <ResponsiveContainer width="100%" height={h}>
+                <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                  <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-18} textAnchor="end" height={48} />
+                  <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                  <Tooltip {...rechartsTooltipStyles()} />
+                  <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </ChartPanel>
         </div>
 
@@ -4222,22 +4319,35 @@ export function BackendDetailPage() {
             </Card>
         )}
       </QueryBody>
-      {healthChart.length > 0 ? (
-        <ChartPanel title="Qubit health mix" empty={false}>
-          {(h) => (
-            <ResponsiveContainer width="100%" height={h}>
-              <PieChart>
-                <Pie data={healthChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                  {healthChart.map((d) => (
-                    <Cell key={d.name} fill={d.fill} />
-                  ))}
-                </Pie>
-                <Tooltip {...rechartsTooltipStyles()} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ChartPanel>
-      ) : null}
+      <ChartPanel
+        title="Qubit health mix"
+        state={
+          topology.isError
+            ? 'error'
+            : topology.isPending
+              ? 'loading'
+              : healthChart.length === 0
+                ? 'empty'
+                : 'ready'
+        }
+        errorMessage={message(topology.error)}
+        onRetry={() => void topology.refetch()}
+        emptyTitle="No qubit health"
+        emptyBody="Topology nodes did not include health states to chart."
+      >
+        {(h) => (
+          <ResponsiveContainer width="100%" height={h}>
+            <PieChart>
+              <Pie data={healthChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                {healthChart.map((d) => (
+                  <Cell key={d.name} fill={d.fill} />
+                ))}
+              </Pie>
+              <Tooltip {...rechartsTooltipStyles()} />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </ChartPanel>
       <Card>
         <h2 className="mb-3 text-base font-semibold">
           Qubits {topology.data ? `${String(topology.data.node_count)} nodes · ${String(topology.data.edge_count)} edges` : ''}
@@ -4360,64 +4470,77 @@ export function QueuesPage() {
         <ChartPanel
           className="xl:col-span-2"
           title="Pending by backend"
-          empty={query.isError || query.isPending || pendingChart.length === 0}
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : pendingChart.length === 0
+                  ? 'empty'
+                  : 'ready'
+          }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No queue samples"
+          emptyBody="Register backends and wait for telemetry ingest."
         >
-          {(h) =>
-            query.isError ? (
-              <EmptyState title="Queues unavailable" body={message(query.error)} />
-            ) : query.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : pendingChart.length === 0 ? (
-              <EmptyState title="No queue samples" body="Register backends and wait for telemetry ingest." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
-                  <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-16} textAnchor="end" height={52} />
-                  <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
-                  <Tooltip
-                    {...rechartsTooltipStyles()}
-                    formatter={(value, name) => {
-                      if (name === 'wait') return [value == null ? 'Unavailable' : formatQueueWait({ estimated_wait_time: value }), 'Wait (est.)']
-                      return [value, 'Pending']
-                    }}
-                  />
-                  <Bar dataKey="pending" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          }
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 8 }}>
+                <XAxis dataKey="name" tick={rechartsAxisTick(10)} interval={0} angle={-16} textAnchor="end" height={52} />
+                <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                <Tooltip
+                  {...rechartsTooltipStyles()}
+                  formatter={(value, name) => {
+                    if (name === 'wait') return [value == null ? 'Unavailable' : formatQueueWait({ estimated_wait_time: value }), 'Wait (est.)']
+                    return [value, 'Pending']
+                  }}
+                />
+                <Bar dataKey="pending" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
-        <ChartPanel title="Condition mix" empty={query.isPending || conditionChart.length === 0}>
-          {(h) =>
-            query.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : conditionChart.length === 0 ? (
-              <EmptyState title="No queue conditions" body="No queue condition values in the latest telemetry rows." />
-            ) : (
-              <div className="flex h-full flex-col gap-2">
-                <div className="min-h-0 flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={conditionChart} dataKey="value" nameKey="name" innerRadius={Math.max(32, h * 0.2)} outerRadius={Math.max(52, h * 0.32)} paddingAngle={2}>
-                        {conditionChart.map((d) => (
-                          <Cell key={d.name} fill={d.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip {...rechartsTooltipStyles()} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <ul className="shrink-0 space-y-1 text-xs text-muted-foreground">
-                  {conditionChart.map((d) => (
-                    <li key={d.name} className="flex justify-between gap-2">
-                      <span>{d.name}</span>
-                      <span className="tabular-nums font-medium text-foreground">{d.value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
+        <ChartPanel
+          title="Condition mix"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : conditionChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No queue conditions"
+          emptyBody="No queue condition values in the latest telemetry rows."
+        >
+          {(h) => (
+            <div className="flex h-full flex-col gap-2">
+              <div className="min-h-0 flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={conditionChart} dataKey="value" nameKey="name" innerRadius={Math.max(32, h * 0.2)} outerRadius={Math.max(52, h * 0.32)} paddingAngle={2}>
+                      {conditionChart.map((d) => (
+                        <Cell key={d.name} fill={d.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...rechartsTooltipStyles()} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <ul className="shrink-0 space-y-1 text-xs text-muted-foreground">
+                {conditionChart.map((d) => (
+                  <li key={d.name} className="flex justify-between gap-2">
+                    <span>{d.name}</span>
+                    <span className="tabular-nums font-medium text-foreground">{d.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </ChartPanel>
       </div>
       <Card>
