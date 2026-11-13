@@ -37,6 +37,7 @@ import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { OperatorNoticeBell } from '@/components/shell/OperatorNoticeBell'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageEnter } from '@/components/ui/PageEnter'
 import { ToastHost } from '@/components/ui/ToastHost'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -174,6 +175,8 @@ function ShellInner() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const [logoutBusy, setLogoutBusy] = useState(false)
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
     return Object.fromEntries(
@@ -274,8 +277,14 @@ function ShellInner() {
   const displayName = user?.full_name || user?.username || 'Signed in'
 
   async function logout() {
-    await authLogout()
-    navigate('/login')
+    setLogoutBusy(true)
+    try {
+      await authLogout()
+      navigate('/login')
+    } finally {
+      setLogoutBusy(false)
+      setLogoutOpen(false)
+    }
   }
 
   return (
@@ -394,7 +403,7 @@ function ShellInner() {
                 </div>
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => setLogoutOpen(true)}
                   className="grid size-8 place-items-center rounded-lg border border-input bg-card hover:bg-accent"
                   aria-label="Sign out"
                 >
@@ -416,7 +425,7 @@ function ShellInner() {
                 </div>
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => setLogoutOpen(true)}
                   className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-input bg-card px-2 py-1.5 text-sm font-medium hover:bg-accent"
                 >
                   <LogOut className="size-3.5" />
@@ -529,6 +538,16 @@ function ShellInner() {
       <QrpQuickActionDock onStartTour={() => setTourOpen(true)} />
       <ToastHost />
       <ProductTour open={tourOpen} steps={QRP_TOUR_STEPS} onStep={handleTourStep} onClose={closeTour} />
+      <ConfirmDialog
+        open={logoutOpen}
+        title="Sign out"
+        body="Your session on this device will end. Unsaved form work may be lost."
+        confirmLabel="Sign out"
+        danger
+        busy={logoutBusy}
+        onCancel={() => !logoutBusy && setLogoutOpen(false)}
+        onConfirm={() => void logout()}
+      />
     </div>
   )
 }

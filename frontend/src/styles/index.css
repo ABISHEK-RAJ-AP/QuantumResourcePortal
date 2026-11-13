@@ -1026,7 +1026,11 @@ html:not(.dark) .cyber-matrix-spot {
   filter: brightness(0.96);
 }
 .btn-primary:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.97); /* press — no bounce on everyday UI */
+}
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled) {
+  transition-duration: 80ms; /* don't tween while held */
 }
 .btn-primary:disabled {
   opacity: 0.5;
@@ -1086,40 +1090,97 @@ html:not(.dark) .cyber-matrix-spot {
   font-variant-numeric: tabular-nums;
 }
 
-/* Interruptible page enter (opacity only under reduced-motion) */
+/* Interruptible enter — ease-out; exits ~20% shorter via --exit-ms */
+:root {
+  --enter-ms: 220ms;
+  --exit-ms: 176ms; /* 20% shorter than enter */
+  --dropdown-ms: 200ms;
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out for moves */
+}
 .page-enter {
   opacity: 0;
   transform: translateY(8px);
   animation: none;
   transition:
-    opacity 280ms var(--ease-out),
-    transform 280ms var(--ease-out);
+    opacity var(--enter-ms) var(--ease-out),
+    transform var(--enter-ms) var(--ease-out);
 }
 .page-enter.is-in {
   opacity: 1;
   transform: none;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .stagger-in > * {
+.page-enter.is-out {
+  opacity: 0;
+  transform: translateY(4px);
+  transition-duration: var(--exit-ms);
+}
+.popover-scale-in {
+  transform-origin: top center;
+  animation: popover-in var(--dropdown-ms) var(--ease-out) both;
+}
+@keyframes popover-in {
+  from {
     opacity: 0;
-    transform: translateY(10px);
-    transition:
-      opacity 300ms var(--ease-out),
-      transform 300ms var(--ease-out);
+    transform: scale(0.95);
   }
-  .stagger-in.is-in > *:nth-child(1) {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.success-pulse {
+  animation: success-pulse 420ms var(--ease-out);
+}
+@keyframes success-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.icon-crossfade {
+  transition:
+    opacity 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+.icon-crossfade.is-out {
+  opacity: 0;
+  filter: blur(4px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stagger-rows > * {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity var(--enter-ms) var(--ease-out),
+      transform var(--enter-ms) var(--ease-out);
+  }
+  .stagger-rows.is-in > *:nth-child(1) {
     transition-delay: 0ms;
   }
-  .stagger-in.is-in > *:nth-child(2) {
-    transition-delay: 100ms;
+  .stagger-rows.is-in > *:nth-child(2) {
+    transition-delay: 30ms;
   }
-  .stagger-in.is-in > *:nth-child(3) {
-    transition-delay: 200ms;
+  .stagger-rows.is-in > *:nth-child(3) {
+    transition-delay: 60ms;
   }
-  .stagger-in.is-in > *:nth-child(4) {
-    transition-delay: 300ms;
+  .stagger-rows.is-in > *:nth-child(4) {
+    transition-delay: 90ms;
   }
-  .stagger-in.is-in > * {
+  .stagger-rows.is-in > *:nth-child(5) {
+    transition-delay: 120ms;
+  }
+  .stagger-rows.is-in > *:nth-child(6) {
+    transition-delay: 150ms;
+  }
+  .stagger-rows.is-in > *:nth-child(n + 7) {
+    transition-delay: 180ms;
+  }
+  .stagger-rows.is-in > * {
     opacity: 1;
     transform: none;
   }

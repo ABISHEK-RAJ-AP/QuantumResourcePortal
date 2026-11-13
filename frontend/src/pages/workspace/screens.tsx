@@ -1030,7 +1030,7 @@ export function ApprovalDetailPage() {
                       <dt className="label-quiet">Project</dt>
                       <dd className="mt-1">
                         {row.project_id ? (
-                          <Link className="font-mono text-xs text-primary hover:underline break-all" to={`/qrp/projects/${row.project_id}`}>
+                          <Link className="mono-id text-primary hover:underline break-all" to={`/qrp/projects/${row.project_id}`}>
                             {text(row, 'project_id')}
                           </Link>
                         ) : (
@@ -1040,7 +1040,7 @@ export function ApprovalDetailPage() {
                     </div>
                     <div className="sm:col-span-2">
                       <dt className="label-quiet">Package SHA-256</dt>
-                      <dd className="mt-1 font-mono text-xs break-all text-muted-foreground">{text(row, 'package_sha256')}</dd>
+                      <dd className="mt-1 mono-id break-all text-muted-foreground">{text(row, 'package_sha256')}</dd>
                     </div>
                   </dl>
                 </Card>
@@ -1063,7 +1063,7 @@ export function ApprovalDetailPage() {
                       </div>
                       <div>
                         <dt className="label-quiet">Required permission</dt>
-                        <dd className="mt-1 font-mono text-xs">{text(stage, 'required_permission')}</dd>
+                        <dd className="mt-1 mono-id">{text(stage, 'required_permission')}</dd>
                       </div>
                     </dl>
                     <Link className="mt-3 inline-flex text-sm font-medium text-primary hover:underline" to="/qrp/policies">
@@ -1096,7 +1096,7 @@ export function ApprovalDetailPage() {
                           </div>
                           <div>
                             <dt className="label-quiet">Reason</dt>
-                            <dd className="mt-1 font-mono text-xs">{text(quota.data, 'reason_code')}</dd>
+                            <dd className="mt-1 mono-id">{text(quota.data, 'reason_code')}</dd>
                           </div>
                         </dl>
                         <p className="text-xs text-muted-foreground">Daily simulation-shot window · UTC · missing ≠ zero elsewhere.</p>
@@ -1573,7 +1573,7 @@ export function ProvidersPage() {
               {
                 key: 'stage',
                 label: 'Stage',
-                render: (row) => <span className="font-mono text-xs">{text((row.integration as Row | undefined) ?? {}, 'stage')}</span>,
+                render: (row) => <span className="mono-id">{text((row.integration as Row | undefined) ?? {}, 'stage')}</span>,
               },
               {
                 key: 'collector',
@@ -1883,7 +1883,7 @@ export function PoliciesPage() {
           <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <dt className="label-quiet">Policy</dt>
-              <dd className="mt-1 flex items-center gap-2 font-mono text-xs">
+              <dd className="mt-1 flex items-center gap-2 mono-id">
                 {text(query.data ?? {}, 'policy_id')}
                 <CopyableId value={String(query.data?.policy_id || '')} />
               </dd>
@@ -2006,7 +2006,7 @@ export function QuotasPage() {
             <dl className="grid gap-2 border-t border-border/70 pt-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="label-quiet">Window (UTC)</dt>
-                <dd className="mt-1 font-mono text-xs">
+                <dd className="mt-1 mono-id">
                   {text(data, 'window_start')} → {text(data, 'window_end')}
                 </dd>
               </div>
@@ -2028,7 +2028,7 @@ export function QuotasPage() {
             <PanelHeader title="Policy" />
             <p>
               <span className="text-muted-foreground">Policy </span>
-              <span className="font-mono text-xs">{text(data, 'policy_id')}</span>
+              <span className="mono-id">{text(data, 'policy_id')}</span>
             </p>
             <p>
               <span className="text-muted-foreground">Kind </span>

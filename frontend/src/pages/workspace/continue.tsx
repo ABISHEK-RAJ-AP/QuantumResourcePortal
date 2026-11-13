@@ -80,7 +80,6 @@ export function AssetDetailPage() {
 
   return (
     <Page
-      eyebrow="Resources · Asset"
       title={row ? stateLabel(state) : 'Asset'}
       description={`Registry id ${shortId(assetId, 14)}. Lifecycle moves only along allowed transitions.`}
       steps={LIFECYCLE}
@@ -100,7 +99,7 @@ export function AssetDetailPage() {
               </div>
               <div>
                 <dt className="label-quiet">Provider</dt>
-                <dd className="mt-1 font-mono text-xs">{text(row, 'provider_id')}</dd>
+                <dd className="mt-1 mono-id">{text(row, 'provider_id')}</dd>
               </div>
             </dl>
             <div className="flex flex-wrap items-center gap-3">
@@ -129,7 +128,6 @@ export function ApprovalHistoryPage() {
   })
   return (
     <Page
-      eyebrow="Governance"
       title="Approval history"
       description="Append-only decisions. A later decision does not rewrite an earlier one."
       actions={
@@ -212,7 +210,6 @@ export function ReconciliationPage() {
   }
   return (
     <Page
-      eyebrow="Operations"
       title="Reconciliation"
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
       updatedAt={query.dataUpdatedAt}
@@ -272,7 +269,7 @@ export function ReconciliationPage() {
                 label: 'Observed job',
                 render: (row) =>
                   row.external_job_id ? (
-                    <Link className="font-mono text-xs text-primary hover:underline" to={`/qrp/jobs/${row.external_job_id}`}>
+                    <Link className="mono-id text-primary hover:underline" to={`/qrp/jobs/${row.external_job_id}`}>
                       {text(row, 'external_job_id')}
                     </Link>
                   ) : (
@@ -386,7 +383,6 @@ export function SchedulingPage() {
   }
   return (
     <Page
-      eyebrow="Governance · Allocation"
       title="Request reservation window"
       description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
     >
@@ -466,7 +462,6 @@ export function SchedulingPage() {
 export function SlaPage() {
   return (
     <Page
-      eyebrow="Not in operational scope"
       title="SLA"
       description="QRP does not provide an SLA ledger, breach predictions, or service credits in this release."
       actions={
@@ -562,7 +557,6 @@ export function OnboardingPage() {
   })
   return (
     <Page
-      eyebrow="Resources"
       title="Provider onboarding board"
       crumbs={[{ label: 'Catalogue', to: '/qrp/providers' }, { label: 'Onboarding' }]}
       description="Stage codes from the connector catalogue. Open a provider to publish a manifest and activate."
@@ -613,7 +607,6 @@ export function RegisterAssetPage() {
   })
   return (
     <Page
-      eyebrow="Resources"
       title="Register asset"
       description="One asset, one provider, one native id."
     >
@@ -672,7 +665,6 @@ export function ImportAssetsPage() {
   const errors = Array.isArray(result?.errors) ? (result.errors as Row[]) : []
   return (
     <Page
-      eyebrow="Resources"
       title="Import assets"
       description="CSV columns: native_asset_id, asset_class, execution_class. A bad row commits nothing."
     >
@@ -690,7 +682,7 @@ export function ImportAssetsPage() {
           </label>
           <label className="text-sm">
             CSV
-            <textarea required rows={8} className={`${fieldClass} font-mono text-xs`} value={csv} onChange={(e) => setCsv(e.target.value)} />
+            <textarea required rows={8} className={`${fieldClass} mono-id`} value={csv} onChange={(e) => setCsv(e.target.value)} />
           </label>
           <div>
             <button type="submit" className={buttonClass} disabled={run.isPending}>
@@ -871,7 +863,6 @@ export function ProjectDetailPage() {
 
   return (
     <Page
-      eyebrow="Workspace · Projects"
       title={projectName}
       description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
       actions={
@@ -1492,7 +1483,6 @@ export function AlertDetailPage() {
 
   return (
     <Page
-      eyebrow="Operations · Alert investigation"
       title={row ? String(row.alert_type || 'Alert') : 'Alert'}
       description={
         row
@@ -1560,7 +1550,7 @@ export function AlertDetailPage() {
                         <dt className="label-quiet">Resource</dt>
                         <dd className="mt-1">
                           <span className="text-xs text-muted-foreground">{text(row, 'resource_type')} · </span>
-                          <span className="font-mono text-xs">{text(row, 'resource_id')}</span>
+                          <span className="mono-id">{text(row, 'resource_id')}</span>
                         </dd>
                       </div>
                       <div>
@@ -1583,7 +1573,7 @@ export function AlertDetailPage() {
                       </div>
                       <div>
                         <dt className="label-quiet">Detected (UTC)</dt>
-                        <dd className="mt-1 font-mono text-xs">{text(row, 'detected_at')}</dd>
+                        <dd className="mt-1 mono-id">{text(row, 'detected_at')}</dd>
                       </div>
                       <div>
                         <dt className="label-quiet">Ack / resolve</dt>
@@ -1991,7 +1981,6 @@ export function ProviderDetailPage() {
   })
   return (
     <Page
-      eyebrow="Resources"
       title={String(row?.provider_name || providerId)}
       description="Publish a capability manifest, then set the provider active or suspended."
       steps={[
@@ -2079,7 +2068,6 @@ export function PoolDetailPage() {
   const members = Array.isArray(query.data?.members) ? (query.data.members as Row[]) : []
   return (
     <Page
-      eyebrow="Resources"
       title={String(query.data?.name || poolId)}
       description="Add a registered asset. Membership does not reserve the asset."
       actions={
@@ -2171,7 +2159,6 @@ export function ConnectorsPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Resources"
       title="Connectors"
       description="Integration stage is evidence on file. I5 is not claimed until a reconciled dispatch exists. No live connection test endpoint."
       updatedAt={query.dataUpdatedAt}
@@ -2219,7 +2206,7 @@ export function ConnectorsPage() {
             ) : (
               Object.entries(legend).map(([key, value]) => (
                 <p key={key}>
-                  <span className="font-mono font-medium">{key}</span> <span className="text-muted-foreground">{String(value)}</span>
+                  <span className="mono-id font-medium">{key}</span> <span className="text-muted-foreground">{String(value)}</span>
                 </p>
               ))
             )}
@@ -2356,7 +2343,6 @@ export function DispatchPage() {
   })
   return (
     <Page
-      eyebrow="Operations"
       title="Dispatch & Jobs"
       description="Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs / reconcile. Approval ≠ provider submission."
       actions={
@@ -2517,7 +2503,7 @@ export function DispatchPage() {
                   label: 'Provider job',
                   render: (row) =>
                     row.external_job_id ? (
-                      <Link className="font-mono text-xs text-primary hover:underline" to={`/qrp/jobs/${row.external_job_id}`}>
+                      <Link className="mono-id text-primary hover:underline" to={`/qrp/jobs/${row.external_job_id}`}>
                         {text(row, 'external_job_id')}
                       </Link>
                     ) : (
@@ -2571,14 +2557,14 @@ export function DispatchPage() {
                   <dd className="mt-1 tabular-nums font-medium">{attempts.isError ? '—' : confirmed}</dd>
                 </div>
               </dl>
-              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'authorize_dispatch')}</p>
-              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'record_attempt')}</p>
-              <p className="font-mono text-xs text-muted-foreground">{text(query.data ?? {}, 'reconcile')}</p>
+              <p className="mono-id text-muted-foreground">{text(query.data ?? {}, 'authorize_dispatch')}</p>
+              <p className="mono-id text-muted-foreground">{text(query.data ?? {}, 'record_attempt')}</p>
+              <p className="mono-id text-muted-foreground">{text(query.data ?? {}, 'reconcile')}</p>
               <p className="text-muted-foreground">{text(query.data ?? {}, 'notes')}</p>
               {required.length > 0 && (
                 <div>
                   <p className="label-quiet">Required fields</p>
-                  <ul className="mt-1 list-inside list-disc font-mono text-xs text-muted-foreground">
+                  <ul className="mt-1 list-inside list-disc mono-id text-muted-foreground">
                     {required.map((field) => (
                       <li key={field}>{field}</li>
                     ))}
@@ -2980,7 +2966,6 @@ export function IncidentsPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Operations"
       title="Incidents"
       description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
       updatedAt={query.dataUpdatedAt}
@@ -3185,7 +3170,6 @@ export function IncidentDetailPage() {
 
   return (
     <Page
-      eyebrow="Operations · Incidents"
       title={String(query.data?.title || incidentId)}
       description={String(query.data?.summary || 'Operational exception lifecycle — links alerts, backends, and dispatch context.')}
       steps={INCIDENT_FLOW}
@@ -3464,7 +3448,6 @@ export function JobsPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Operations"
       title="Provider jobs"
       description="Provider execution records. Not governance approval state — use Approvals for that."
       updatedAt={query.dataUpdatedAt}
@@ -3611,7 +3594,6 @@ export function JobDetailPage() {
   const status = String(query.data?.status || '')
   return (
     <Page
-      eyebrow="Operations · Provider job"
       title={status ? stateLabel(status) : 'Provider job'}
       description={`Provider execution ${shortId(jobId, 14)}. Does not resubmit. Not a governance approval record.`}
       actions={
@@ -3714,7 +3696,6 @@ export function CentrePage() {
   }, [queues.data])
   return (
     <Page
-      eyebrow="Operations"
       title="Operations Centre"
       crumbs={[{ label: 'Command', to: '/qrp' }, { label: 'Operations Centre' }]}
       description="Fleet posture, collector health, queue depth, and open exceptions."
@@ -4044,7 +4025,6 @@ export function BackendsPage() {
   const pendingTotal = asList(queues.data).reduce((sum, row) => sum + (Number(row.pending_jobs) || 0), 0)
   return (
     <Page
-      eyebrow="Operations"
       title="Backends"
       description="Catalogue QPUs. Operational status is provider/catalogue state — not QRP governance eligibility or live dispatch claim."
       updatedAt={query.dataUpdatedAt}
@@ -4195,7 +4175,6 @@ export function BackendDetailPage() {
       : queue.data?.pending_jobs
   return (
     <Page
-      eyebrow="Operations"
       title={String(backend.data?.backend_name || backendId)}
       description="Catalogue record and topology from returned fields. Wait estimates come from Queues telemetry samples."
       actions={
@@ -4403,7 +4382,6 @@ export function QueuesPage() {
   }, [query.data])
   return (
     <Page
-      eyebrow="Operations"
       title="Queues"
       description="Pending jobs and queue condition from latest telemetry per backend."
       updatedAt={query.dataUpdatedAt}

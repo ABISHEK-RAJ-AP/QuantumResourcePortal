@@ -1,98 +1,135 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
+import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
-import { LogoMark } from '@/components/brand/LogoMark'
-import { PublicShell } from '@/components/marketing/PublicShell'
-import CyberMatrixHero from '@/components/ui/cyber-matrix-hero'
-import { useTheme } from '@/components/theme/ThemeProvider'
-import { cn } from '@/lib/utils'
+import { AuthPanel } from '@/components/auth/AuthPanel'
+import { CaptchaField } from '@/components/auth/CaptchaField'
+import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
+import { notifySuccess } from '@/lib/toast'
+
+const captchaEnabled = import.meta.env.VITE_QRE_CAPTCHA === '1'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
   const [token, setToken] = useState(params.get('token') || '')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [captchaId, setCaptchaId] = useState('')
+  const [captchaCode, setCaptchaCode] = useState('')
+  const [captchaOn, setCaptchaOn] = useState(false)
+  const [fields, setFields] = useState<Record<string, string>>({})
+  const [banner, setBanner] = useState('')
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
-    setError('')
+    setBanner('')
+    setFields({})
+    const next: Record<string, string> = {}
+    if (!token.trim()) next.token = 'Reset token is required'
+    if (password.length < 8) next.new_password = 'Use at least 8 characters'
+    if (password !== confirm) next.confirm_password = 'Passwords do not match'
+    if (captchaEnabled && captchaOn && !captchaCode.trim()) next.captcha_code = 'Enter the characters shown'
+    if (Object.keys(next).length) {
+      setFields(next)
+      setBusy(false)
+      return
+    }
     try {
-      await authFetch('/auth/password/reset', {
-        method: 'POST',
-        body: JSON.stringify({ token, new_password: password, confirm_password: confirm }),
-      })
+      const body: Record<string, string> = {
+        token: token.trim(),
+        new_password: password,
+        confirm_password: confirm,
+      }
+      if (captchaEnabled && captchaOn && captchaId && captchaCode) {
+        body.captcha_id = captchaId
+        body.captcha_code = captchaCode
+      }
+      await authFetch('/auth/password/reset', { method: 'POST', body: JSON.stringify(body) })
+      notifySuccess('Password updated', { toastId: 'pw-reset' })
       navigate('/login', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Reset failed')
+      if (err instanceof ApiError) {
+        const mapped = mapApiFieldErrors(err.fieldErrors)
+        setFields(mapped)
+        setBanner(Object.keys(mapped).length ? '' : err.detail || 'Reset failed')
+      } else {
+        setBanner(err instanceof Error ? err.message : 'Reset failed')
+      }
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <PublicShell>
-      <div className="relative flex-1">
-        <CyberMatrixHero showDefaultContent={false} className={cn('min-h-[calc(100svh-104px)]', !dark && 'bg-surface')}>
-          <div className="fade-up mx-auto w-full max-w-md rounded-2xl border border-border bg-card/95 p-8 text-foreground shadow-raised backdrop-blur-md">
-            <div className="mb-6 flex items-center gap-3">
-              <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />
-              <p className="text-sm font-semibold">C-DAC</p>
-            </div>
-            <h2 className="text-xl font-semibold tracking-tight">Set new password</h2>
-            <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-              <label className="block text-sm font-medium">
-                Reset token
-                <input
-                  required
-                  className="field-input font-mono text-xs"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                />
-              </label>
-              <label className="block text-sm font-medium">
-                New password
-                <input
-                  required
-                  type="password"
-                  minLength={6}
-                  autoComplete="new-password"
-                  className="field-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </label>
-              <label className="block text-sm font-medium">
-                Confirm password
-                <input
-                  required
-                  type="password"
-                  minLength={6}
-                  autoComplete="new-password"
-                  className="field-input"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                />
-              </label>
-              {error ? <p className="text-sm text-critical">{error}</p> : null}
-              <button type="submit" disabled={busy} className="btn-primary w-full py-2.5">
-                {busy ? 'Saving…' : 'Update password'}
-              </button>
-            </form>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              <Link className="font-medium text-primary hover:underline" to="/login">
-                Back to sign in
-              </Link>
-            </p>
+    <AuthPanel
+      title="Set new password"
+      subtitle="Paste the token from your reset email"
+      footer={
+        <Link className="font-medium text-primary hover:underline" to="/login">
+          Back to sign in
+        </Link>
+      }
+    >
+      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+        <FormBanner message={banner} />
+        <label className="block text-sm font-medium">
+          Reset token
+          <input
+            required
+            className="field-input"
+            value={token}
+            aria-invalid={Boolean(fields.token)}
+            onChange={(e) => setToken(e.target.value)}
+          />
+          <FieldAlert message={fields.token} />
+        </label>
+        <label className="block text-sm font-medium">
+          New password
+          <input
+            required
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            className="field-input"
+            value={password}
+            aria-invalid={Boolean(fields.new_password)}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <FieldAlert message={fields.new_password} />
+        </label>
+        <label className="block text-sm font-medium">
+          Confirm password
+          <input
+            required
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            className="field-input"
+            value={confirm}
+            aria-invalid={Boolean(fields.confirm_password)}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+          <FieldAlert message={fields.confirm_password} />
+        </label>
+        {captchaEnabled ? (
+          <div>
+            <CaptchaField
+              value={captchaCode}
+              onChange={setCaptchaCode}
+              onChallenge={setCaptchaId}
+              onAvailability={setCaptchaOn}
+            />
+            <FieldAlert message={fields.captcha_code} />
           </div>
-        </CyberMatrixHero>
-      </div>
-    </PublicShell>
+        ) : null}
+        <button type="submit" disabled={busy} className="btn-primary w-full">
+          {busy ? 'Saving…' : 'Update password'}
+        </button>
+      </form>
+    </AuthPanel>
   )
 }

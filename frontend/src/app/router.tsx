@@ -50,6 +50,7 @@ import {
 } from '@/pages/workspace/screens'
 import { LandingPage } from '@/pages/public/LandingPage'
 import { LoginPage } from '@/pages/public/LoginPage'
+import { MfaOtpPage } from '@/pages/public/MfaOtpPage'
 import { ForgotPasswordPage } from '@/pages/public/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
@@ -103,6 +104,15 @@ export const router = createBrowserRouter([
   {
     path: '/reset-password',
     element: <ResetPasswordPage />,
+    errorElement: <RouteError />,
+  },
+  {
+    path: '/mfa',
+    element: (
+      <PublicOnly>
+        <MfaOtpPage />
+      </PublicOnly>
+    ),
     errorElement: <RouteError />,
   },
   {

@@ -19,7 +19,7 @@ export interface AuthState {
     username: string,
     password: string,
     captcha?: { captcha_id: string; captcha_code: string },
-  ) => Promise<void>
+  ) => Promise<rbac.LoginResult>
   logout: () => Promise<void>
   refresh: () => Promise<void>
   hasPermission: (code: string) => boolean
@@ -78,8 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       captcha?: { captcha_id: string; captcha_code: string },
     ) => {
       const result = await rbac.login(username, password, captcha)
-      setCsrfToken(result.csrf_token)
+      if (result.status === 'MFA_REQUIRED' || result.status === 'MFA_CHALLENGE') {
+        return result
+      }
+      if (result.csrf_token) setCsrfToken(result.csrf_token)
       await loadSession()
+      return result
     },
     [loadSession],
   )

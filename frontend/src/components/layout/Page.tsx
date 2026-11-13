@@ -107,9 +107,9 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border/90 bg-gradient-to-b from-muted/35 to-muted/10 px-4 py-5">
+    <div className="flex flex-col items-start gap-3 rounded-[var(--radius)] border border-dashed border-border px-4 py-5">
       <div className="min-w-0">
-        <p className="text-sm font-semibold tracking-tight">{title}</p>
+        <p className="text-sm font-semibold">{title}</p>
         <div className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">{body}</div>
       </div>
       {action ? <div className="flex flex-wrap items-center gap-2">{action}</div> : null}
