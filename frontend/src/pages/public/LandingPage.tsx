@@ -12,10 +12,14 @@ import {
 } from 'lucide-react'
 
 import { PublicShell } from '@/components/marketing/PublicShell'
-import { CubeWaveHero } from '@/components/ui/cube-wave-hero'
+import { GridPulse } from '@/components/ui/grid-pulse'
 import { HoverGrid } from '@/components/ui/hover-grid'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { cn } from '@/lib/utils'
+
+/** Halo so lit cells stay clear of hero copy (light + dark). */
+const guard =
+  '[text-shadow:0_0_6px_var(--color-background),0_0_14px_var(--color-background),0_0_30px_var(--color-background)]'
 
 const CAPABILITIES = [
   {
@@ -73,20 +77,20 @@ export function LandingPage() {
 
   return (
     <PublicShell>
-      {/* Full-bleed hero — CubeWave edge-to-edge (Cert Studio), not boxed */}
+      {/* Full-bleed hero — GridPulse (QRP indigo→cyan), light/dark via theme tokens */}
       <section
         className={cn(
           'relative isolate w-full min-h-[calc(100svh-7.5rem)] overflow-hidden',
           dark ? 'bg-background' : 'bg-surface',
         )}
       >
-        <CubeWaveHero />
+        <GridPulse className="z-0 opacity-90" />
         <div
           className={cn(
             'pointer-events-none absolute inset-0 z-[1]',
             dark
-              ? 'bg-gradient-to-b from-background/25 via-transparent to-background'
-              : 'bg-gradient-to-b from-surface/30 via-transparent to-surface',
+              ? 'bg-gradient-to-b from-background/40 via-transparent to-background'
+              : 'bg-gradient-to-b from-surface/50 via-transparent to-surface',
           )}
           aria-hidden
         />
@@ -99,13 +103,28 @@ export function LandingPage() {
                 : 'border-border/70 bg-card/75 shadow-raised',
             )}
           >
-            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-info-text uppercase">
+            <p
+              data-grid-avoid
+              className={cn(
+                'mb-3 text-xs font-bold tracking-[0.2em] text-info-text uppercase',
+                guard,
+              )}
+            >
               Centre for Development of Advanced Computing
             </p>
-            <h1 className="text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl">
+            <h1
+              data-grid-avoid
+              className={cn(
+                'text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl',
+                guard,
+              )}
+            >
               Quantum Resource Portal
             </h1>
-            <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
+            <p
+              data-grid-avoid
+              className={cn('mt-4 text-pretty text-base text-muted-foreground sm:text-lg', guard)}
+            >
               Institution-wide governance for quantum workloads: approvals, capacity, operations, and evidence in one
               place.
             </p>

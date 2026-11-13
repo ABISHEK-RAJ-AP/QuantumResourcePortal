@@ -55,6 +55,8 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   json?: unknown
   /** Extra statuses (besides 2xx) whose JSON body is returned instead of thrown, e.g. 503 from /readyz. */
   acceptStatuses?: number[]
+  /** When true, a 401 does not clear the in-memory session (anonymous probe). */
+  quietUnauthorized?: boolean
 }
 
 export interface ApiResponse<T> {
@@ -92,7 +94,7 @@ async function toApiError(response: Response): Promise<ApiError> {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
-  const { json, acceptStatuses = [], headers, ...init } = options
+  const { json, acceptStatuses = [], quietUnauthorized = false, headers, ...init } = options
   const finalHeaders = new Headers(headers)
   finalHeaders.set('Accept', 'application/json')
   let body: BodyInit | undefined
@@ -119,8 +121,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     })
   }
 
-  // An authenticated session that has expired or been revoked: let the app send the user to login.
-  if (response.status === 401 && !init.method?.toString().includes('__login')) {
+  // Expired/revoked session → clear UI auth. Anonymous session probes set quietUnauthorized.
+  if (response.status === 401 && !quietUnauthorized) {
     _onUnauthorized?.()
   }
   if (!response.ok && !acceptStatuses.includes(response.status)) {

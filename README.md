@@ -45,8 +45,8 @@ Already cloned — update and restart:
 
 ```bash
 cd ~/apps/QuantumResourcePortal
-git pull --ff-only
-bash scripts/vm-setup.sh
+git fetch origin && git checkout afk/2026-11-13 && git pull --ff-only
+bash scripts/restart-qrp.sh
 ```
 
 ## Local laptop
