@@ -41,24 +41,29 @@ Already on `266869b`. Nothing to install.
 
 The shadcn CLI default component root is `/components/ui` at the project root, next to a default `@/components/ui` alias. QRP’s real alias is `frontend/src/components/ui` (`@/components/ui`). A second root at `/components/ui` would split imports and make the CLI write files the app does not compile. Later slices stay on `@/components/ui`. Do not run `npx shadcn init`. The toolchain is already Tailwind 4 + TypeScript.
 
-## Phase 2 — GridPulse in QRP contrast (next, not started)
+## Phase 2 — GridPulse in QRP contrast (done, not mounted)
 
-Do this phase alone. Antislop mode is `during`, so UI edit is allowed. React and TSX are in place.
+File: `frontend/src/components/ui/grid-pulse.tsx`. Not imported. No `demo.tsx`. No new dependency.
 
-Source the user supplied (do not use the demo as product UI):
+Ink: each lit cell lerps computed `--primary` to `--brand-cyan` by row (indigo at the top, cyan at the bottom). A theme class change re-reads those variables. If the variable is missing, fallbacks are the hex values in `frontend/src/styles/index.css` (`#536dfe` / `#20b8d5` on a light page, `#7b8cff` / `#3ad0ea` on a dark page). The page is classified from the inherited text colour. A short shade ladder darkens the light-theme band so `#20b8d5` stays visible on `#ffffff`, and barely darkens the dark-theme band so `#7b8cff` and `#3ad0ea` stay visible on `#0b1220`. Cells behind `[data-grid-avoid]` still drop to the faint alpha. Hairlines still use `--grid-pulse-line` from `--color-foreground`.
 
-- Copy `grid-pulse.tsx` to `frontend/src/components/ui/grid-pulse.tsx`.
-- Import `cn` from `@/lib/utils`. Drop `"use client"` (Vite SPA, not Next).
-- Keep reduced motion early return, `aria-hidden`, `pointer-events-none`, canvas sleep when nothing is lit, text-avoid (`avoid` default `[data-grid-avoid]`), fade, and max-lit cap.
-- Replace `HUE_TOP` / `HUE_SPAN` rainbow (`hsl` sweep 60→270) with QRP theme ink:
-  - Light (`:root`): cells use `--primary` `#536dfe` and `--brand-cyan` `#20b8d5` at lightnesses that stay visible on `--background` `#ffffff` and do not wash `--foreground` `#172033`.
-  - Dark (`.dark`): cells use `--primary` `#7b8cff` and `--brand-cyan` `#3ad0ea` visible on `--background` `#0b1220` without washing `--foreground` `#e8eef9`.
-  - Hairline stays `--grid-pulse-line` mixed from `--color-foreground` (already in the component). Lit cells must not use the demo’s pale ladder (`TINTS` 88–56) on white, or the deep ladder on near-black if the result falls under the text colour.
-- Do not add `demo.tsx`. No “grid pulse” headline, no text toggle, no Unsplash, no new lucide icons (the component has none). `lucide-react` is already a dependency; do not add icons for this slice.
-- Mount: operator shell `chrome.tsx` has no full-bleed positioned hero. `LandingPage.tsx` and auth pages already run `CubeWaveHero` or `CyberMatrixHero`. Stacking a second canvas restyles those surfaces and costs a second animation loop. **Add the component file only.** Recommended later mount, after a surface exists that is positioned and does not already own a canvas: under that surface’s content, `data-grid-avoid` only on real text. Do not restyle the app. Do not put GridPulse on the marketing hero in this slice.
-- Verify with `npm run typecheck` in `frontend/`. Do not start a second dev server if `:5176` is already up. Browser-check only if you mount; a file-only slice has nothing to click.
+Reduced motion returns before the canvas loop. The node is `aria-hidden` and `pointer-events-none`. The draw loop stops when no cell is lit. An `IntersectionObserver` pauses the ambient beat off screen.
 
-## Later phases (one each, after Phase 2)
+`npm run typecheck` (`tsc -b`) exits 1 on a pre-existing parse error in `frontend/src/pages/public/ForgotPasswordPage.tsx` (`function motionless-brand` at line 42). That file was not edited. `grid-pulse.tsx` is not in the error list. The worktree has no `node_modules`; the check used the sibling install and did not change it.
+
+### Recommended mount (not done)
+
+Do not mount on current surfaces.
+
+- `frontend/src/pages/public/LandingPage.tsx` is a positioned hero and already runs `CubeWaveHero`.
+- Auth pages (`LoginPage.tsx`, `RegisterPage.tsx`, `ForgotPasswordPage.tsx`, `ResetPasswordPage.tsx`) already run `CyberMatrixHero`.
+- `frontend/src/components/layout/chrome.tsx` is a sticky header plus page outlet, not a full-bleed backdrop.
+
+Mount later on the first operator region that is `relative` and does not already own a canvas. Put `GridPulse` under the content. Add `data-grid-avoid` only on real text in that region. Do not restyle the app to create that region.
+
+## Later phases
+
+Phase 3 is the only next slice. Do not start it in the GridPulse commit.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
