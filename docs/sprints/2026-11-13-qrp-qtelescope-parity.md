@@ -139,6 +139,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator whose OS theme switches during the day.
 - **Shipped:** `lib/theme.ts` stores `light` | `dark` | `system`; `ThemeProvider` exposes `preference` plus resolved `theme` (so existing `theme === 'dark'` callers stay correct). Toggle cycles light → dark → system. OS `prefers-color-scheme` updates when preference is system. Header and workspace chrome show a monitor icon for system. Lucide `Monitor` already in the app.
 
+### Phase 17 — Chart system + Overview dedupe (done)
+
+- **Who:** operator reading governance charts without duplicate KPIs or theme-blind tooltips.
+- **Shipped:** `lib/chartTheme.ts` (shared `CHART_COLORS`, semantic colours, Recharts tooltip/axis). `ChartPanel` gains `state` / Retry / empty copy (TeleScope-style). Overview drops the second KPI strip that repeated Pipeline counts; My requests stays in the strip. Overview + Approvals + Metering charts use the shared theme. Metering adds an Area chart for sample depth (2D only). No ECharts dep. No new 3D ops charts (CubeWave / CyberMatrix stay decorative heroes).
+
 ## Untangle (gated)
 
 Waiting on the user: Comments, Tests, or neither. Do not delete comments or tests until they choose.

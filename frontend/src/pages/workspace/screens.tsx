@@ -3,8 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Pie,
   PieChart,
@@ -17,6 +20,7 @@ import {
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { useAuth } from '@/auth/hooks'
+import { CHART_COLORS, chartColor, rechartsAxisTick, rechartsTooltipStyles } from '@/lib/chartTheme'
 import { cn } from '@/lib/utils'
 import { CopyableId } from '@/components/data/CopyableId'
 import { ChartPanel } from '@/components/data/ChartPanel'
@@ -192,8 +196,6 @@ const APPROVAL_PATH: WorkflowStep[] = [
   { id: 'authorise', label: 'Authorise' },
 ]
 
-const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
-
 export function OverviewPage() {
   const { user } = useAuth()
   const focus = overviewFocus(user?.roles?.[0] || 'Operator')
@@ -316,25 +318,6 @@ export function OverviewPage() {
         </div>
       </Card>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/approvals">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Needs review</span>
-          <span className="text-2xl font-semibold tabular-nums">{summary.isError ? '—' : queueCount}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/approvals?filter=mine">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">My requests</span>
-          <span className="text-2xl font-semibold tabular-nums">{myApprovals.isError ? '—' : myRows.length}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/reconciliation">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Unresolved dispatch</span>
-          <span className="text-2xl font-semibold tabular-nums">{attempts.isError ? '—' : unresolvedAttempts}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/incidents">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Open incidents</span>
-          <span className="text-2xl font-semibold tabular-nums">{centre.isError ? '—' : openIncidents}</span>
-        </Link>
-      </div>
-
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartPanel
           title="Request stages"
@@ -343,30 +326,34 @@ export function OverviewPage() {
               Queue
             </Link>
           }
-          empty={summary.isError || summary.isPending || lifecycleChart.every((d) => d.value === 0)}
-        >
-          {(h) =>
-            summary.isError ? (
-              <EmptyState title="Summary unavailable" body={message(summary.error)} />
-            ) : summary.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : lifecycleChart.every((d) => d.value === 0) ? (
-              <EmptyState title="No request volume" body="Submit from a project." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={lifecycleChart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                  <Tooltip />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {lifecycleChart.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )
+          state={
+            summary.isError
+              ? 'error'
+              : summary.isPending
+                ? 'loading'
+                : lifecycleChart.every((d) => d.value === 0)
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(summary.error)}
+          onRetry={() => void summary.refetch()}
+          emptyTitle="No request volume"
+          emptyBody="Submit from a project."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={lifecycleChart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <XAxis dataKey="name" tick={rechartsAxisTick(11)} />
+                <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                <Tooltip {...rechartsTooltipStyles()} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {lifecycleChart.map((_, i) => (
+                    <Cell key={i} fill={chartColor(i)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
 
         <ChartPanel
@@ -376,36 +363,48 @@ export function OverviewPage() {
               Ledger
             </Link>
           }
-          empty={ledger.isError || ledger.isPending || quotaChart.length === 0}
-        >
-          {(h) =>
-            ledger.isError ? (
-              <EmptyState title="Quota unavailable" body={message(ledger.error)} />
-            ) : ledger.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : quotaChart.length === 0 ? (
-              <EmptyState title="No quota ledger rows" body="Daily shot ledger has no entries for this tenant yet." />
-            ) : (
-              <div className="flex h-full flex-col">
-                <div className="min-h-0 flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={quotaChart} dataKey="value" nameKey="name" innerRadius={Math.max(36, h * 0.22)} outerRadius={Math.max(56, h * 0.34)} paddingAngle={2}>
-                        {quotaChart.map((d, i) => (
-                          <Cell key={d.name} fill={d.fill || CHART_COLORS[i]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="shrink-0 text-center text-sm tabular-nums">
-                  <span className="font-semibold">{used}</span> used · <span className="font-semibold">{remaining || cap - used}</span> left
-                  {cap ? ` / ${cap}` : ''} · UTC today
-                </p>
-              </div>
-            )
+          state={
+            ledger.isError
+              ? 'error'
+              : ledger.isPending
+                ? 'loading'
+                : quotaChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(ledger.error)}
+          onRetry={() => void ledger.refetch()}
+          emptyTitle="No quota ledger rows"
+          emptyBody="Daily shot ledger has no entries for this tenant yet."
+        >
+          {(h) => (
+            <div className="flex h-full flex-col">
+              <div className="min-h-0 flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={quotaChart}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={Math.max(36, h * 0.22)}
+                      outerRadius={Math.max(56, h * 0.34)}
+                      paddingAngle={2}
+                    >
+                      {quotaChart.map((d, i) => (
+                        <Cell key={d.name} fill={d.fill || chartColor(i)} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...rechartsTooltipStyles()} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="shrink-0 text-center text-sm tabular-nums">
+                <span className="font-semibold">{used}</span> used ·{' '}
+                <span className="font-semibold">{remaining || cap - used}</span> left
+                {cap ? ` / ${cap}` : ''} · UTC today
+              </p>
+            </div>
+          )}
         </ChartPanel>
 
         <ChartPanel
@@ -415,34 +414,57 @@ export function OverviewPage() {
               Alerts
             </Link>
           }
-          empty={alertSummary.isError || alertSummary.isPending || alertBackendChart.length === 0}
-        >
-          {(h) =>
-            alertSummary.isError ? (
-              <EmptyState title="Alert rollup unavailable" body={message(alertSummary.error)} />
-            ) : alertSummary.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : alertBackendChart.length === 0 ? (
-              <EmptyState title="No active alerts" body="No active alerts returned for any backend." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={alertBackendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v) => [v, 'Active alerts']} labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')} />
-                  <Bar dataKey="value" fill="var(--chart-5)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
+          state={
+            alertSummary.isError
+              ? 'error'
+              : alertSummary.isPending
+                ? 'loading'
+                : alertBackendChart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(alertSummary.error)}
+          onRetry={() => void alertSummary.refetch()}
+          emptyTitle="No active alerts"
+          emptyBody="No active alerts returned for any backend."
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={alertBackendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
+                <XAxis type="number" allowDecimals={false} tick={rechartsAxisTick(11)} />
+                <YAxis type="category" dataKey="name" width={100} tick={rechartsAxisTick(10)} />
+                <Tooltip
+                  {...rechartsTooltipStyles()}
+                  formatter={(v) => [v, 'Active alerts']}
+                  labelFormatter={(_, p) =>
+                    String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')
+                  }
+                />
+                <Bar dataKey="value" fill="var(--chart-5)" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
       </div>
 
       <KpiStrip>
-        <MetricTile label="Fleet online" value={centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`} hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'} tone="success" />
+        <MetricTile
+          label="My requests"
+          value={myApprovals.isError ? '—' : myRows.length}
+          hint="Opened by you"
+        />
+        <MetricTile
+          label="Fleet online"
+          value={centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`}
+          hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'}
+          tone="success"
+        />
         <MetricTile label="Assets" value={summary.isError ? '—' : summary.data?.inventory_assets} />
-        <MetricTile label="Active alerts" value={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active} tone="warning" />
-        <MetricTile label="Open incidents" value={centre.isError ? '—' : openIncidents} tone={openIncidents ? 'critical' : 'neutral'} />
+        <MetricTile
+          label="Active alerts"
+          value={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active}
+          tone="warning"
+        />
       </KpiStrip>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -681,27 +703,36 @@ export function ApprovalsPage() {
           <MetricTile label="Mine" value={filter === 'mine' ? rows.length : '→'} />
         </button>
       </KpiStrip>
-      <ChartPanel title="Stages" empty={summary.isError || stageChart.every((d) => d.value === 0)}>
-        {(h) =>
-          summary.isError ? (
-            <EmptyState title="Summary unavailable" body={message(summary.error)} />
-          ) : stageChart.every((d) => d.value === 0) ? (
-            <EmptyState title="No request volume" body="Submit from a project." />
-          ) : (
-            <ResponsiveContainer width="100%" height={h}>
-              <BarChart data={stageChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                <Tooltip />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {stageChart.map((d) => (
-                    <Cell key={d.name} fill={d.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )
+      <ChartPanel
+        title="Stages"
+        state={
+          summary.isError
+            ? 'error'
+            : summary.isPending
+              ? 'loading'
+              : stageChart.every((d) => d.value === 0)
+                ? 'empty'
+                : 'ready'
         }
+        errorMessage={message(summary.error)}
+        onRetry={() => void summary.refetch()}
+        emptyTitle="No request volume"
+        emptyBody="Submit from a project."
+      >
+        {(h) => (
+          <ResponsiveContainer width="100%" height={h}>
+            <BarChart data={stageChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+              <XAxis dataKey="name" tick={rechartsAxisTick(11)} />
+              <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+              <Tooltip {...rechartsTooltipStyles()} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {stageChart.map((d) => (
+                  <Cell key={d.name} fill={d.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </ChartPanel>
       {seed.error && <Notice>{message(seed.error)}</Notice>}
       <Card>
@@ -2324,39 +2355,77 @@ export function MeteringPage() {
         <ChartPanel
           className="xl:col-span-2"
           title="Top sums in window"
-          empty={query.isError || query.isPending || chart.length === 0}
-        >
-          {(h) =>
-            query.isError ? (
-              <EmptyState title="Metering unavailable" body={message(query.error)} />
-            ) : query.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : chart.length === 0 ? (
-              <EmptyState title="No metering sums" body={`No metering rollups with a sum in the last ${hours} h. Missing rollups are not zero usage.`} />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v, _n, item) => [v, (item?.payload as { unit?: string } | undefined)?.unit || 'sum']} />
-                  <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : chart.length === 0
+                  ? 'empty'
+                  : 'ready'
           }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No metering sums"
+          emptyBody={`No metering rollups with a sum in the last ${hours} h. Missing rollups are not zero usage.`}
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
+                <XAxis type="number" tick={rechartsAxisTick(11)} />
+                <YAxis type="category" dataKey="name" width={110} tick={rechartsAxisTick(10)} />
+                <Tooltip
+                  {...rechartsTooltipStyles()}
+                  formatter={(v, _n, item) => [v, (item?.payload as { unit?: string } | undefined)?.unit || 'sum']}
+                />
+                <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
-        <Card>
-          <PanelHeader title="How to read" />
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>Rollups come from connector meters — not invented portal math.</li>
-            <li>Daily shot cap lives on Quotas; this page is broader usage telemetry.</li>
-            <li>An empty metering window means no rollups returned, not that usage was zero.</li>
-          </ul>
-          <Link className="mt-3 inline-flex text-sm font-medium text-primary hover:underline" to="/qrp/quotas">
-            Open shot ledger →
-          </Link>
-        </Card>
+        <ChartPanel
+          title="Sample depth"
+          state={
+            query.isError
+              ? 'error'
+              : query.isPending
+                ? 'loading'
+                : chart.length === 0
+                  ? 'empty'
+                  : 'ready'
+          }
+          errorMessage={message(query.error)}
+          onRetry={() => void query.refetch()}
+          emptyTitle="No sample counts"
+          emptyBody={`No available_samples in the last ${hours} h.`}
+        >
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <AreaChart data={chart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" hide />
+                <YAxis allowDecimals={false} tick={rechartsAxisTick(11)} width={28} />
+                <Tooltip {...rechartsTooltipStyles()} formatter={(v) => [v, 'Samples']} />
+                <Area
+                  type="monotone"
+                  dataKey="samples"
+                  stroke="var(--chart-1)"
+                  fill="var(--chart-1)"
+                  fillOpacity={0.2}
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </ChartPanel>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Rollups come from connector meters, not invented portal math. Daily shot cap lives on{' '}
+        <Link className="font-medium text-primary hover:underline" to="/qrp/quotas">
+          Quotas
+        </Link>
+        . An empty metering window means no rollups returned, not that usage was zero.
+      </p>
       <Card>
         <QueryBody query={query}>
           <Table

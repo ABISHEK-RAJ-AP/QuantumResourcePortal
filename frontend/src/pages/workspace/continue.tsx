@@ -38,9 +38,8 @@ import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
+import { CHART_COLORS } from '@/lib/chartTheme'
 import { message, QueryBody, shortId, Table } from '@/pages/workspace/screens'
-
-const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
 type Row = Record<string, unknown>
 
