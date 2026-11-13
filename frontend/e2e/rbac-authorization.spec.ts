@@ -3,7 +3,7 @@
  *
  * Proves the backend is the authority (S-11, plan §9): the browser cannot reach protected data without
  * a session, a signed-in admin sees the Access Control area, and a researcher is denied admin APIs even
- * by calling them directly. Run against a full stack (QRP API + gateway + TeleScope) with E2E_* creds.
+ * by calling them directly. Run against a live QRP stack with E2E_* creds.
  *
  * These are intentionally API-and-UI checks via Playwright's request context + page; they need live
  * servers, so they are skipped automatically when E2E_RUN_RBAC is not set.

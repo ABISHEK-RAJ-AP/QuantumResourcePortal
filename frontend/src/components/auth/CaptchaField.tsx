@@ -10,8 +10,8 @@ type CaptchaPayload = {
 }
 
 /**
- * Image challenge when the API exposes GET /auth/captcha (e.g. TeleScope, or QRP with
- * QRE_CAPTCHA_ENABLED). If the endpoint is missing, renders nothing and clears the challenge.
+ * Image challenge when the API exposes GET /auth/captcha (QRE_CAPTCHA_ENABLED).
+ * If the endpoint is missing, renders nothing and clears the challenge.
  */
 export function CaptchaField({
   value,

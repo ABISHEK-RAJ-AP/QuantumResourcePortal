@@ -168,7 +168,7 @@ function LangPanel({ current, onClose, onSelect }: { current: string; onClose: (
   )
 }
 
-/** Cert Studio / Q-TeleScope accessibility toolbar above the public header. */
+/** Accessibility toolbar above the public header. */
 export function A11yPreheader() {
   const barRef = useRef<HTMLDivElement>(null)
   const [openPanel, setOpenPanel] = useState<'access' | 'lang' | null>(null)

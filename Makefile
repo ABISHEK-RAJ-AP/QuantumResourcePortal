@@ -5,12 +5,23 @@ SHELL := /bin/bash
 VENV  := backend/.venv
 PY    := $(VENV)/bin/python
 
-.PHONY: help setup setup-backend setup-frontend migrate dev-api dev-web test test-backend test-frontend test-e2e lint check
+.PHONY: help setup setup-all setup-backend setup-frontend migrate start stop dev-api dev-web test test-backend test-frontend test-e2e lint check
 
 help:  ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 setup: setup-backend setup-frontend  ## Install backend and frontend dependencies
+
+setup-all:  ## Deps + lab Postgres + migrate + bootstrap admin
+	bash scripts/setup-qrp.sh
+
+start:  ## setup-all then start API + UI
+	bash scripts/start-qrp.sh
+
+stop:  ## Stop API/UI started by start-qrp / vm-setup (best-effort)
+	@test -f logs/api.pid && kill $$(cat logs/api.pid) 2>/dev/null || true
+	@test -f logs/ui.pid && kill $$(cat logs/ui.pid) 2>/dev/null || true
+	@echo "[qrp] stop signalled"
 
 setup-backend:  ## Create the Python venv and install backend dependencies
 	test -d $(VENV) || python3 -m venv $(VENV)

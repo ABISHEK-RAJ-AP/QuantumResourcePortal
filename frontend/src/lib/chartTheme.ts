@@ -1,5 +1,5 @@
 /**
- * Shared chart tokens for Recharts (QRP). Mirrors Q-TeleScope chartTheme jobs:
+ * Shared chart tokens for Recharts (QRP):
  * one series palette, semantic status colours, tooltip/axis ink that follow light/dark.
  */
 

@@ -18,7 +18,7 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   server: {
-    // 5173 is Q-TeleScope. `::` accepts localhost on IPv4 and IPv6.
+    // QRP UI default. `::` accepts localhost on IPv4 and IPv6.
     port: 5176,
     strictPort: true,
     host: '::',

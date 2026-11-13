@@ -25,7 +25,7 @@ function readDisabled() {
 }
 
 /**
- * Original TeleScope / Cert Studio hero: WebGL CubeWave.
+ * Landing hero: WebGL CubeWave.
  * Soft orbs only when a11y pause, WebGL disabled, or R3F fails.
  */
 export function CubeWaveHero({ className }: { className?: string }) {

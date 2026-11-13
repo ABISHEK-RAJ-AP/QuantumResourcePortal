@@ -1,63 +1,64 @@
 #!/usr/bin/env bash
-# VM: Quantum Resource Portal only (this repo). Starts QRE API :8000 + Vite :5176.
-# Q-TeleScope is a separate application; do not point this portal at TeleScope.
+# VM / headless: install deps, lab DB, migrate, start QRP API + UI (this repo only).
 set -euo pipefail
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/qrp-common.sh
+source "$ROOT/scripts/lib/qrp-common.sh"
+
 cd "$ROOT"
+qrp_bootstrap_path
 
-log() { printf '\033[1;36m[qrp-vm]\033[0m %s\n' "$*"; }
-die() { printf '\033[1;31m[qrp-vm]\033[0m %s\n' "$*" >&2; exit 1; }
+command -v git >/dev/null && git pull --ff-only || qrp_log "git pull skipped"
 
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
-export PATH="$HOME/miniforge3/bin:$HOME/.local/bin:/usr/local/bin:${PATH:-}"
+bash "$ROOT/scripts/setup-qrp.sh"
+# shellcheck source=/dev/null
+source "$ROOT/logs/runtime.env"
 
-command -v git >/dev/null && git pull --ff-only || log "git pull skipped"
-
-API_PORT="${API_PORT:-8000}"
-UI_PORT="${UI_PORT:-5176}"
+API_PORT="${API_PORT:-${QRP_API_PORT:-8000}}"
+UI_PORT="${UI_PORT:-${QRP_UI_PORT:-5176}}"
+API_TARGET="http://127.0.0.1:${API_PORT}"
+PY="$ROOT/backend/.venv/bin/python"
 mkdir -p "$ROOT/logs"
 
-VENV="$ROOT/backend/.venv"
-PY="$VENV/bin/python"
-if [[ ! -x "$PY" ]]; then
-  log "Backend setup"
-  make setup-backend
+# Prefer caller-forced API_PORT; rewrite runtime.env if needed.
+if [[ "${API_PORT}" != "${QRP_API_PORT:-}" ]]; then
+  if qrp_port_listening "$API_PORT" && ! qrp_is_qrp_api "$API_PORT"; then
+    qrp_die "Port ${API_PORT} is in use by another process. Set API_PORT to a free port."
+  fi
 fi
 
-[[ -f "$ROOT/backend/.env" ]] || cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
-log "Database migrate"
-make migrate || die "alembic failed — create Postgres database qre per README"
-
-if ! curl -sf -m 1 "http://127.0.0.1:${API_PORT}/healthz" >/dev/null 2>&1; then
-  log "Start QRE API :${API_PORT}"
+if ! qrp_is_qrp_api "$API_PORT"; then
+  qrp_log "Start API :${API_PORT}"
   nohup "$PY" -m uvicorn qre.main:app --app-dir "$ROOT/backend" --host 0.0.0.0 --port "$API_PORT" \
     >"$ROOT/logs/api.log" 2>&1 &
   echo $! >"$ROOT/logs/api.pid"
+  for _ in $(seq 1 40); do
+    qrp_is_qrp_api "$API_PORT" && break
+    sleep 0.25
+  done
+  qrp_is_qrp_api "$API_PORT" || qrp_die "API failed (logs/api.log)"
 else
-  log "API already on :${API_PORT}"
+  qrp_log "API already on :${API_PORT}"
 fi
 
-command -v npm >/dev/null || die "npm missing"
-if [[ ! -d frontend/node_modules ]]; then
-  log "npm install"
-  (cd frontend && npm install)
-fi
-
-if curl -sf -m 1 "http://127.0.0.1:${UI_PORT}/" >/dev/null 2>&1; then
-  log "UI already on :${UI_PORT}"
+if curl -sf -m 1 -o /dev/null "http://127.0.0.1:${UI_PORT}/" 2>/dev/null; then
+  qrp_log "UI already on :${UI_PORT}"
 else
-  log "Start Vite :${UI_PORT}"
-  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && npm run dev -- --host 0.0.0.0 --port $UI_PORT" \
+  qrp_log "Start UI :${UI_PORT}"
+  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && QRP_API_TARGET=$(printf %q "$API_TARGET") npm run dev -- --host 0.0.0.0 --port ${UI_PORT}" \
     >"$ROOT/logs/ui.log" 2>&1 &
   echo $! >"$ROOT/logs/ui.pid"
 fi
 
-log "Portal  http://0.0.0.0:${UI_PORT}/qrp"
-log "API     http://0.0.0.0:${API_PORT}/healthz"
-log "Admin   use seeded lab principal after migrate (see docs/RBAC_DELIVERY.md)"
-echo
-echo "Manual:"
-echo "  cd $ROOT && make setup && make migrate"
-echo "  make dev-api    # terminal 1"
-echo "  make dev-web    # terminal 2 (or port 5176: cd frontend && npm run dev -- --host 0.0.0.0 --port 5176)"
+cat >"$ROOT/logs/runtime.env" <<EOF
+QRP_API_PORT=${API_PORT}
+QRP_UI_PORT=${UI_PORT}
+QRP_API_TARGET=${API_TARGET}
+QRP_PGPORT=${QRP_PGPORT:-}
+QRP_DATABASE_URL=${QRP_DATABASE_URL:-}
+EOF
+
+qrp_log "Portal  http://0.0.0.0:${UI_PORT}/qrp"
+qrp_log "API     http://0.0.0.0:${API_PORT}/healthz"
+qrp_log "Admin   admin / Admin-Strong-Pw-2026"

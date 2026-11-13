@@ -1,10 +1,8 @@
 # Quantum Resource Portal (QRP)
 
-**Separate application from Q-TeleScope.** This repository ships its own FastAPI backend (`backend/qre/`) and React frontend. Do not proxy workspace API calls to the TeleScope monorepo.
+Standalone Govern workspace for the Quantum Resource Ecosystem (QRE): resource inventory, provider onboarding, approvals and quotas, scheduling, metering, SLA, support and audit.
 
-The **Govern** workspace of the Quantum Resource Ecosystem (QRE): resource inventory, provider onboarding, approvals and quotas, scheduling, metering, SLA, support and audit.
-
-Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`docs/00_REQUIREMENTS_AND_DESIGN.md`](docs/00_REQUIREMENTS_AND_DESIGN.md) for the requirement mapping and design, and [`docs/DECISIONS.md`](docs/DECISIONS.md) for open decisions.
+Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`docs/00_REQUIREMENTS_AND_DESIGN.md`](docs/00_REQUIREMENTS_AND_DESIGN.md) and [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 | Layer | Stack |
 |---|---|
@@ -17,26 +15,31 @@ Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`do
 
 **Phase 1 (foundation) is complete.** API health and readiness, problem+json errors, correlation ids, JSON logs, the Alembic baseline, the design tokens and the platform status page are in place.
 
-## Quick start (Ubuntu 24.04)
+## Quick start (one script)
 
-Prerequisites: Python 3.12+, Node.js 20.19+ or 22.12+, PostgreSQL 16. The full walkthrough is [`docs/PHASE_1_GUIDE.md`](docs/PHASE_1_GUIDE.md).
+Requires Python 3.11+, Node.js 20+, and PostgreSQL tools (`initdb` / `postgres` / `psql` — system package or miniforge). The setup script installs Python/Node project deps, starts a lab Postgres cluster under `.pgdata` when nothing is listening, migrates, and bootstraps a lab admin.
 
 ```bash
-# 1. Database (once)
-sudo -u postgres psql -c "CREATE ROLE qre_app WITH LOGIN PASSWORD 'qre_dev_password';"
-sudo -u postgres psql -c "CREATE DATABASE qre OWNER qre_app;"
-sudo -u postgres psql -c "CREATE DATABASE qre_test OWNER qre_app;"
+bash scripts/setup-qrp.sh   # deps + DB + migrate + admin
+bash scripts/start-qrp.sh   # API + UI (idempotent; re-runs setup)
+```
 
-# 2. Dependencies, config and schema
-make setup        # venv + pip install, npm ci, creates backend/.env
+Portal: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000/healthz (or the free port written to `logs/runtime.env`)
+
+Lab admin (override with `QRE_BOOTSTRAP_USERNAME` / `QRE_BOOTSTRAP_PASSWORD`):
+
+```
+admin / Admin-Strong-Pw-2026
+```
+
+### Make targets (optional)
+
+```bash
+make setup        # venv + pip + npm only (no DB)
 make migrate      # alembic upgrade head
-
-# 3. Run (two terminals)
-make dev-api      # http://127.0.0.1:8000  (API docs: /api/v1/docs)
-make dev-web      # http://localhost:5173  (open this one)
-
-# 4. Verify
-make check        # lint + backend and frontend tests
+make dev-api      # API with reload
+make dev-web      # Vite on :5176 (proxies /api to QRP_API_TARGET or :8000)
+make check        # lint + unit tests
 ```
 
 ## Repository layout
@@ -45,38 +48,23 @@ make check        # lint + backend and frontend tests
 backend/   FastAPI app (qre/), Alembic migrations, tests
 frontend/  Vite + React app (src/), Playwright e2e (e2e/)
 docs/      Requirements mapping, design, phase guides, decision log
+scripts/   setup-qrp.sh, start-qrp.sh, vm-setup.sh
 ```
-
-Run `make help` to see all commands.
-
-## Desktop / Windows launchers
-
-From this repository root:
-
-```bash
-# Linux — separate terminals for API + Vite (windows stay open)
-./scripts/start-qrp.sh
-```
-
-```powershell
-# Windows / PowerShell
-.\scripts\Start-QRP.ps1
-```
-
-Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000
-
-When developing inside the larger Quantum Monitoring monorepo, use
-`Quantum_Monitoring-main/scripts/start-qrp.sh` so shared Postgres/Redis and the
-integrated TeleScope API on `:8000` start with the portal.
 
 ## VM
 
 ```bash
 git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
 cd QuantumResourcePortal
-# API is Q-TeleScope on :8000 (portal proxies /api)
-export TELESCOPE_ROOT=/path/to/QTelescope
 bash scripts/vm-setup.sh
 ```
 
 Portal: http://\<host\>:5176/qrp
+
+Optional: `API_PORT=8000 UI_PORT=5176 bash scripts/vm-setup.sh`
+
+## Windows
+
+```powershell
+.\scripts\Start-QRP.ps1
+```

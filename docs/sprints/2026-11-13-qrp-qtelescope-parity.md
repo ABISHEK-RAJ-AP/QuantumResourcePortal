@@ -157,7 +157,7 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 ### Phase 20 — Soft captcha + freshness guard (done)
 
 - **Who:** operator signing in; shell freshness line.
-- **Shipped:** `CaptchaField` probes `GET /api/v1/auth/captcha` and only renders when the API serves a challenge (lab QRP has captcha off). Login/RBAC accept optional `captcha_id`/`captcha_code`. `DataFreshness` ignores TanStack `dataUpdatedAt === 0`. Lab verify: QRP API on `:8001` (user-space Postgres `:5433`), Vite `QRP_API_TARGET=http://127.0.0.1:8001` — do not proxy TeleScope `:8000`.
+- **Shipped:** `CaptchaField` probes `GET /api/v1/auth/captcha` and only renders when the API serves a challenge (lab captcha off). Login/RBAC accept optional `captcha_id`/`captcha_code`. `DataFreshness` ignores TanStack `dataUpdatedAt === 0`. Lab: `scripts/setup-qrp.sh` + `scripts/start-qrp.sh` (own Postgres + API; Vite `QRP_API_TARGET`).
 
 ## Untangle (closed: neither)
 

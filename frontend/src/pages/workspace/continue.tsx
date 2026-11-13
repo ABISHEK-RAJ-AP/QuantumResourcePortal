@@ -3494,7 +3494,7 @@ export function JobsPage() {
     <Page
       eyebrow="Operations"
       title="Provider jobs"
-      description="Provider execution records (TeleScope job catalogue). Not QRP governance approval state — use Approvals for that."
+      description="Provider execution records. Not governance approval state — use Approvals for that."
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3747,7 +3747,7 @@ export function CentrePage() {
     <Page
       eyebrow="Operations"
       title="Operations Centre"
-      description="Fleet posture, collector health, queue depth, and open exceptions. Not a TeleScope live console."
+      description="Fleet posture, collector health, queue depth, and open exceptions."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/approvals">

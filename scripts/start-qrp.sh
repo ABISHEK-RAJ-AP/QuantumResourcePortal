@@ -1,84 +1,56 @@
 #!/usr/bin/env bash
-# Standalone QRP launcher (this repo root = quantum-resource-portal).
-# Starts Postgres (if configured), FastAPI :8000, Vite :5176 in separate terminals when possible.
+# Start QRP API + UI after ensuring lab deps/DB exist.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=lib/qrp-common.sh
+source "$ROOT/scripts/lib/qrp-common.sh"
+
 cd "$ROOT"
+qrp_bootstrap_path
 
-log() { printf '\033[1;36m[qrp]\033[0m %s\n' "$*"; }
-pause_fail() {
-  printf '\033[1;31m[qrp]\033[0m %s\n' "$*" >&2
-  read -r -p "Press Enter to close… " _
-  exit 1
-}
+# Always make sure the stack is ready (idempotent).
+bash "$ROOT/scripts/setup-qrp.sh"
 
-spawn_term() {
-  local title="$1"
-  shift
-  local cmd="$*"
-  local wrapped="cd $(printf %q "$ROOT"); $cmd; ec=\$?; echo; echo \"[exit \$ec]\"; read -r -p 'Press Enter to close this terminal… ' _"
-  if command -v gnome-terminal >/dev/null 2>&1; then
-    gnome-terminal --title="$title" -- bash -lc "$wrapped" &
-    return 0
-  fi
-  if command -v x-terminal-emulator >/dev/null 2>&1; then
-    x-terminal-emulator -T "$title" -e bash -lc "$wrapped" &
-    return 0
-  fi
-  log "No GUI terminal — inline: $title"
-  bash -lc "$cmd"
-}
+# shellcheck source=/dev/null
+source "$ROOT/logs/runtime.env"
 
-# Prefer monorepo PATH bootstrap (nvm / miniforge) when available
-MONOREPO_ENV="$(cd "$ROOT/.." 2>/dev/null && pwd)/scripts/_dev-env.sh"
-if [[ -f "$MONOREPO_ENV" ]]; then
-  # shellcheck source=/dev/null
-  source "$MONOREPO_ENV"
-elif [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-  # shellcheck source=/dev/null
-  source "$HOME/.nvm/nvm.sh" >/dev/null 2>&1 || true
-fi
-command -v npm >/dev/null || pause_fail "npm not found (install Node or nvm; PATH=$PATH)"
+API_PORT="${QRP_API_PORT:-8000}"
+UI_PORT="${QRP_UI_PORT:-5176}"
+API_TARGET="${QRP_API_TARGET:-http://127.0.0.1:${API_PORT}}"
+PY="$ROOT/backend/.venv/bin/python"
+mkdir -p "$ROOT/logs"
 
-VENV="$ROOT/backend/.venv"
-PY="$VENV/bin/python"
-if [[ ! -x "$PY" ]]; then
-  log "Creating backend venv…"
-  python3 -m venv "$VENV" || pause_fail "python3-venv missing"
-  "$PY" -m pip install -q -U pip
-  "$PY" -m pip install -q -r backend/requirements-dev.txt
-fi
-[[ -f backend/.env ]] || cp backend/.env.example backend/.env
-
-if [[ ! -d frontend/node_modules ]]; then
-  log "npm ci / install frontend…"
-  (cd frontend && (npm ci || npm install)) || pause_fail "frontend install failed"
+if qrp_is_qrp_api "$API_PORT"; then
+  qrp_log "API already on :${API_PORT}"
+else
+  qrp_log "Starting API :${API_PORT}"
+  nohup "$PY" -m uvicorn qre.main:app --app-dir "$ROOT/backend" --host 127.0.0.1 --port "$API_PORT" \
+    >"$ROOT/logs/api.log" 2>&1 &
+  echo $! >"$ROOT/logs/api.pid"
+  for _ in $(seq 1 40); do
+    qrp_is_qrp_api "$API_PORT" && break
+    sleep 0.25
+  done
+  qrp_is_qrp_api "$API_PORT" || qrp_die "API failed to start (see logs/api.log)"
 fi
 
-# Optional: alembic if DB reachable
-if "$PY" -c "import asyncpg" 2>/dev/null; then
-  (cd backend && ../backend/.venv/bin/alembic upgrade head) 2>/dev/null || log "migrate skipped (DB may be down — see README)"
+if curl -sf -m 1 -o /dev/null "http://127.0.0.1:${UI_PORT}/" 2>/dev/null; then
+  qrp_log "UI already on :${UI_PORT}"
+else
+  qrp_log "Starting UI :${UI_PORT} → ${API_TARGET}"
+  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && QRP_API_TARGET=$(printf %q "$API_TARGET") npm run dev -- --host 127.0.0.1 --port ${UI_PORT}" \
+    >"$ROOT/logs/ui.log" 2>&1 &
+  echo $! >"$ROOT/logs/ui.pid"
+  for _ in $(seq 1 60); do
+    curl -sf -m 1 -o /dev/null "http://127.0.0.1:${UI_PORT}/" 2>/dev/null && break
+    sleep 0.25
+  done
 fi
 
-API_UP=0
-UI_UP=0
-curl -sf -m 1 http://127.0.0.1:8000/readyz >/dev/null 2>&1 && API_UP=1 || true
-curl -sf -m 1 -o /dev/null http://127.0.0.1:5176/ >/dev/null 2>&1 && UI_UP=1 || true
+command -v xdg-open >/dev/null && xdg-open "http://127.0.0.1:${UI_PORT}/qrp" >/dev/null 2>&1 || true
 
-if [[ "$API_UP" -eq 0 ]]; then
-  log "Opening terminal: QRP API :8000"
-  spawn_term "QRP API :8000" \
-    "cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port 8000"
-fi
-if [[ "$UI_UP" -eq 0 ]]; then
-  log "Opening terminal: QRP UI :5176"
-  spawn_term "QRP UI :5176" \
-    "cd frontend && npm run dev -- --host 127.0.0.1 --port 5176"
-fi
-
-sleep 2
-command -v xdg-open >/dev/null && xdg-open "http://127.0.0.1:5176/qrp" >/dev/null 2>&1 || true
-log "  API    http://127.0.0.1:8000  (docs /api/v1/docs)"
-log "  Portal http://127.0.0.1:5176/qrp"
-read -r -p "Launcher OK — Press Enter to close (servers keep running)… " _
+qrp_log "Portal  http://127.0.0.1:${UI_PORT}/qrp"
+qrp_log "API     http://127.0.0.1:${API_PORT}/healthz"
+qrp_log "Docs    http://127.0.0.1:${API_PORT}/api/v1/docs"
+qrp_log "Admin   admin / Admin-Strong-Pw-2026  (override with QRE_BOOTSTRAP_*)"

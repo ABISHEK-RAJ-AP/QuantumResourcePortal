@@ -39,7 +39,7 @@ type PublicFooterProps = {
   className?: string
 }
 
-/** Cert Studio / Q-TeleScope public footer: brand + link columns + copyright bar. */
+/** Public marketing footer: brand + link columns + copyright bar. */
 export function PublicFooter({ variant = 'dark', className }: PublicFooterProps) {
   const year = new Date().getFullYear()
   const dark = variant === 'dark'
