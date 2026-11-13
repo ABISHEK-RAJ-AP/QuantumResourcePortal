@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–8 are done. Do not start phase 9 until this commit is accepted.
+Phases 3–9 are done. Do not start phase 10 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -99,12 +99,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator who set reduced motion, and keyboard users.
 - **Shipped:** `HoverGrid` reads `prefers-reduced-motion` and `a11y-pause-anim`. When reduced: no mousemove, `pointer-events-none`, static mask, no transition. Still `aria-hidden`. When motion is allowed, cursor tracking stays. `chrome.tsx`: visible `focus-visible` ring on sidebar route links and the refresh control (palette and theme already had it). GridPulse left unmounted. Empty copy and Retry unchanged.
 
-### Phase 9 — Workspace toolbar density
+### Phase 9 — Workspace toolbar density (done)
 
 - **Who:** operator fitting filters and freshness on one row.
-- **Evidence:** QRP density hooks in `index.css` (`.shell-canvas[data-density]`) and header wrap in `chrome.tsx`. Q-TeleScope `.page-toolbar-unified` in `app-shell-density.css`.
-- **Size:** medium. One toolbar row. Do not restyle every page.
-- **Risk:** medium layout. Tables in `screens.tsx` must not lose their filter.
+- **Shipped:** `chrome.tsx` header uses `.workspace-chrome-header` / `.workspace-toolbar`: tighter pad, title `text-xl`, freshness and controls on one wrapping row (no column stack). Shell control height stays `h-9` / `2.25rem`. `index.css` adds toolbar rules and `--qrp-canvas-pad-y` so compact density shortens page top pad. Sidebar unchanged. Palette, HoverGrid, empty copy, Retry unchanged.
 
 ### Phase 10 — Refresh without a full reload
 

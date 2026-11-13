@@ -265,19 +265,54 @@
 }
 
 .shell-canvas {
+  --qrp-canvas-pad-y: 1rem;
+  padding-top: var(--qrp-canvas-pad-y);
   background-image:
     radial-gradient(ellipse 70% 40% at 100% 0%, rgb(83 109 254 / 0.06), transparent 55%),
     radial-gradient(ellipse 50% 35% at 0% 100%, rgb(32 184 213 / 0.05), transparent 50%);
+}
+
+/* Ops chrome header: tight vertical pad, controls share one toolbar row */
+.workspace-chrome-header {
+  --workspace-toolbar-control-h: 2.25rem; /* h-9 shell pattern */
+  padding-inline: 1rem;
+  padding-block: 0.625rem;
+}
+@media (min-width: 640px) {
+  .workspace-chrome-header {
+    padding-inline: 1.25rem;
+  }
+}
+@media (min-width: 1024px) {
+  .workspace-chrome-header {
+    padding-inline: 1.5rem;
+  }
+}
+
+.workspace-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+}
+
+.workspace-toolbar > button {
+  min-height: var(--workspace-toolbar-control-h);
+  align-self: center;
 }
 
 /* Workspace density (Cert Studio–style compact lists) */
 .shell-canvas[data-density='compact'] {
   --qrp-cell-y: 0.35rem;
   --qrp-gap: 0.75rem;
+  --qrp-canvas-pad-y: 0.75rem;
 }
 .shell-canvas[data-density='comfortable'] {
   --qrp-cell-y: 0.625rem;
   --qrp-gap: 1rem;
+  --qrp-canvas-pad-y: 1rem;
 }
 .shell-canvas[data-density='compact'] .flex.w-full.max-w-none.flex-col {
   gap: var(--qrp-gap);

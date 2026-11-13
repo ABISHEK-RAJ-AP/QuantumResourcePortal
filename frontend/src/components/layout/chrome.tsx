@@ -391,60 +391,60 @@ function ShellInner() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-8 z-10 border-b border-border/80 bg-card/90 px-6 py-4 backdrop-blur-md">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
+        <header className="workspace-chrome-header sticky top-8 z-10 border-b border-border/80 bg-card/90 backdrop-blur-md">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <div className="min-w-0 flex-1">
               {chrome.crumbs && chrome.crumbs.length > 0 ? (
                 <Breadcrumbs items={chrome.crumbs} />
               ) : chrome.eyebrow ? (
                 <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
-              <h1 className="text-2xl font-semibold tracking-tight text-balance">{chrome.title || 'Workspace'}</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]">
+                {chrome.title || 'Workspace'}
+              </h1>
               {chrome.description ? (
-                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{chrome.description}</p>
+                <p className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm">{chrome.description}</p>
               ) : null}
             </div>
-            <div className="flex min-w-0 max-w-full shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="workspace-toolbar">
               <DataFreshness updatedAt={chrome.updatedAt} />
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <WorkspaceLayoutControls />
-                <button
-                  type="button"
-                  className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-2.5 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
-                  aria-label="Open command palette"
-                  title="Go to page (Ctrl/Cmd+K)"
-                  onClick={openPalette}
-                >
-                  <Search className="size-4 shrink-0" />
-                  <kbd className="hidden rounded border border-input bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline">
-                    Ctrl/Cmd+K
-                  </kbd>
-                </button>
-                <button
-                  type="button"
-                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
-                  aria-label="Refresh page"
-                  title="Refresh"
-                  onClick={() => window.location.reload()}
-                >
-                  <RefreshCw className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
-                  aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                  title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-                  onClick={toggleTheme}
-                >
-                  {theme === 'dark' ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-foreground" />}
-                </button>
-              </div>
+              <WorkspaceLayoutControls />
+              <button
+                type="button"
+                className="inline-flex h-9 min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-2.5 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                aria-label="Open command palette"
+                title="Go to page (Ctrl/Cmd+K)"
+                onClick={openPalette}
+              >
+                <Search className="size-4 shrink-0" />
+                <kbd className="hidden rounded border border-input bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline">
+                  Ctrl/Cmd+K
+                </kbd>
+              </button>
+              <button
+                type="button"
+                className="grid size-9 min-h-9 min-w-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                aria-label="Refresh page"
+                title="Refresh"
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw className="size-4" />
+              </button>
+              <button
+                type="button"
+                className="grid size-9 min-h-9 min-w-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-foreground" />}
+              </button>
             </div>
           </div>
         </header>
         <div
           id="page-content"
-          className="shell-canvas min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-6 pb-24"
+          className="shell-canvas min-w-0 flex-1 px-4 sm:px-5 lg:px-6 pb-24"
           data-density={prefs.density}
           data-chart-size={prefs.chartSize}
           data-kpi={prefs.kpiLayout}
