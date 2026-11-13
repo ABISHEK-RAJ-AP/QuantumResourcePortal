@@ -45,7 +45,7 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
 # API sub-paths reachable without a session (LLD §4.2 public allow-list). Everything else on the
 # versioned API router must carry an authorisation dependency — asserted at start-up. Health probes
 # live on a separate router and are intentionally public, so they are not part of this check.
-PUBLIC_API_SUFFIXES = frozenset({"/auth/login"})
+PUBLIC_API_SUFFIXES = frozenset({"/auth/login", "/auth/session"})
 
 
 def _iter_api_routes(routes: object):

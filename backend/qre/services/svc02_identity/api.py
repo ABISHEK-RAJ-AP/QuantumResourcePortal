@@ -19,6 +19,7 @@ from qre.services.svc02_identity.service import (
     LoginSuccess,
     login_local,
     logout,
+    resolve_context,
 )
 
 router = APIRouter(tags=["identity"])
@@ -105,11 +106,7 @@ async def auth_logout(
     return {"status": "SIGNED_OUT"}
 
 
-@router.get("/me")
-async def me(
-    ctx: TenantContext = Depends(get_ctx),
-    session: AsyncSession = Depends(db_session),
-) -> dict:
+async def _me_payload(session: AsyncSession, ctx: TenantContext) -> dict:
     from sqlalchemy import text
 
     roles = (
@@ -129,6 +126,48 @@ async def me(
         "roles": list(roles),
         "permissions": sorted(ctx.permissions()),
     }
+
+
+@router.get("/auth/session")
+async def auth_session(
+    request: Request,
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    """SPA session probe — always 200 so anonymous pages do not log 401 noise."""
+    settings = request.app.state.settings
+    sid = request.cookies.get(settings.session_cookie_name)
+    if not sid:
+        return {
+            "authenticated": False,
+            "principal_id": None,
+            "principal_type": None,
+            "tenant_id": None,
+            "roles": [],
+            "permissions": [],
+        }
+    corr = request.scope.get("state", {}).get("correlation_id", "-")
+    try:
+        ctx, _csrf = await resolve_context(
+            session, settings, sid=sid, correlation_id=corr,
+        )
+    except Exception:
+        return {
+            "authenticated": False,
+            "principal_id": None,
+            "principal_type": None,
+            "tenant_id": None,
+            "roles": [],
+            "permissions": [],
+        }
+    return await _me_payload(session, ctx)
+
+
+@router.get("/me")
+async def me(
+    ctx: TenantContext = Depends(get_ctx),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    return await _me_payload(session, ctx)
 
 
 @router.get("/auth/csrf")

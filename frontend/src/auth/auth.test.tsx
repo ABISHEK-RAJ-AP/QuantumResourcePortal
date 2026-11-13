@@ -17,6 +17,7 @@ import { useAuth, useHasAnyPermission, useHasPermission, useHasRole } from '@/au
 
 // --- mock the typed RBAC client -------------------------------------------------------------
 vi.mock('@/api/rbac', () => ({
+  getSession: vi.fn(),
   getMe: vi.fn(),
   getCsrf: vi.fn(),
   login: vi.fn(),
@@ -31,7 +32,7 @@ vi.mock('@/api/client', () => ({
 
 import * as rbac from '@/api/rbac'
 
-const getMe = vi.mocked(rbac.getMe)
+const getSession = vi.mocked(rbac.getSession)
 const getCsrf = vi.mocked(rbac.getCsrf)
 
 function meWith(permissions: string[], roles: string[] = []) {
@@ -52,12 +53,18 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-/** Render `children` inside a settled AuthProvider (waits for the /me load to finish). */
+/** Render `children` inside a settled AuthProvider (waits for the session probe to finish). */
 async function renderAuthed(ui: ReactNode, { authed = true, permissions = [] as string[], roles = [] as string[] } = {}) {
   if (authed) {
-    getMe.mockResolvedValue(meWith(permissions, roles) as never)
+    getSession.mockResolvedValue(meWith(permissions, roles) as never)
   } else {
-    getMe.mockRejectedValue(new Error('401'))
+    getSession.mockResolvedValue({
+      authenticated: false,
+      principal_id: '',
+      tenant_id: '',
+      roles: [],
+      permissions: [],
+    } as never)
   }
   render(
     <MemoryRouter initialEntries={['/start']}>
@@ -69,8 +76,7 @@ async function renderAuthed(ui: ReactNode, { authed = true, permissions = [] as 
       </AuthProvider>
     </MemoryRouter>,
   )
-  // AuthProvider shows nothing until loading flips; wait until a known sentinel or page appears.
-  await waitFor(() => expect(getMe).toHaveBeenCalled())
+  await waitFor(() => expect(getSession).toHaveBeenCalled())
 }
 
 // --- hooks ----------------------------------------------------------------------------------

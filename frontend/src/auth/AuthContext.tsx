@@ -35,9 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadSession = useCallback(async () => {
     try {
-      const me = await rbac.getMe()
+      const me = await rbac.getSession()
+      if (!me.authenticated) {
+        setUser(null)
+        setCsrfToken(null)
+        return
+      }
       setUser(me)
-      // Refresh the CSRF token so writes work after a reload (the token is not persisted).
       try {
         const { csrf_token } = await rbac.getCsrf()
         setCsrfToken(csrf_token)

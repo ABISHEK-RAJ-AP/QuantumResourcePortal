@@ -2,7 +2,7 @@
  * Typed client for the QRP RBAC backend (RBAC-4/5 endpoints). Same-origin; the session cookie and
  * CSRF token are handled by `api/client.ts`. Everything here maps 1:1 to a FastAPI route.
  */
-import { ApiError, apiGet, apiRequest } from '@/api/client'
+import { apiGet, apiRequest } from '@/api/client'
 
 const BASE = '/api/v1'
 
@@ -77,23 +77,13 @@ export interface EffectivePermissions {
 
 // ---- session / identity -------------------------------------------------------------------------
 
-/** Session probe. 401 means signed out (expected on public pages); does not clear auth handlers twice. */
-export async function getMe(): Promise<Me> {
-  const res = await apiRequest<Me>(`${BASE}/me`, {
-    method: 'GET',
-    acceptStatuses: [401],
-    quietUnauthorized: true,
-  })
-  if (res.status === 401) {
-    throw new ApiError({
-      code: 'AUTH_REQUIRED',
-      title: 'Authentication is required.',
-      detail: 'Not signed in.',
-      status: 401,
-    })
-  }
-  return res.data
+/** Soft session probe (always HTTP 200). Prefer this for AuthProvider mount. */
+export async function getSession(): Promise<Me> {
+  return apiGet<Me>(`${BASE}/auth/session`)
 }
+
+/** Hard /me — 401 when signed out (protected routes / tests). */
+export const getMe = () => apiGet<Me>(`${BASE}/me`)
 export const getNavigation = () => apiGet<{ items: NavItem[] }>(`${BASE}/me/navigation`)
 export const getMyGrants = () =>
   apiGet<{ permissions: string[]; grants: Grant[] }>(`${BASE}/me/permissions`)

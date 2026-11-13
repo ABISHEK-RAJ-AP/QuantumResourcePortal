@@ -6,7 +6,8 @@ import { defineConfig } from 'vite'
 
 // Backend address used by the dev-server proxy. The browser only ever talks to the Vite origin,
 // so session cookies stay same-origin (LLD PD-34) and no CORS configuration is needed.
-const API_TARGET = process.env.QRP_API_TARGET ?? 'http://127.0.0.1:8000'
+// Default matches scripts/setup-qrp.sh lab API port (8088), not a neighbour app on :8000.
+const API_TARGET = process.env.QRP_API_TARGET ?? 'http://127.0.0.1:8088'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
