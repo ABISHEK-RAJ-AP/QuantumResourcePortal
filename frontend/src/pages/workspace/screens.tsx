@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -33,7 +33,6 @@ import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import {
   Card,
   EmptyState,
-  LoadingLine,
   MetricTile,
   Notice,
   Page,
@@ -41,6 +40,8 @@ import {
   stateLabel,
   stateTone,
 } from '@/components/layout/Page'
+import { BoneyardSkeleton } from '@/components/ui/BoneyardSkeleton'
+import { notifyError } from '@/lib/toast'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 
 /** Role → which pipeline stage to emphasize (counts still come from APIs). */
@@ -117,12 +118,12 @@ export function Table({
           return sortDir === 'asc' ? cmp : -cmp
         })
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-lg border border-border/60">
       <table className="data-table w-full text-left text-sm">
-        <thead>
+        <thead className="sticky top-0 z-[1] bg-card/95 backdrop-blur-sm">
           <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
             {columns.map((col) => (
-              <th key={col.key} className="px-3 py-2.5 font-semibold first:ps-0 last:pe-0">
+              <th key={col.key} className="px-3 py-2.5 font-semibold first:ps-3 last:pe-3">
                 {col.sortable ? (
                   <button
                     type="button"
@@ -147,9 +148,12 @@ export function Table({
         </thead>
         <tbody>
           {sorted.map((row, index) => (
-            <tr key={String(row.workload_id || row.asset_id || row.id || index)} className="border-b border-border/70 last:border-0">
+            <tr
+              key={String(row.workload_id || row.asset_id || row.id || index)}
+              className="border-b border-border/70 last:border-0"
+            >
               {columns.map((col) => (
-                <td key={col.key} className="px-3 py-2.5 align-middle first:ps-0 last:pe-0">
+                <td key={col.key} className="px-3 py-2.5 align-middle first:ps-3 last:pe-3">
                   {col.render ? col.render(row) : text(row, col.key)}
                 </td>
               ))}
@@ -164,6 +168,7 @@ export function Table({
 export function QueryBody({
   query,
   children,
+  skeleton = 'table',
 }: {
   query: {
     isPending: boolean
@@ -172,8 +177,21 @@ export function QueryBody({
     refetch: () => unknown
   }
   children: ReactNode
+  skeleton?: 'table' | 'dashboard' | 'detail' | 'list' | 'chart'
 }) {
-  if (query.isPending) return <LoadingLine />
+  const toasted = useRef<string | null>(null)
+  const errMsg = query.error ? message(query.error) : null
+  useEffect(() => {
+    if (!errMsg) {
+      toasted.current = null
+      return
+    }
+    if (toasted.current === errMsg) return
+    toasted.current = errMsg
+    notifyError(errMsg, { toastId: `qb:${errMsg.slice(0, 36)}` })
+  }, [errMsg])
+
+  if (query.isPending) return <BoneyardSkeleton layout={skeleton} />
   if (query.error) {
     return (
       <Notice
@@ -183,7 +201,7 @@ export function QueryBody({
           </button>
         }
       >
-        {message(query.error)}
+        {errMsg}
       </Notice>
     )
   }
@@ -298,26 +316,28 @@ export function OverviewPage() {
       description={`${user?.roles?.[0] || 'Operator'} · ${user?.principal_id || '—'}`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
-      <Card>
-        <PanelHeader title="Pipeline" />
-        <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-          {pipeline.map((step, i) => (
-            <Link
-              key={step.label}
-              to={step.to}
-              className={cn(
-                'min-w-[7.5rem] shrink-0 rounded-lg border px-3 py-2.5 transition-[transform,background-color] duration-300 hover:bg-accent',
-                step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border',
-                focus.primaryTo === step.to ? 'ring-1 ring-primary/40' : '',
-              )}
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{step.label}</span>
-              <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
-            </Link>
-          ))}
-        </div>
-      </Card>
+      <div data-tour="page-pipeline">
+        <Card>
+          <PanelHeader title="Pipeline" />
+          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+            {pipeline.map((step, i) => (
+              <Link
+                key={step.label}
+                to={step.to}
+                className={cn(
+                  'min-w-[7.5rem] shrink-0 rounded-lg border px-3 py-2.5 transition-[transform,background-color] duration-300 hover:bg-accent',
+                  step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border',
+                  focus.primaryTo === step.to ? 'ring-1 ring-primary/40' : '',
+                )}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{step.label}</span>
+                <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartPanel
@@ -433,25 +453,27 @@ export function OverviewPage() {
         </ChartPanel>
       </div>
 
-      <KpiStrip>
-        <MetricTile
-          label="My requests"
-          value={myApprovals.isError ? '—' : myRows.length}
-          hint="Opened by you"
-        />
-        <MetricTile
-          label="Fleet online"
-          value={centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`}
-          hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'}
-          tone="success"
-        />
-        <MetricTile label="Assets" value={summary.isError ? '—' : summary.data?.inventory_assets} />
-        <MetricTile
-          label="Active alerts"
-          value={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active}
-          tone="warning"
-        />
-      </KpiStrip>
+      <div data-tour="page-kpis">
+        <KpiStrip>
+          <MetricTile
+            label="My requests"
+            value={myApprovals.isError ? '—' : myRows.length}
+            hint="Opened by you"
+          />
+          <MetricTile
+            label="Fleet online"
+            value={centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`}
+            hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'}
+            tone="success"
+          />
+          <MetricTile label="Assets" value={summary.isError ? '—' : summary.data?.inventory_assets} />
+          <MetricTile
+            label="Active alerts"
+            value={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active}
+            tone="warning"
+          />
+        </KpiStrip>
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>

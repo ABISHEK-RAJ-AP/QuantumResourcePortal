@@ -12,6 +12,7 @@ type CommandPaletteProps = {
   onClose: () => void
   items: NavItem[]
   status: PaletteNavStatus
+  onStartTour?: () => void
 }
 
 function focusables(root: HTMLElement) {
@@ -25,7 +26,7 @@ function focusables(root: HTMLElement) {
 /**
  * Route jump list fed by GET /me/navigation. Does not invent commands from the local sidebar NAV.
  */
-export function CommandPalette({ open, onClose, items, status }: CommandPaletteProps) {
+export function CommandPalette({ open, onClose, items, status, onStartTour }: CommandPaletteProps) {
   const navigate = useNavigate()
   const titleId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -196,9 +197,18 @@ export function CommandPalette({ open, onClose, items, status }: CommandPaletteP
         <ul className="max-h-72 overflow-y-auto p-1" role="listbox" aria-label="Pages">
           {body}
         </ul>
-        <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
-          Arrow keys move. Enter opens. Escape closes.
-        </p>
+        <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+          <p className="text-xs text-muted-foreground">Arrow keys · Enter · Escape</p>
+          {onStartTour ? (
+            <button
+              type="button"
+              className="text-xs font-medium text-primary hover:underline"
+              onClick={() => onStartTour()}
+            >
+              Restart tour
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   )

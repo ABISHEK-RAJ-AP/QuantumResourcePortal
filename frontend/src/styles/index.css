@@ -980,6 +980,21 @@ html:not(.dark) .cyber-matrix-spot {
   @apply transition-colors hover:bg-muted/45;
 }
 
+.page-enter {
+  animation: qrp-page-enter 220ms ease-out;
+}
+
+@keyframes qrp-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

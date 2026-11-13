@@ -5,11 +5,13 @@ import {
   ClipboardList,
   LayoutDashboard,
   Plus,
+  Route,
   Siren,
   Sparkles,
   X,
   Zap,
 } from 'lucide-react'
+import { notifyError, notifySuccess } from '@/lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { seedPortalDemo } from '@/api/seedDemo'
@@ -29,7 +31,7 @@ type DockAction = {
 }
 
 /** Lifecycle actions only — not a second sidebar. */
-export function QrpQuickActionDock() {
+export function QrpQuickActionDock({ onStartTour }: { onStartTour?: () => void }) {
   const client = useQueryClient()
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
@@ -61,11 +63,17 @@ export function QrpQuickActionDock() {
   const seed = useMutation({
     mutationFn: seedPortalDemo,
     onSuccess: (r) => {
-      setSeedMsg(`Demo: ${r.projects}p · ${r.approvals}r · ${r.reservations}h · ${r.assets}a`)
+      const msg = `Demo: ${r.projects}p · ${r.approvals}r · ${r.reservations}h · ${r.assets}a`
+      setSeedMsg(msg)
+      notifySuccess(msg, { toastId: 'demo-seed' })
       void client.invalidateQueries()
       setOpen(false)
     },
-    onError: (e) => setSeedMsg(e instanceof Error ? e.message : 'Seed failed'),
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : 'Seed failed'
+      setSeedMsg(msg)
+      notifyError(msg, { toastId: 'demo-seed-err' })
+    },
   })
 
   useEffect(() => {
@@ -137,6 +145,18 @@ export function QrpQuickActionDock() {
         icon: <Zap className="size-5" strokeWidth={2} />,
       },
     ]
+    if (onStartTour) {
+      list.push({
+        id: 'tour',
+        label: 'Product tour',
+        subtitle: 'Walk the console',
+        onClick: () => {
+          setOpen(false)
+          onStartTour()
+        },
+        icon: <Route className="size-5" strokeWidth={2} />,
+      })
+    }
     if (isAdmin) {
       list.push({
         id: 'demo',
@@ -147,12 +167,12 @@ export function QrpQuickActionDock() {
       })
     }
     return list
-  }, [queue, incidents, alerts, unresolved, isAdmin, seed.isPending])
+  }, [queue, incidents, alerts, unresolved, isAdmin, seed.isPending, onStartTour])
 
   const urgent = queue + incidents + unresolved
 
   return (
-    <div ref={rootRef} className="qrp-quick-dock-root" aria-label="Quick actions">
+    <div ref={rootRef} className="qrp-quick-dock-root" aria-label="Quick actions" data-tour="quick-dock">
       {seedMsg ? (
         <p className="qrp-quick-dock__toast" role="status">
           {seedMsg}

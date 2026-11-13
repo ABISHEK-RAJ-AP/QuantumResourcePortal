@@ -15,6 +15,7 @@ import {
   unreadOperatorNoticeCount,
   type OperatorNotice,
 } from '@/lib/operatorNotices'
+import { notifyError, notifyWarn } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 function noticeIcon(notice: OperatorNotice) {
@@ -50,16 +51,21 @@ export function OperatorNoticeBell({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!remote.data) return
-    syncLabNotifications(
-      remote.data.map((r) => ({
-        id: String(r.id || ''),
-        title: String(r.title || ''),
-        body: String(r.body || ''),
-        tone: String(r.tone || ''),
-        href: r.href ? String(r.href) : undefined,
-        read: Boolean(r.read),
-      })),
-    )
+    const rows = remote.data.map((r) => ({
+      id: String(r.id || ''),
+      title: String(r.title || ''),
+      body: String(r.body || ''),
+      tone: String(r.tone || ''),
+      href: r.href ? String(r.href) : undefined,
+      read: Boolean(r.read),
+    }))
+    syncLabNotifications(rows)
+    for (const row of rows) {
+      if (row.read || !row.id) continue
+      const msg = `${row.title}: ${row.body}`
+      if (row.tone === 'critical') notifyError(msg, { toastId: `n:${row.id}` })
+      else if (row.tone === 'warning') notifyWarn(msg, { toastId: `n:${row.id}` })
+    }
     refresh()
   }, [remote.data, refresh])
 

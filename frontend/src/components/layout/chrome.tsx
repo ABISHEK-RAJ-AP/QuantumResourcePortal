@@ -32,13 +32,16 @@ import { DataFreshness } from '@/components/data/DataFreshness'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { CommandPalette, type PaletteNavStatus } from '@/components/layout/command-palette'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
+import { ProductTour } from '@/components/onboarding/ProductTour'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { OperatorNoticeBell } from '@/components/shell/OperatorNoticeBell'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
+import { ToastHost } from '@/components/ui/ToastHost'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useAuth } from '@/auth/hooks'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
+import { markTourDone, QRP_TOUR_STEPS, shouldAutoStartTour, type TourStep } from '@/lib/qrpTour'
 import { cn } from '@/lib/utils'
 
 /**
@@ -47,26 +50,34 @@ import { cn } from '@/lib/utils'
  */
 const NAV: {
   label: string
-  items: { to: string; label: string; icon: LucideIcon; end?: boolean; perm?: string; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
+  items: {
+    to: string
+    label: string
+    icon: LucideIcon
+    end?: boolean
+    perm?: string
+    badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents'
+    tourId?: string
+  }[]
 }[] = [
   {
     label: 'Command',
     items: [
-      { to: '/qrp', label: 'Overview', icon: LayoutDashboard, end: true },
-      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge },
+      { to: '/qrp', label: 'Overview', icon: LayoutDashboard, end: true, tourId: 'nav-overview' },
+      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge, tourId: 'nav-centre' },
     ],
   },
   {
     label: 'Review',
     items: [
-      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals' },
+      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals', tourId: 'nav-approvals' },
       { to: '/qrp/projects', label: 'Projects', icon: Users },
     ],
   },
   {
     label: 'Operate',
     items: [
-      { to: '/qrp/backends', label: 'Backends', icon: Server },
+      { to: '/qrp/backends', label: 'Backends', icon: Server, tourId: 'nav-backends' },
       { to: '/qrp/queues', label: 'Queues', icon: Gauge },
       { to: '/qrp/jobs', label: 'Dispatch & Jobs', icon: ClipboardList },
       { to: '/qrp/reconciliation', label: 'Reconciliation', icon: ClipboardList, badgeKey: 'reconcile' },
@@ -161,12 +172,38 @@ function ShellInner() {
   const prefs = useWorkspacePrefs()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
     return Object.fromEntries(
       NAV.map((g) => [g.label, saved[g.label] ?? (g.label === 'Command' || g.label === 'Review')]),
     )
   })
+
+  useEffect(() => {
+    if (shouldAutoStartTour()) {
+      const t = window.setTimeout(() => setTourOpen(true), 900)
+      return () => window.clearTimeout(t)
+    }
+    return undefined
+  }, [])
+
+  const handleTourStep = useCallback(
+    (step: TourStep) => {
+      if (step.path && location.pathname !== step.path) {
+        navigate(step.path)
+      }
+      // Expand rail while touring so labels + targets stay visible
+      setCollapsed(false)
+      setOpen(Object.fromEntries(NAV.map((g) => [g.label, true])))
+    },
+    [location.pathname, navigate],
+  )
+
+  const closeTour = useCallback(() => {
+    markTourDone()
+    setTourOpen(false)
+  }, [])
 
   const navigation = useQuery({
     queryKey: ['me-navigation'],
@@ -262,12 +299,12 @@ function ShellInner() {
           )}
         </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3" aria-label="Workspace">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3" aria-label="Workspace" data-tour="sidebar-nav">
           {NAV.map((group) => {
             // Hide items the principal lacks the permission for; drop a group that ends up empty.
             const items = group.items.filter((item) => !item.perm || permissions.has(item.perm))
             if (items.length === 0) return null
-            const expanded = collapsed || open[group.label] !== false
+            const expanded = collapsed || open[group.label] !== false || tourOpen
             return (
               <div key={group.label}>
                 {!collapsed && (
@@ -297,6 +334,7 @@ function ShellInner() {
                             to={item.to}
                             end={item.end}
                             title={item.label}
+                            data-tour={item.tourId}
                             className={({ isActive }) =>
                               cn(
                                 'relative flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring/40',
@@ -414,7 +452,9 @@ function ShellInner() {
             <div className="workspace-toolbar">
               <DataFreshness updatedAt={chrome.updatedAt} />
               <WorkspaceLayoutControls />
-              <OperatorNoticeBell />
+              <span data-tour="header-notices">
+                <OperatorNoticeBell />
+              </span>
               <button
                 type="button"
                 className="inline-flex h-9 min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-2.5 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
@@ -474,7 +514,9 @@ function ShellInner() {
           data-kpi={prefs.kpiLayout}
           tabIndex={-1}
         >
-          <Outlet />
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </div>
       </div>
       <CommandPalette
@@ -482,8 +524,14 @@ function ShellInner() {
         onClose={closePalette}
         items={navItems}
         status={paletteStatus}
+        onStartTour={() => {
+          closePalette()
+          setTourOpen(true)
+        }}
       />
-      <QrpQuickActionDock />
+      <QrpQuickActionDock onStartTour={() => setTourOpen(true)} />
+      <ToastHost />
+      <ProductTour open={tourOpen} steps={QRP_TOUR_STEPS} onStep={handleTourStep} onClose={closeTour} />
     </div>
   )
 }
