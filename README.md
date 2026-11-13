@@ -7,64 +7,83 @@ Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`do
 | Layer | Stack |
 |---|---|
 | Backend | Python 3.12+, FastAPI, Pydantic v2, SQLAlchemy 2.0 (async, asyncpg), Alembic |
-| Database | PostgreSQL 16 |
+| Database | PostgreSQL 16 (private lab cluster under `.pgdata`) |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, TanStack Query, React Router |
 | Tests | pytest, Vitest + Testing Library, Playwright |
 
-## Status
+## Default ports (dedicated)
 
-**Phase 1 (foundation) is complete.** API health and readiness, problem+json errors, correlation ids, JSON logs, the Alembic baseline, the design tokens and the platform status page are in place.
+| Service | Port |
+|---|---|
+| QRP API | **8088** (falls back 8001/8002/…) |
+| QRP UI | **5176** |
+| Lab Postgres | **5433** |
 
-## Quick start (one script)
+## VM / first run (copy-paste)
 
-Requires Python 3.11+, Node.js 20+, and PostgreSQL tools (`initdb` / `postgres` / `psql` — system package or miniforge). The setup script installs Python/Node project deps, starts a lab Postgres cluster under `.pgdata` when nothing is listening, migrates, and bootstraps a lab admin.
+```bash
+mkdir -p ~/apps && cd ~/apps
+git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
+cd QuantumResourcePortal
+git checkout afk/2026-11-13
+git pull --ff-only
+
+# installs Postgres/Node/Python deps if missing, DB, migrate, admin, starts API+UI
+bash scripts/vm-setup.sh
+```
+
+HTTPS clone:
+
+```bash
+git clone https://github.com/ABISHEK-RAJ-AP/QuantumResourcePortal.git
+```
+
+Open: `http://<vm-ip>:5176/qrp`  
+Login: `admin` / `Admin-Strong-Pw-2026`
+
+Already cloned — update and restart:
+
+```bash
+cd ~/apps/QuantumResourcePortal
+git pull --ff-only
+bash scripts/vm-setup.sh
+```
+
+## Local laptop
 
 ```bash
 bash scripts/setup-qrp.sh   # deps + DB + migrate + admin
-bash scripts/start-qrp.sh   # API + UI (idempotent; re-runs setup)
+bash scripts/start-qrp.sh   # start API + UI
+# or: make start
 ```
 
-Portal: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000/healthz (or the free port written to `logs/runtime.env`)
+## What auto-install does
 
-Lab admin (override with `QRE_BOOTSTRAP_USERNAME` / `QRE_BOOTSTRAP_PASSWORD`):
+`scripts/lib/qrp-common.sh` will, when missing:
 
-```
-admin / Admin-Strong-Pw-2026
-```
+1. `python3` / `python3-venv` via apt  
+2. Node via nvm (installs nvm if needed)  
+3. PostgreSQL tools (`initdb`/`postgres`/`psql`) via apt, else conda/miniforge  
+4. Private Postgres data dir `.pgdata` on **:5433**  
+5. Backend venv + frontend `npm ci`  
+6. Alembic migrate + lab admin bootstrap  
 
-### Make targets (optional)
+Override ports: `API_PORT=8088 UI_PORT=5176 QRP_PGPORT=5433 bash scripts/vm-setup.sh`
+
+## Make targets
 
 ```bash
-make setup        # venv + pip + npm only (no DB)
-make migrate      # alembic upgrade head
-make dev-api      # API with reload
-make dev-web      # Vite on :5176 (proxies /api to QRP_API_TARGET or :8000)
-make check        # lint + unit tests
+make setup-all   # same as scripts/setup-qrp.sh
+make start       # setup + start
+make stop        # kill PIDs in logs/*.pid
+make check       # lint + unit tests
 ```
 
 ## Repository layout
 
 ```
 backend/   FastAPI app (qre/), Alembic migrations, tests
-frontend/  Vite + React app (src/), Playwright e2e (e2e/)
-docs/      Requirements mapping, design, phase guides, decision log
+frontend/  Vite + React app
+docs/      Requirements, design, phase guides
 scripts/   setup-qrp.sh, start-qrp.sh, vm-setup.sh
-```
-
-## VM
-
-```bash
-git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
-cd QuantumResourcePortal
-bash scripts/vm-setup.sh
-```
-
-Portal: http://\<host\>:5176/qrp
-
-Optional: `API_PORT=8000 UI_PORT=5176 bash scripts/vm-setup.sh`
-
-## Windows
-
-```powershell
-.\scripts\Start-QRP.ps1
 ```
