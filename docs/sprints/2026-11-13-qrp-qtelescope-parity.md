@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–11 are done. Do not start phase 12 until this commit is accepted.
+Phases 3–12 are done. Build slices for this sprint are complete; next is the untangle gate (or backlog).
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -114,12 +114,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator comparing “updated just now” with Q-TeleScope’s clock.
 - **Shipped:** `DataFreshness.tsx` shows `Updated` plus a narrow `Intl.RelativeTimeFormat` age (for example `2m ago`). Absolute stamp stays on `title` and `aria-label`. Ticks every 15s while mounted. No second clock. No new dependency.
 
-### Phase 12 — Chart series follow the active theme
+### Phase 12 — Chart series follow the active theme (done)
 
 - **Who:** analyst on the governance overview charts.
-- **Evidence:** `CHART_COLORS` in `screens.tsx`. Tokens `--chart-*` are identical in `:root` and `.dark` inside `index.css` (dark block does not override them).
-- **Size:** small token override in `.dark`.
-- **Risk:** low. Do not invent series.
+- **Shipped:** `.dark` sets `--chart-1`…`--chart-5` to lighter indigo / violet / cyan / green / amber (`#7b8cff`, `#a78bfa`, `#3ad0ea`, `#34d399`, `#fbbf24`) so series stay readable on navy cards. Same order as light. `CHART_COLORS` in screens/continue already consume `var(--chart-*)`; no chart component rewrite.
 
 ## Untangle (gated)
 

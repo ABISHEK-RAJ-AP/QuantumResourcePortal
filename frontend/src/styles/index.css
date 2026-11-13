@@ -116,6 +116,12 @@
   --info: #3ad0ea;
   --info-soft: #143044;
   --info-text: #3ad0ea;
+  /* Chart series: same order as light, lifted for navy card/background contrast. */
+  --chart-1: #7b8cff;
+  --chart-2: #a78bfa;
+  --chart-3: #3ad0ea;
+  --chart-4: #34d399;
+  --chart-5: #fbbf24;
 }
 
 @theme inline {
