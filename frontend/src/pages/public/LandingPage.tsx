@@ -76,7 +76,7 @@ export function LandingPage() {
 
   return (
     <PublicShell>
-      {/* One GridPulse over the whole landing — pointer trail + ambient across every section */}
+      {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="z-0 opacity-90" />
 

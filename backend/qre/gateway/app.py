@@ -31,6 +31,7 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     from qre.services.svc02_identity.api import ping_router
     from qre.services.svc02_identity.api import router as identity_router
     from qre.services.svc17_audit.api import router as audit_router
+    from qre.services.svc_lab_modules.api import router as lab_modules_router
 
     router = APIRouter(prefix=API_PREFIX)
     router.include_router(identity_router)  # /auth/*, /me* (RBAC-4)
@@ -38,7 +39,8 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     router.include_router(admin_router)     # /admin/* roles, permissions, users, memberships
     router.include_router(authz_router)     # /authz/check (RBAC-5)
     router.include_router(audit_router)     # /rbac/audit read/export/verify (RBAC-8)
-  # Governance module routes (inventory, approvals, …) are added per service slice on this same API.
+    # Lab empty module surfaces (Overview/chrome) until full governance/ops services land.
+    router.include_router(lab_modules_router)
     return router
 
 

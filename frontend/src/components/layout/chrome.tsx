@@ -31,7 +31,6 @@ import { LogoMark } from '@/components/brand/LogoMark'
 import { DataFreshness } from '@/components/data/DataFreshness'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { CommandPalette, type PaletteNavStatus } from '@/components/layout/command-palette'
-import { GridPulse } from '@/components/ui/grid-pulse'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
@@ -402,17 +401,11 @@ function ShellInner() {
               ) : chrome.eyebrow ? (
                 <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
-              <h1
-                data-grid-avoid
-                className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]"
-              >
+              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-[1.35rem]">
                 {chrome.title || 'Workspace'}
               </h1>
               {chrome.description ? (
-                <p
-                  data-grid-avoid
-                  className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm"
-                >
+                <p className="mt-0.5 max-w-3xl text-xs text-muted-foreground sm:text-sm">
                   {chrome.description}
                 </p>
               ) : null}
@@ -479,10 +472,7 @@ function ShellInner() {
           data-kpi={prefs.kpiLayout}
           tabIndex={-1}
         >
-          <GridPulse className="opacity-80" />
-          <div className="relative z-10">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </div>
       <CommandPalette
