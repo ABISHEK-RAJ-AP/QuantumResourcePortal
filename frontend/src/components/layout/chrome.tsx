@@ -8,6 +8,7 @@ import {
   Gauge,
   LayoutDashboard,
   LogOut,
+  Monitor,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -155,7 +156,7 @@ function ShellInner() {
     : null
   const location = useLocation()
   const { chrome } = usePageChrome()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, preference, toggleTheme } = useTheme()
   const prefs = useWorkspacePrefs()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -434,11 +435,29 @@ function ShellInner() {
               <button
                 type="button"
                 className="grid size-9 min-h-9 min-w-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
-                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+                aria-label={
+                  preference === 'light'
+                    ? 'Switch to dark theme'
+                    : preference === 'dark'
+                      ? 'Follow system theme'
+                      : 'Switch to light theme'
+                }
+                title={
+                  preference === 'system'
+                    ? `System (${theme})`
+                    : preference === 'dark'
+                      ? 'Dark theme'
+                      : 'Light theme'
+                }
                 onClick={toggleTheme}
               >
-                {theme === 'dark' ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-foreground" />}
+                {preference === 'system' ? (
+                  <Monitor className="size-4 text-foreground" />
+                ) : theme === 'dark' ? (
+                  <Sun className="size-4 text-warning" />
+                ) : (
+                  <Moon className="size-4 text-foreground" />
+                )}
               </button>
             </div>
           </div>

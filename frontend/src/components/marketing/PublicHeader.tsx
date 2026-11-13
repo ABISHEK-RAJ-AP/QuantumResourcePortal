@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react'
+import { ArrowRight, Menu, Monitor, Moon, Sun, X } from 'lucide-react'
 
 import { LogoMark } from '@/components/brand/LogoMark'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -16,7 +16,7 @@ const NAV = [
 /** Full-bleed header: brand left · nav centre · actions right. A11y lives in A11yPreheader. */
 export function PublicHeader({ className }: { className?: string }) {
   const { pathname } = useLocation()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, preference, toggleTheme } = useTheme()
   const dark = theme === 'dark'
   const [open, setOpen] = useState(false)
 
@@ -69,11 +69,29 @@ export function PublicHeader({ className }: { className?: string }) {
           <button
             type="button"
             className={iconBtn}
-            aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={dark ? 'Light theme' : 'Dark theme'}
+            aria-label={
+              preference === 'light'
+                ? 'Switch to dark theme'
+                : preference === 'dark'
+                  ? 'Follow system theme'
+                  : 'Switch to light theme'
+            }
+            title={
+              preference === 'system'
+                ? `System (${theme})`
+                : preference === 'dark'
+                  ? 'Dark theme'
+                  : 'Light theme'
+            }
             onClick={toggleTheme}
           >
-            {dark ? <Sun className="size-4 text-warning" /> : <Moon className="size-4" />}
+            {preference === 'system' ? (
+              <Monitor className="size-4" />
+            ) : dark ? (
+              <Sun className="size-4 text-warning" />
+            ) : (
+              <Moon className="size-4" />
+            )}
           </button>
 
           <Link

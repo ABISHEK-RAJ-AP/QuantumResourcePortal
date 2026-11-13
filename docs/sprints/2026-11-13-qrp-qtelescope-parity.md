@@ -134,6 +134,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** visitor on Landing and auth routes in light or dark.
 - **Shipped:** `PublicHeader.tsx` and `PublicFooter.tsx` drop `#0b1220`, `#070b14`, and white-opacity chrome. Surfaces use `border-border bg-card` / `bg-card/95`; nav and copy use `text-muted-foreground` / `hover:bg-accent`; Get started uses `bg-primary text-primary-foreground`; theme sun uses `text-warning`. Footer `variant` still drives logo invert only. `PublicShell` callers unchanged.
 
+### Phase 16 — System theme preference (done)
+
+- **Who:** operator whose OS theme switches during the day.
+- **Shipped:** `lib/theme.ts` stores `light` | `dark` | `system`; `ThemeProvider` exposes `preference` plus resolved `theme` (so existing `theme === 'dark'` callers stay correct). Toggle cycles light → dark → system. OS `prefers-color-scheme` updates when preference is system. Header and workspace chrome show a monitor icon for system. Lucide `Monitor` already in the app.
+
 ## Untangle (gated)
 
 Waiting on the user: Comments, Tests, or neither. Do not delete comments or tests until they choose.

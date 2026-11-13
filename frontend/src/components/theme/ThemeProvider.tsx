@@ -1,32 +1,62 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-import { applyTheme, initTheme, readTheme, setTheme as persistTheme, type AppTheme } from '@/lib/theme'
+import {
+  applyTheme,
+  initTheme,
+  nextPreference,
+  readPreference,
+  resolveTheme,
+  setPreference as persistPreference,
+  type AppTheme,
+  type ThemePreference,
+} from '@/lib/theme'
 import { initA11yFromStorage } from '@/lib/a11y'
 
 type ThemeApi = {
+  /** Stored choice: light, dark, or follow the OS. */
+  preference: ThemePreference
+  /** Resolved light/dark currently on the document. */
   theme: AppTheme
-  setTheme: (theme: AppTheme) => void
+  setTheme: (preference: ThemePreference) => void
   toggleTheme: () => void
 }
 
 const ThemeContext = createContext<ThemeApi | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<AppTheme>(() => {
+  const [preference, setPreferenceState] = useState<ThemePreference>(() => {
     if (typeof window === 'undefined') return 'light'
     initTheme()
     initA11yFromStorage()
-    return readTheme()
+    return readPreference()
   })
+  const [theme, setThemeState] = useState<AppTheme>(() =>
+    typeof window === 'undefined' ? 'light' : resolveTheme(readPreference()),
+  )
 
   useEffect(() => {
-    applyTheme(theme)
-  }, [theme])
+    const resolved = resolveTheme(preference)
+    applyTheme(resolved)
+    setThemeState(resolved)
+  }, [preference])
+
+  useEffect(() => {
+    if (preference !== 'system') return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => {
+      const resolved = getFreshSystem()
+      applyTheme(resolved)
+      setThemeState(resolved)
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [preference])
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'qrp_theme' && (e.newValue === 'light' || e.newValue === 'dark')) {
-        setThemeState(e.newValue)
+      if (e.key !== 'qrp_theme') return
+      if (e.newValue === 'light' || e.newValue === 'dark' || e.newValue === 'system') {
+        setPreferenceState(e.newValue)
       }
     }
     window.addEventListener('storage', onStorage)
@@ -35,21 +65,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ThemeApi>(
     () => ({
+      preference,
       theme,
       setTheme: (next) => {
-        persistTheme(next)
-        setThemeState(next)
+        persistPreference(next)
+        setPreferenceState(next)
       },
       toggleTheme: () => {
-        const next = theme === 'light' ? 'dark' : 'light'
-        persistTheme(next)
-        setThemeState(next)
+        const next = nextPreference(preference)
+        persistPreference(next)
+        setPreferenceState(next)
       },
     }),
-    [theme],
+    [preference, theme],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}
+
+function getFreshSystem(): AppTheme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 export function useTheme() {
