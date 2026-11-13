@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phase 3 is done. Phase 4 is the only next slice. Do not start it in the FilterBar commit.
+Phase 3 is done. Phase 4 was not built: the shell does not load server nav. Do not start phase 5 until that palette exists.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -73,12 +73,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Shipped:** `frontend/src/components/data/FilterBar.tsx` only. Same props. The search control is one line: a visible "Search" label on the field border, `field` tokens (`border-input`, `bg-card`, `ring`), placeholder and `aria-label` unchanged. Typing still filters through `onSearch`. Enter does not submit a parent form. Escape clears the search text. Chip filters are unchanged.
 - **Not in this bar:** FilterBar does not render result rows. Pages that already list rows keep their own empty copy (for example "No rows match search." in `screens.tsx`). No new empty-state component. No result counts. No command palette.
 
-### Phase 4 — Command palette (next)
+### Phase 4 — Command palette (not built)
 
 - **Who:** operator moving across Govern routes without the sidebar.
-- **Evidence:** missing under `frontend/src`. Q-TeleScope `CommandPalette.jsx` and `useCommandPaletteShortcut` in `App.jsx`. QRP nav is server-shaped in `chrome.tsx`.
-- **Size:** medium. New component plus a shortcut in the shell. Commands must come from the same nav the server already returns.
-- **Risk:** medium. **Changes behavior** (new keyboard route). Wrong commands would expose pages the role cannot open. Empty query and no-match states are required (antislop).
+- **Stopped:** `frontend/src/components/layout/chrome.tsx` does not call `getNavigation`. The sidebar walks a local `NAV` array and hides items with `permissions.has`. `GET /api/v1/me/navigation` exists (`frontend/src/api/rbac.ts`, `NavItem` is `label`, `route`, `required_permission`) and is filled from `NAV_REGISTRY` in `backend/qre/core/authz.py`. That payload is not passed into the shell. A palette was not added, because a second list would invent commands.
+- **Next build, still this phase:** in `chrome.tsx`, load `getNavigation()` and pass those items into one palette file beside the shell. Then Ctrl/Cmd-K, filter, arrows, Enter, Escape, empty and no-match lines. Do not copy `NAV`.
 
 ### Phase 5 — Theme contrast on public and shell chrome
 
