@@ -21,7 +21,6 @@ export function UserPermissionsPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title={eff.data ? `Permissions · ${eff.data.username}` : 'User permissions'}
       description="Effective permissions resolved from the user's active role assignments."
       actions={
@@ -40,7 +39,7 @@ export function UserPermissionsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(byModule).map(([module, grants]) => (
             <Card key={module} className="space-y-1">
-              <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              <p className="label-quiet">
                 {module}
               </p>
               <ul className="space-y-0.5">

@@ -27,7 +27,6 @@ export function RolesPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title="Roles"
       description="System roles are fixed; create tenant roles from the permission catalogue."
       actions={
@@ -41,7 +40,12 @@ export function RolesPage() {
       {error && <Notice tone="critical">{error}</Notice>}
       <Card>
         {roles.isLoading ? (
-          <p className="p-4 text-sm text-muted-foreground">Loading roles…</p>
+          <div className="space-y-2 p-4" aria-busy="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-9 animate-pulse rounded-md bg-muted" />
+            ))}
+            <span className="sr-only">Loading roles</span>
+          </div>
         ) : roles.isError ? (
           <Notice tone="critical">Could not load roles.</Notice>
         ) : (roles.data ?? []).length === 0 ? (
@@ -50,7 +54,7 @@ export function RolesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
+                <tr className="border-b border-border text-xs font-medium text-muted-foreground">
                   <th className="px-3 py-2.5 font-semibold">Role</th>
                   <th className="px-3 py-2.5 font-semibold">Scope</th>
                   <th className="px-3 py-2.5 font-semibold">Users</th>

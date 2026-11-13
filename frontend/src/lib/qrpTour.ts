@@ -49,10 +49,10 @@ export const QRP_TOUR_STEPS: TourStep[] = [
     body: 'Fleet catalogue: modality, status, queue depth. Open a row for topology.',
   },
   {
-    target: 'nav-centre',
-    path: '/qrp/centre',
-    title: 'Operations Centre',
-    body: 'Fleet posture, queue depth, and open exceptions in one ops board.',
+    target: 'nav-overview',
+    path: '/qrp/reservations',
+    title: 'Reservations',
+    body: 'Request holds and see the calendar on one page — no separate schedule screen.',
   },
   {
     target: 'header-notices',

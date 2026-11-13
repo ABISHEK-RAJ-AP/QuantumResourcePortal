@@ -56,7 +56,7 @@ export function WorkspaceLayoutControls() {
           role="dialog"
           aria-label="Workspace layout"
         >
-          <p className="mb-2 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Workspace layout</p>
+          <p className="mb-2 label-quiet">Workspace layout</p>
 
           <Field label="Density">
             <Seg

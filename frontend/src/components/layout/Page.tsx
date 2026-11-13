@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import type { Crumb } from '@/components/layout/Breadcrumbs'
-import { StatusBadge, type StatusTone } from '@/components/status/StatusBadge'
+import type { StatusTone } from '@/components/status/StatusBadge'
 import { WorkflowSteps, type WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { useSetPageChrome } from '@/components/layout/page-context'
 import { cn } from '@/lib/utils'
@@ -136,15 +136,9 @@ export function Notice({
           ? 'border-success/20 bg-success-soft/25'
           : 'border-border bg-card'
   return (
-    <div className={cn('flex items-start gap-3 rounded-xl border px-3.5 py-3 shadow-card', shell)}>
-      <StatusBadge
-        tone={tone}
-        label={tone === 'critical' ? 'Unavailable' : tone === 'warning' ? 'Attention' : 'Note'}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="text-sm leading-snug text-muted-foreground">{children}</div>
-        {action ? <div className="mt-2 flex flex-wrap gap-2">{action}</div> : null}
-      </div>
+    <div className={cn('rounded-[var(--radius)] border px-3.5 py-3', shell)} role="status">
+      <div className="text-sm leading-snug text-foreground">{children}</div>
+      {action ? <div className="mt-2 flex flex-wrap gap-2">{action}</div> : null}
     </div>
   )
 }

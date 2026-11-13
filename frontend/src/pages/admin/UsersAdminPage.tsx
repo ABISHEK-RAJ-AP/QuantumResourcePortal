@@ -37,7 +37,6 @@ export function UsersAdminPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title="Users & roles"
       description="Assign and revoke roles. Scope and escalation rules are enforced by the server."
     >
@@ -57,14 +56,19 @@ export function UsersAdminPage() {
 
       <Card>
         {users.isLoading ? (
-          <p className="p-4 text-sm text-muted-foreground">Loading users…</p>
+          <div className="space-y-2 p-4" aria-busy="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-9 animate-pulse rounded-md bg-muted" />
+            ))}
+            <span className="sr-only">Loading users</span>
+          </div>
         ) : (users.data ?? []).length === 0 ? (
           <EmptyState title="No users" body="Create users to assign roles." />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
+                <tr className="border-b border-border text-xs font-medium text-muted-foreground">
                   <th className="px-3 py-2.5 font-semibold">User</th>
                   <th className="px-3 py-2.5 font-semibold">Status</th>
                   <th className="px-3 py-2.5 font-semibold">Roles</th>

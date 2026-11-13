@@ -106,7 +106,7 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
         <header className="flex flex-wrap items-center gap-4">
           <LogoMark className="h-11 w-auto" />
           <div className="flex-1">
-            <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            <p className="text-sm font-medium text-muted-foreground">
               Quantum Resource Portal
             </p>
             <h1 className="text-2xl font-semibold tracking-tight">Platform status</h1>
@@ -133,7 +133,7 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-3">
           <Card className="relative overflow-hidden">
-            <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-(image:--brand-gradient)" />
+            <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-primary" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Activity aria-hidden="true" className="size-4" /> API liveness
             </div>

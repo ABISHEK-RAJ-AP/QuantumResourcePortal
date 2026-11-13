@@ -50,7 +50,7 @@ function overviewFocus(role: string) {
   if (r.includes('auditor') || r.includes('security')) return { kind: 'auditor' as const, primaryTo: '/qrp/audit' }
   if (r.includes('incident')) return { kind: 'incident' as const, primaryTo: '/qrp/incidents' }
   if (r.includes('ops') || r.includes('operator') || r.includes('quantumops')) {
-    return { kind: 'ops' as const, primaryTo: '/qrp/centre' }
+    return { kind: 'ops' as const, primaryTo: '/qrp/backends' }
   }
   if (r.includes('research') || r.includes('viewer') || r.includes('analyst')) {
     return { kind: 'researcher' as const, primaryTo: '/qrp/projects' }
@@ -303,36 +303,35 @@ export function OverviewPage() {
 
   const pipeline = [
     { label: 'Review', to: '/qrp/approvals', value: summary.isError ? '—' : queueCount, hot: queueCount > 0 },
-    { label: 'Hold', to: '/qrp/scheduling', value: '→', hot: false },
+    { label: 'Hold', to: '/qrp/reservations?compose=1', value: summary.isError ? '—' : '·', hot: false },
     { label: 'Dispatch', to: '/qrp/jobs', value: attempts.isError ? '—' : unresolvedAttempts, hot: unresolvedAttempts > 0 },
     { label: 'Incidents', to: '/qrp/incidents', value: centre.isError ? '—' : openIncidents, hot: openIncidents > 0 },
-    { label: 'Audit', to: '/qrp/audit', value: '→', hot: false },
+    { label: 'Audit', to: '/qrp/audit', value: '·', hot: false },
   ]
 
   return (
     <Page
-      crumbs={[{ label: 'Command', to: '/qrp' }, { label: 'Overview' }]}
       title="Overview"
       description={`${user?.roles?.[0] || 'Operator'} · ${user?.principal_id || '—'}`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
       <div data-tour="page-pipeline">
-        <Card>
-          <PanelHeader title="Pipeline" />
-          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+        <Card className="!py-3">
+          <PanelHeader title="Lifecycle" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {pipeline.map((step, i) => (
               <Link
                 key={step.label}
                 to={step.to}
                 className={cn(
-                  'min-w-[7.5rem] shrink-0 rounded-lg border px-3 py-2.5 transition-[transform,background-color] duration-300 hover:bg-accent',
-                  step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border',
+                  'flex min-h-[4.25rem] flex-col justify-between rounded-[var(--radius-inner)] border px-3 py-2.5 transition-[transform,background-color] duration-150 hover:bg-accent active:scale-[0.97]',
+                  step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border bg-surface/60',
                   focus.primaryTo === step.to ? 'ring-1 ring-primary/40' : '',
                 )}
-                style={{ animationDelay: `${i * 60}ms` }}
+                style={{ transitionDelay: `${i * 30}ms` }}
               >
-                <span className="label-quiet block">{step.label}</span>
-              <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
+                <span className="label-quiet">{step.label}</span>
+                <span className="text-2xl font-semibold tabular-nums leading-none">{step.value}</span>
               </Link>
             ))}
           </div>
@@ -948,7 +947,7 @@ export function ApprovalDetailPage() {
             Decision writes to audit and advances stages. Does not dispatch a provider job. After approved: Schedule hold → authorize dispatch.
           </InfoTip>
           {govState === 'approved' ? (
-            <Link to="/qrp/scheduling" className="btn-primary">
+            <Link to="/qrp/reservations?compose=1" className="btn-primary">
               Request hold
             </Link>
           ) : null}
@@ -975,7 +974,7 @@ export function ApprovalDetailPage() {
                 blockers: quota.data && !quota.data.allowed ? ['Over daily shot cap'] : undefined,
                 primary: closed
                   ? govState === 'approved'
-                    ? { to: '/qrp/scheduling', label: 'Request hold' }
+                    ? { to: '/qrp/reservations?compose=1', label: 'Request hold' }
                     : { to: '/qrp/approvals', label: 'Queue' }
                   : tab === 'decide'
                     ? undefined
@@ -1959,8 +1958,13 @@ export function QuotasPage() {
   const nearWarn = barPct != null && Number.isFinite(warnAt) && barPct >= warnAt
   return (
     <Page
-      crumbs={[{ label: 'Govern', to: '/qrp/quotas' }, { label: 'Quotas & Usage' }]}
       title="Quotas"
+      description="Institution shot budget and headroom."
+      actions={
+        <Link to="/qrp/metering" className="btn-ghost text-sm">
+          Metering
+        </Link>
+      }
       updatedAt={query.dataUpdatedAt}
     >
       <FilterBar
@@ -2115,15 +2119,60 @@ const RESERVATION_FILTERS = [
   { id: 'cancelled', label: 'Cancelled' },
 ] as const
 
+function defaultLocalWindow() {
+  const start = new Date()
+  start.setMinutes(0, 0, 0)
+  start.setHours(start.getHours() + 1)
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  const toLocal = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+  return { window_start: toLocal(start), window_end: toLocal(end) }
+}
+
 export function ReservationsPage() {
   const client = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const composeOpen = searchParams.get('compose') === '1'
   const [filter, setFilter] = useState<(typeof RESERVATION_FILTERS)[number]['id']>('all')
   const [view, setView] = useState<'list' | 'calendar'>('calendar')
   const [search, setSearch] = useState('')
+  const [form, setForm] = useState({ resource_ref: '', project_id: '', purpose: 'Request window', ...defaultLocalWindow() })
+  const [pendingMove, setPendingMove] = useState<{ id: string; state: string } | null>(null)
+
   const path = filter === 'all' ? '/reservations' : `/reservations?state=${encodeURIComponent(filter)}`
   const query = useQuery({
     queryKey: ['reservations', filter],
     queryFn: () => qre<{ items?: Row[]; transitions?: Record<string, string[]>; conflict_count?: number }>(path),
+  })
+  const assets = useQuery({
+    queryKey: ['assets-scheduling'],
+    queryFn: async () => asList(await qre<unknown>('/inventory/assets')),
+    retry: false,
+  })
+  const projects = useQuery({
+    queryKey: ['projects-scheduling'],
+    queryFn: async () => asList(await qre<unknown>('/projects')),
+    retry: false,
+  })
+  const create = useMutation({
+    mutationFn: () =>
+      qre<Row>('/reservations', {
+        method: 'POST',
+        body: JSON.stringify({
+          resource_ref: form.resource_ref,
+          project_id: form.project_id || null,
+          window_start: new Date(form.window_start).toISOString(),
+          window_end: new Date(form.window_end).toISOString(),
+          purpose: form.purpose,
+        }),
+      }),
+    onSuccess: () => {
+      setForm({ resource_ref: '', project_id: '', purpose: 'Request window', ...defaultLocalWindow() })
+      void client.invalidateQueries({ queryKey: ['reservations'] })
+      setSearchParams({}, { replace: true })
+    },
   })
   const move = useMutation({
     mutationFn: ({ id, state }: { id: string; state: string }) =>
@@ -2131,7 +2180,10 @@ export function ReservationsPage() {
         method: 'POST',
         body: JSON.stringify({ state }),
       }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ['reservations'] }),
+    onSuccess: () => {
+      setPendingMove(null)
+      void client.invalidateQueries({ queryKey: ['reservations'] })
+    },
   })
   const transitions = query.data?.transitions ?? {}
   const allRows = asList(query.data)
@@ -2150,30 +2202,121 @@ export function ReservationsPage() {
       )
     : allRows
   const countFor = (state: string) => allRows.filter((r) => String(r.state) === state).length
+
+  const setCompose = (open: boolean) => {
+    if (open) setSearchParams({ compose: '1' }, { replace: true })
+    else setSearchParams({}, { replace: true })
+  }
+  const prefillFromDay = (dateStr: string) => {
+    setForm((prev) => ({ ...prev, window_start: `${dateStr}T10:00`, window_end: `${dateStr}T12:00` }))
+    setCompose(true)
+  }
+
   return (
     <Page
-      crumbs={[{ label: 'Schedule', to: '/qrp/reservations' }, { label: 'Allocation' }]}
       title="Reservations"
+      description="Governance holds for capacity windows — not provider booking or dispatch."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <Link to="/qrp/scheduling" className="btn-primary">
-            Request a window
-          </Link>
-          
-        </span>
+        <button type="button" className="btn-primary" onClick={() => setCompose(!composeOpen)}>
+          {composeOpen ? 'Close form' : 'New hold'}
+        </button>
       }
       updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <KpiStrip>
         <MetricTile label="Requested" value={countFor('requested')} hint="Awaiting activate" tone="warning" />
         <MetricTile label="Active" value={countFor('active')} hint="Hold in force" tone="success" />
-        <MetricTile label="Released" value={countFor('released')} hint="Terminal" />
-        <MetricTile label="Cancelled" value={countFor('cancelled')} hint="Terminal" tone="critical" />
-        <MetricTile label="Conflicts" value={conflictCount} hint="Overlapping holds" tone={conflictCount ? 'critical' : 'neutral'} />
-      </div>
-      {conflictCount > 0 && (
-        <Notice tone="warning">{conflictCount} overlapping reservation(s) flagged. Overlaps are not auto-cancelled.</Notice>
-      )}
+        <MetricTile label="Conflicts" value={conflictCount} hint="Overlapping" tone={conflictCount ? 'critical' : 'neutral'} />
+      </KpiStrip>
+      {conflictCount > 0 ? (
+        <Notice tone="warning">{conflictCount} overlapping hold(s). Overlaps are not auto-cancelled.</Notice>
+      ) : null}
+
+      {composeOpen ? (
+        <Card>
+          <PanelHeader title="New hold" />
+          <form
+            className="grid gap-3 sm:grid-cols-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              create.mutate()
+            }}
+          >
+            <label className="text-sm sm:col-span-2">
+              Resource
+              <input
+                required
+                list="reserv-assets"
+                className="field-input"
+                value={form.resource_ref}
+                placeholder="Asset or backend ref"
+                onChange={(e) => setForm({ ...form, resource_ref: e.target.value })}
+              />
+              <datalist id="reserv-assets">
+                {assets.data?.map((a) => (
+                  <option key={String(a.asset_id)} value={String(a.native_asset_id || a.asset_id)}>
+                    {String(a.execution_class || '')} · {String(a.provider_id || '')}
+                  </option>
+                ))}
+              </datalist>
+            </label>
+            <label className="text-sm sm:col-span-2">
+              Project
+              <select
+                className="field-input"
+                value={form.project_id}
+                onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+              >
+                <option value="">No project</option>
+                {projects.data?.map((p) => (
+                  <option key={String(p.project_id)} value={String(p.project_id)}>
+                    {String(p.name || p.project_id)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm">
+              Start (local)
+              <input
+                required
+                type="datetime-local"
+                className="field-input"
+                value={form.window_start}
+                onChange={(e) => setForm({ ...form, window_start: e.target.value })}
+              />
+            </label>
+            <label className="text-sm">
+              End (local)
+              <input
+                required
+                type="datetime-local"
+                className="field-input"
+                value={form.window_end}
+                onChange={(e) => setForm({ ...form, window_end: e.target.value })}
+              />
+            </label>
+            <label className="text-sm sm:col-span-2">
+              Purpose
+              <input
+                required
+                className="field-input"
+                value={form.purpose}
+                onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+              />
+            </label>
+            <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
+              <button type="submit" className="btn-primary" disabled={create.isPending}>
+                {create.isPending ? 'Submitting…' : 'Request window'}
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => setCompose(false)}>
+                Cancel
+              </button>
+              {create.error ? <p className="text-sm text-critical">{message(create.error)}</p> : null}
+            </div>
+          </form>
+        </Card>
+      ) : null}
+
       <Card>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <FilterBar
@@ -2185,8 +2328,14 @@ export function ReservationsPage() {
             searchPlaceholder="Resource, purpose, project…"
             defaultId="all"
           />
-          <div className="ms-auto flex gap-1 rounded-lg border border-border p-0.5" role="tablist" aria-label="Reservation view">
-            <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'btn-secondary' : 'btn-ghost'} onClick={() => setView('list')}>
+          <div className="ms-auto flex gap-1 rounded-[var(--radius-inner)] border border-border p-0.5" role="tablist" aria-label="View">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'list'}
+              className={view === 'list' ? 'btn-secondary' : 'btn-ghost'}
+              onClick={() => setView('list')}
+            >
               List
             </button>
             <button
@@ -2202,12 +2351,12 @@ export function ReservationsPage() {
         </div>
         <QueryBody query={query}>
           {view === 'calendar' ? (
-            <ReservationCalendar rows={rows} />
+            <ReservationCalendar rows={rows} onDaySelect={prefillFromDay} />
           ) : (
             <Table
               rows={rows}
               emptyTitle="No reservations"
-              emptyBody="Request a window to hold capacity for a project resource."
+              emptyBody="Open New hold to request a capacity window."
               columns={[
                 {
                   key: 'reservation_id',
@@ -2232,13 +2381,19 @@ export function ReservationsPage() {
                 {
                   key: 'state',
                   label: 'State',
-                  render: (row) => <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />,
+                  render: (row) => (
+                    <StatusBadge tone={stateTone(String(row.state || ''))} label={stateLabel(String(row.state || 'requested'))} />
+                  ),
                 },
                 {
                   key: 'has_conflict',
                   label: 'Conflict',
                   render: (row) =>
-                    row.has_conflict ? <StatusBadge tone="critical" label="Overlap" /> : <span className="text-muted-foreground">—</span>,
+                    row.has_conflict ? (
+                      <StatusBadge tone="critical" label="Overlap" />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    ),
                 },
                 { key: 'purpose', label: 'Purpose' },
                 {
@@ -2251,11 +2406,7 @@ export function ReservationsPage() {
                           key={state}
                           type="button"
                           className="btn-ghost"
-                          onClick={() => {
-                            if (window.confirm(`Move reservation to ${state}?`)) {
-                              move.mutate({ id: String(row.reservation_id), state })
-                            }
-                          }}
+                          onClick={() => setPendingMove({ id: String(row.reservation_id), state })}
                         >
                           {stateLabel(state)}
                         </button>
@@ -2267,8 +2418,31 @@ export function ReservationsPage() {
             />
           )}
         </QueryBody>
-        {move.error && <p className="mt-3 text-sm text-critical">{message(move.error)}</p>}
+        {move.error ? <p className="mt-3 text-sm text-critical">{message(move.error)}</p> : null}
       </Card>
+
+      <Modal
+        open={pendingMove != null}
+        onClose={() => setPendingMove(null)}
+        title="Confirm hold transition"
+      >
+        <p className="text-sm text-muted-foreground">
+          Move reservation to <span className="font-medium text-foreground">{pendingMove ? stateLabel(pendingMove.state) : ''}</span>?
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={move.isPending || !pendingMove}
+            onClick={() => pendingMove && move.mutate(pendingMove)}
+          >
+            {move.isPending ? 'Updating…' : 'Confirm'}
+          </button>
+          <button type="button" className="btn-ghost" onClick={() => setPendingMove(null)}>
+            Cancel
+          </button>
+        </div>
+      </Modal>
     </Page>
   )
 }
@@ -2488,10 +2662,12 @@ export function AuditPage() {
   }, [all])
   return (
     <Page
-      crumbs={[{ label: 'Records', to: '/qrp/audit' }, { label: 'Audit' }]}
-      title="Audit Trail"
+      title="Audit"
       actions={
         <span className="flex flex-wrap gap-2">
+          <Link to="/qrp/evidence" className="btn-ghost text-sm">
+            Evidence
+          </Link>
           <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
             {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
           </button>

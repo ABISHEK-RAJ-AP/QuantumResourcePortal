@@ -21,7 +21,6 @@ export function PermissionsPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title="Permissions"
       description="The permission catalogue is read-only. Grant permissions by editing a role."
     >
@@ -34,13 +33,18 @@ export function PermissionsPage() {
         />
       </Card>
       {permissions.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="space-y-2" aria-busy="true">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-16 animate-pulse rounded-[var(--radius)] bg-muted" />
+          ))}
+          <span className="sr-only">Loading permissions</span>
+        </div>
       ) : Object.keys(byModule).length === 0 ? (
         <EmptyState title="No permissions" body="Nothing matches your search." />
       ) : (
         Object.entries(byModule).map(([module, perms]) => (
           <Card key={module} className="space-y-2">
-            <h2 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            <h2 className="label-quiet">
               {module}
             </h2>
             <table className="w-full text-left text-sm">

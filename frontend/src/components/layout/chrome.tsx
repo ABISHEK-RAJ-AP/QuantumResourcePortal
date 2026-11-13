@@ -47,8 +47,8 @@ import { markTourDone, QRP_TOUR_STEPS, shouldAutoStartTour, type TourStep } from
 import { cn } from '@/lib/utils'
 
 /**
- * Lifecycle rail — Submit → Review → Hold → Dispatch → Reconcile → Audit.
- * Users/roles sit under Admin (directory work), not Review. Status lives inside Settings.
+ * Compact IA (Hick / Miller / Occam): ≤7 groups, no twin destinations.
+ * Deep routes stay live; sidebar only shows hubs (Jakob + TeleScope pattern).
  */
 const NAV: {
   label: string
@@ -63,75 +63,38 @@ const NAV: {
   }[]
 }[] = [
   {
-    label: 'Command',
+    label: 'Work',
     items: [
       { to: '/qrp', label: 'Overview', icon: LayoutDashboard, end: true, tourId: 'nav-overview' },
-      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge, tourId: 'nav-centre' },
-    ],
-  },
-  {
-    label: 'Review',
-    items: [
-      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals', tourId: 'nav-approvals' },
+      { to: '/qrp/approvals', label: 'Review', icon: ClipboardList, badgeKey: 'approvals', tourId: 'nav-approvals' },
       { to: '/qrp/projects', label: 'Projects', icon: Users },
+      { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
     ],
   },
   {
     label: 'Operate',
     items: [
-      { to: '/qrp/backends', label: 'Backends', icon: Server, tourId: 'nav-backends' },
-      { to: '/qrp/queues', label: 'Queues', icon: Gauge },
-      { to: '/qrp/jobs', label: 'Dispatch & Jobs', icon: ClipboardList },
-      { to: '/qrp/reconciliation', label: 'Reconciliation', icon: ClipboardList, badgeKey: 'reconcile' },
-      { to: '/qrp/support', label: 'Alerts', icon: Siren },
-      { to: '/qrp/incidents', label: 'Incidents', icon: Siren },
-    ],
-  },
-  {
-    label: 'Schedule',
-    items: [
-      { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
-      { to: '/qrp/scheduling', label: 'Schedule hold', icon: CalendarClock },
+      { to: '/qrp/backends', label: 'Fleet', icon: Server, tourId: 'nav-backends' },
+      { to: '/qrp/jobs', label: 'Jobs', icon: ClipboardList },
+      { to: '/qrp/reconciliation', label: 'Reconcile', icon: ClipboardList, badgeKey: 'reconcile' },
+      { to: '/qrp/incidents', label: 'Incidents', icon: Siren, badgeKey: 'incidents' },
     ],
   },
   {
     label: 'Govern',
     items: [
+      { to: '/qrp/quotas', label: 'Quotas', icon: Gauge },
       { to: '/qrp/policies', label: 'Policies', icon: Shield },
-      { to: '/qrp/quotas', label: 'Quotas & Usage', icon: Gauge },
-      { to: '/qrp/metering', label: 'Metering', icon: Gauge },
-    ],
-  },
-  {
-    label: 'Catalogue',
-    items: [
       { to: '/qrp/inventory', label: 'Inventory', icon: Boxes },
-      { to: '/qrp/pools', label: 'Resource Pools', icon: Boxes },
       { to: '/qrp/providers', label: 'Providers', icon: Server, end: true },
-      { to: '/qrp/connectors', label: 'Connectors', icon: Server },
+      { to: '/qrp/audit', label: 'Audit', icon: ScrollText },
     ],
   },
   {
-    label: 'Records',
+    label: 'Admin',
     items: [
-      { to: '/qrp/audit', label: 'Audit Trail', icon: ScrollText },
-      { to: '/qrp/evidence', label: 'Evidence', icon: ScrollText },
-    ],
-  },
-  {
-    label: 'Access Control',
-    items: [
-      { to: '/qrp/admin/roles', label: 'Roles', icon: Shield, perm: 'role:read' },
-      { to: '/qrp/admin/permissions', label: 'Permissions', icon: Shield, perm: 'permission:read' },
-      { to: '/qrp/admin/users', label: 'Users & Roles', icon: Users, perm: 'user:read' },
-    ],
-  },
-  {
-    label: 'Administration',
-    items: [
-      { to: '/qrp/profile', label: 'My Profile', icon: Users },
-      { to: '/qrp/settings', label: 'Platform Settings', icon: Settings2 },
-      { to: '/system/status', label: 'Platform Status', icon: Settings2 },
+      { to: '/qrp/admin/users', label: 'Users', icon: Users, perm: 'user:read' },
+      { to: '/qrp/settings', label: 'Settings', icon: Settings2 },
     ],
   },
 ]
@@ -412,7 +375,10 @@ function ShellInner() {
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2.5">
+                <NavLink
+                  to="/qrp/profile"
+                  className="flex items-center gap-2.5 rounded-lg p-1 hover:bg-accent/60"
+                >
                   <div className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                     {initials(displayName)}
                   </div>
@@ -422,7 +388,7 @@ function ShellInner() {
                       {user?.role || 'Operator'}
                     </p>
                   </div>
-                </div>
+                </NavLink>
                 <button
                   type="button"
                   onClick={() => setLogoutOpen(true)}
@@ -438,13 +404,11 @@ function ShellInner() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="workspace-chrome-header sticky top-8 z-10 border-b border-border/80 bg-card/90 backdrop-blur-md">
+        <header className="workspace-chrome-header sticky top-8 z-10 border-b border-border bg-card">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <div className="min-w-0 flex-1">
               {chrome.crumbs && chrome.crumbs.length > 0 ? (
                 <Breadcrumbs items={chrome.crumbs} />
-              ) : chrome.eyebrow ? (
-                <p className="label-quiet">{chrome.eyebrow}</p>
               ) : null}
               <h1 className="text-xl font-semibold text-balance sm:text-[1.35rem]">
                 {chrome.title || 'Workspace'}

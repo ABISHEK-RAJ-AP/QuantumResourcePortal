@@ -71,7 +71,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-3">
             {SECTIONS.map((section) => (
               <div key={section.title} className="space-y-3">
-                <h3 className="text-xs font-bold tracking-[0.14em] uppercase text-foreground">{section.title}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
                 <ul className="space-y-2">
                   {section.links.map((link) => (
                     <li key={link.name}>

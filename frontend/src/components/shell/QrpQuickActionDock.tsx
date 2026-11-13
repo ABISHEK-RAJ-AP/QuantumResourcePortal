@@ -112,9 +112,9 @@ export function QrpQuickActionDock({ onStartTour }: { onStartTour?: () => void }
       },
       {
         id: 'hold',
-        label: 'Schedule hold',
-        subtitle: 'After approval',
-        to: '/qrp/scheduling',
+        label: 'New hold',
+        subtitle: 'Reservations',
+        to: '/qrp/reservations?compose=1',
         icon: <CalendarClock className="size-5" strokeWidth={2} />,
       },
       {

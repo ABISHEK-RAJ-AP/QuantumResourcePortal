@@ -100,7 +100,7 @@ function A11yPanel({
         </div>
       </div>
 
-      <p className="mb-2 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">Contrast</p>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Contrast</p>
       <div className="mb-3 grid grid-cols-2 gap-2">
         <A11yBtn label="High contrast" icon={<Moon size={18} />} active={settings.contrast === 'high'} onClick={() => set('contrast', settings.contrast === 'high' ? 'normal' : 'high')} />
         <A11yBtn label="Grayscale" icon={<CircleDot size={18} />} active={settings.contrast === 'gray'} onClick={() => set('contrast', settings.contrast === 'gray' ? 'normal' : 'gray')} />
@@ -108,7 +108,7 @@ function A11yPanel({
         <A11yBtn label="Pause animation" icon={<RotateCcw size={18} />} active={settings.pauseAnim} onClick={() => set('pauseAnim', !settings.pauseAnim)} />
       </div>
 
-      <p className="mb-2 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">Text — {settings.fontSize}%</p>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Text — {settings.fontSize}%</p>
       <div className="mb-3 grid grid-cols-2 gap-2">
         <A11yBtn label="Bigger" icon={<Plus size={18} />} active={settings.fontSize > 100} onClick={() => set('fontSize', Math.min(settings.fontSize + 10, 170))} />
         <A11yBtn label="Smaller" icon={<Minus size={18} />} active={settings.fontSize < 100} onClick={() => set('fontSize', Math.max(settings.fontSize - 10, 80))} />
@@ -116,7 +116,7 @@ function A11yPanel({
         <A11yBtn label="Line height" icon={<Eye size={18} />} active={settings.lineHeight} onClick={() => set('lineHeight', !settings.lineHeight)} />
       </div>
 
-      <p className="mb-2 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">Reading</p>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Reading</p>
       <div className="grid grid-cols-2 gap-2">
         <A11yBtn label="Dyslexia font" icon={<Eye size={18} />} active={settings.dyslexia} onClick={() => set('dyslexia', !settings.dyslexia)} />
         <A11yBtn label="Focus mode" icon={<Eye size={18} />} active={settings.focusMode} onClick={() => set('focusMode', !settings.focusMode)} />

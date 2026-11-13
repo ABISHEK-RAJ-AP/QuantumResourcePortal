@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
 import {
   Bar,
   BarChart,
@@ -326,137 +326,9 @@ export function ReconciliationPage() {
 const fieldClass = 'field-input'
 const buttonClass = 'btn-primary'
 
-function defaultLocalWindow() {
-  const start = new Date()
-  start.setMinutes(0, 0, 0)
-  start.setHours(start.getHours() + 1)
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000)
-  const toLocal = (d: Date) => {
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  }
-  return { window_start: toLocal(start), window_end: toLocal(end) }
-}
-
+/** Merged into Reservations — keep route for old bookmarks. */
 export function SchedulingPage() {
-  const client = useQueryClient()
-  const navigate = useNavigate()
-  const query = useQuery({
-    queryKey: ['reservations'],
-    queryFn: () => qre<unknown>('/reservations'),
-  })
-  const assets = useQuery({
-    queryKey: ['assets-scheduling'],
-    queryFn: async () => asList(await qre<unknown>('/inventory/assets')),
-    retry: false,
-  })
-  const projects = useQuery({
-    queryKey: ['projects-scheduling'],
-    queryFn: async () => asList(await qre<unknown>('/projects')),
-    retry: false,
-  })
-  const [form, setForm] = useState({ resource_ref: '', project_id: '', purpose: '', ...defaultLocalWindow() })
-  const create = useMutation({
-    mutationFn: () =>
-      qre<Row>('/reservations', {
-        method: 'POST',
-        body: JSON.stringify({
-          resource_ref: form.resource_ref,
-          project_id: form.project_id || null,
-          window_start: new Date(form.window_start).toISOString(),
-          window_end: new Date(form.window_end).toISOString(),
-          purpose: form.purpose,
-        }),
-      }),
-    onSuccess: (row) => {
-      setForm({ resource_ref: '', project_id: '', purpose: '', ...defaultLocalWindow() })
-      void client.invalidateQueries({ queryKey: ['reservations'] })
-      if (row.reservation_id) navigate('/qrp/reservations')
-    },
-  })
-  const holds = asList(query.data)
-  const prefillFromDay = (dateStr: string) => {
-    // Local midday → mid+2h window so new hold lands on the clicked calendar day.
-    const start = `${dateStr}T10:00`
-    const end = `${dateStr}T12:00`
-    setForm((prev) => ({ ...prev, window_start: start, window_end: end }))
-  }
-  return (
-    <Page
-      title="Request reservation window"
-      description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
-    >
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <PanelHeader title="New hold" />
-          <form
-            className="grid gap-3 sm:grid-cols-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              create.mutate()
-            }}
-          >
-            <label className="text-sm sm:col-span-2">
-              Resource
-              <input
-                required
-                list="sched-assets"
-                className={fieldClass}
-                value={form.resource_ref}
-                placeholder="Asset or backend ref"
-                onChange={(e) => setForm({ ...form, resource_ref: e.target.value })}
-              />
-              <datalist id="sched-assets">
-                {assets.data?.map((a) => (
-                  <option key={String(a.asset_id)} value={String(a.native_asset_id || a.asset_id)}>
-                    {String(a.execution_class || '')} · {String(a.provider_id || '')}
-                  </option>
-                ))}
-              </datalist>
-            </label>
-            <label className="text-sm sm:col-span-2">
-              Project
-              <select className={fieldClass} value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
-                <option value="">No project</option>
-                {projects.data?.map((p) => (
-                  <option key={String(p.project_id)} value={String(p.project_id)}>
-                    {String(p.name || p.project_id)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm">
-              Window start (local)
-              <input required type="datetime-local" className={fieldClass} value={form.window_start} onChange={(e) => setForm({ ...form, window_start: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              Window end (local)
-              <input required type="datetime-local" className={fieldClass} value={form.window_end} onChange={(e) => setForm({ ...form, window_end: e.target.value })} />
-            </label>
-            <label className="text-sm sm:col-span-2">
-              Purpose
-              <input required className={fieldClass} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} />
-            </label>
-            <div className="sm:col-span-2">
-              <button type="submit" className={buttonClass} disabled={create.isPending}>
-                {create.isPending ? 'Submitting…' : 'Request window'}
-              </button>
-              {create.error && <p className="mt-2 text-sm text-critical">{message(create.error)}</p>}
-            </div>
-          </form>
-        </Card>
-        <Card>
-          <PanelHeader
-            title="Existing holds (calendar)"
-            action={<span className="text-xs text-muted-foreground tabular-nums">{holds.length} rows</span>}
-          />
-          <QueryBody query={query}>
-            <ReservationCalendar rows={holds} title="Hold calendar" onDaySelect={(dateStr) => prefillFromDay(dateStr)} />
-          </QueryBody>
-        </Card>
-      </div>
-    </Page>
-  )
+  return <Navigate to="/qrp/reservations?compose=1" replace />
 }
 
 export function SlaPage() {
@@ -932,7 +804,7 @@ export function ProjectDetailPage() {
             related={[
               { to: '/qrp/approvals', label: 'Review Queue', hint: `${openApprovals} open here` },
               { to: '/qrp/reservations', label: 'All holds', hint: `${reservationRows.length} on project` },
-              { to: '/qrp/scheduling', label: 'Schedule hold', hint: 'Guided window request' },
+              { to: '/qrp/reservations?compose=1', label: 'New hold', hint: 'Request capacity window' },
               { to: '/qrp/quotas', label: 'Quotas', hint: quota.isError ? 'Unavailable' : 'Institution ledger' },
               { to: '/qrp/metering', label: 'Metering', hint: 'Usage samples' },
               { to: '/qrp/inventory', label: 'Catalogue', hint: 'Eligible resources' },
@@ -1538,10 +1410,7 @@ export function AlertDetailPage() {
                     <PanelHeader
                       title="Investigation summary"
                       action={
-                        <span className="flex flex-wrap gap-2">
-                          <StatusBadge tone={severity === 'critical' ? 'critical' : 'warning'} label={String(row.severity || 'info')} />
-                          <StatusBadge tone={stateTone(status.toLowerCase())} label={stateLabel(status)} />
-                        </span>
+                        <StatusBadge tone={severity === 'critical' ? 'critical' : 'warning'} label={String(row.severity || 'info')} />
                       }
                     />
                     <p className="text-sm leading-relaxed">{explainAlert(row, current, threshold)}</p>
@@ -1665,16 +1534,13 @@ export function AlertDetailPage() {
                         <>
                           <p className="text-sm font-medium">{String(incident.data?.title || incidentId)}</p>
                           <p className="text-sm text-muted-foreground">{String(incident.data?.summary || '')}</p>
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            <StatusBadge
-                              tone={String(incident.data?.severity).toLowerCase() === 'critical' ? 'critical' : 'warning'}
-                              label={String(incident.data?.severity || '')}
-                            />
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
                             <StatusBadge
                               tone={stateTone(String(incident.data?.status || '').toLowerCase())}
                               label={stateLabel(String(incident.data?.status || ''))}
                             />
-                            <span className="rounded-md border border-border px-2 py-1 tabular-nums">
+                            <span className="text-muted-foreground">{String(incident.data?.severity || '')}</span>
+                            <span className="tabular-nums text-muted-foreground">
                               {String(incident.data?.alert_count ?? siblingOnBackend.length)} alerts grouped
                             </span>
                           </div>
@@ -2967,7 +2833,12 @@ export function IncidentsPage() {
   return (
     <Page
       title="Incidents"
-      description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
+      description="Exception cases with ownership and alert groups."
+      actions={
+        <Link to="/qrp/support" className="btn-ghost text-sm">
+          Alert inbox
+        </Link>
+      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3222,12 +3093,9 @@ export function IncidentDetailPage() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="space-y-3">
                   <PanelHeader title="Incident summary" />
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge tone={stateTone(status.toLowerCase())} label={stateLabel(status)} />
-                    <StatusBadge
-                      tone={String(query.data.severity || '').toLowerCase() === 'critical' ? 'critical' : 'warning'}
-                      label={String(query.data.severity || '—')}
-                    />
+                    <span className="text-sm text-muted-foreground">{String(query.data.severity || '—')}</span>
                   </div>
                   <dl className="grid gap-3 text-sm sm:grid-cols-2">
                     <div>
@@ -3606,7 +3474,7 @@ export function JobDetailPage() {
         {query.data && (
           <Card className="space-y-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">Provider status</span>
+              <span className="label-quiet">Provider status</span>
               <StatusBadge tone={stateTone(status.toLowerCase())} label={stateLabel(status || 'unknown')} />
             </div>
             <dl className="grid gap-3 sm:grid-cols-2">
@@ -4206,17 +4074,16 @@ export function BackendDetailPage() {
         {backend.data && (
           <Card className="space-y-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">Catalogue status</span>
+              <span className="label-quiet">Catalogue status</span>
               <StatusBadge
                 tone={stateTone(String(backend.data.operational_status || '').toLowerCase())}
                 label={stateLabel(String(backend.data.operational_status || 'unknown'))}
               />
-              {queue.data?.queue_condition != null && (
-                <StatusBadge
-                  tone={stateTone(String(queue.data.queue_condition || '').toLowerCase())}
-                  label={`Queue ${stateLabel(String(queue.data.queue_condition))}`}
-                />
-              )}
+              {queue.data?.queue_condition != null ? (
+                <span className="text-sm text-muted-foreground">
+                  Queue {stateLabel(String(queue.data.queue_condition))}
+                </span>
+              ) : null}
             </div>
             <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div>
@@ -4706,19 +4573,23 @@ export function SettingsPage() {
   const fed = (boundary.data?.federation as Row | undefined) ?? {}
   return (
     <Page
-      crumbs={[{ label: 'Admin' }, { label: 'Settings' }]}
       title="Settings"
       actions={
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={() => {
-            void logout()
-            navigate('/login')
-          }}
-        >
-          Sign out
-        </button>
+        <span className="flex flex-wrap gap-2">
+          <Link to="/system/status" className="btn-ghost text-sm">
+            Platform status
+          </Link>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              void logout()
+              navigate('/login')
+            }}
+          >
+            Sign out
+          </button>
+        </span>
       }
     >
       <Card className="space-y-2 text-sm">

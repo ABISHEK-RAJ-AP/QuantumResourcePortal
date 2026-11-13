@@ -29,7 +29,7 @@ export function PublicHeader({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        'sticky top-8 z-50 w-full border-b border-border bg-card/95 text-foreground backdrop-blur-xl',
+        'sticky top-8 z-50 w-full border-b border-border bg-card text-foreground',
         className,
       )}
     >
@@ -41,7 +41,7 @@ export function PublicHeader({ className }: { className?: string }) {
               <p className="truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-xl">
                 Quantum Resource Portal
               </p>
-              <p className="hidden truncate text-xs font-semibold tracking-wider uppercase whitespace-nowrap text-muted-foreground sm:block">
+              <p className="hidden truncate text-xs font-medium whitespace-nowrap text-muted-foreground sm:block">
                 C-DAC Governance
               </p>
             </div>

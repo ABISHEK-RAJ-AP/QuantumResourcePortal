@@ -12,13 +12,10 @@ import {
 } from 'lucide-react'
 
 import { PublicShell } from '@/components/marketing/PublicShell'
-import { GridPulse } from '@/components/ui/grid-pulse'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { cn } from '@/lib/utils'
 
-/** Halo so lit cells stay clear of copy (light + dark). */
-const guard =
-  '[text-shadow:0_0_6px_var(--color-background),0_0_14px_var(--color-background),0_0_30px_var(--color-background)]'
+const guard = ''
 
 const CAPABILITIES = [
   {
@@ -78,27 +75,15 @@ export function LandingPage() {
     <PublicShell>
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
-        <GridPulse className="z-0 opacity-90" />
-
         <section className="relative z-10 flex min-h-[calc(100svh-7.5rem)] flex-col items-center justify-center px-4 py-16 sm:px-8 lg:px-10">
-          <div
-            className={cn(
-              'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-2xl border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
-              dark
-                ? 'border-border bg-background/80 shadow-2xl shadow-black/40'
-                : 'border-border/70 bg-card/75 shadow-raised',
-            )}
-          >
-            <p
-              data-grid-avoid
-              className={cn('mb-3 text-xs font-bold tracking-[0.2em] text-info-text uppercase', guard)}
-            >
+          <div className="fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-[var(--radius)] border border-border bg-card px-6 py-10 text-center shadow-card sm:px-10 sm:py-12">
+            <p data-grid-avoid className={cn('mb-2 text-sm text-muted-foreground', guard)}>
               Centre for Development of Advanced Computing
             </p>
             <h1
               data-grid-avoid
               className={cn(
-                'text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl',
+                'text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl',
                 guard,
               )}
             >
@@ -106,28 +91,16 @@ export function LandingPage() {
             </h1>
             <p
               data-grid-avoid
-              className={cn('mt-4 text-pretty text-base text-muted-foreground sm:text-lg', guard)}
+              className={cn('mx-auto mt-4 max-w-prose text-pretty text-base text-muted-foreground sm:text-lg', guard)}
             >
-              Institution-wide governance for quantum workloads: approvals, capacity, operations, and evidence in one
-              place.
+              Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
             <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link
-                to="/login"
-                className="btn-primary w-full gap-2 px-6 py-3 text-base shadow-lg shadow-primary/25 sm:w-auto sm:min-w-[160px]"
-              >
+              <Link to="/login" className="btn-primary w-full gap-2 px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
                 Enter portal
                 <ArrowRight className="size-4" />
               </Link>
-              <Link
-                to="/register"
-                className={cn(
-                  'inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-base font-semibold sm:w-auto sm:min-w-[160px]',
-                  dark
-                    ? 'border-border bg-card/40 text-foreground hover:bg-accent'
-                    : 'border-border bg-card hover:bg-accent',
-                )}
-              >
+              <Link to="/register" className="btn-secondary w-full px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
                 Request access
               </Link>
             </div>
@@ -138,17 +111,14 @@ export function LandingPage() {
           <section id="capabilities" className="scroll-mt-28">
             <div className="flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
               <div>
-                <span data-grid-avoid className={cn('text-xs font-bold tracking-wider text-info-text uppercase', guard)}>
-                  Core governance
-                </span>
                 <h2
                   data-grid-avoid
                   className={cn(
-                    'mt-1 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl',
+                    'text-3xl font-semibold tracking-tight text-foreground sm:text-4xl',
                     guard,
                   )}
                 >
-                  Control beyond a single monitoring app
+                  Approvals, capacity, and evidence in one workspace
                 </h2>
               </div>
               <p data-grid-avoid className={cn('max-w-md text-sm leading-relaxed text-muted-foreground', guard)}>
@@ -162,14 +132,13 @@ export function LandingPage() {
                   <article
                     key={item.title}
                     className={cn(
-                      'relative overflow-hidden rounded-2xl border border-border p-6 backdrop-blur-sm',
-                      dark ? 'bg-card/50' : 'bg-card/80 shadow-card',
+                      'relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card',
                     )}
                   >
-                    <span className="inline-flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                      <Icon className="size-5" />
+                    <span className="inline-flex size-10 items-center justify-center rounded-[var(--radius-inner)] bg-accent text-accent-foreground">
+                      <Icon className="size-5" aria-hidden />
                     </span>
-                    <h3 data-grid-avoid className={cn('mt-4 text-lg font-bold text-foreground', guard)}>
+                    <h3 data-grid-avoid className={cn('mt-4 text-lg font-semibold text-foreground', guard)}>
                       {item.title}
                     </h3>
                     <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
@@ -183,17 +152,14 @@ export function LandingPage() {
 
           <section id="modules" className="scroll-mt-28">
             <div className="mx-auto max-w-3xl space-y-2 text-center">
-              <span data-grid-avoid className={cn('text-xs font-bold tracking-wider text-info-text uppercase', guard)}>
-                Workspace modules
-              </span>
               <h2
                 data-grid-avoid
-                className={cn('text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl', guard)}
+                className={cn('text-3xl font-semibold tracking-tight text-foreground sm:text-4xl', guard)}
               >
-                End-to-end resource governance
+                Operator modules for the live fleet
               </h2>
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
-                Demo-ready surfaces for operators — no charter-only clutter in the primary nav.
+                Surfaces operators use day to day — not charter-only placeholders.
               </p>
             </div>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -202,15 +168,12 @@ export function LandingPage() {
                 return (
                   <article
                     key={item.title}
-                    className={cn(
-                      'relative overflow-hidden rounded-2xl border border-border p-6 backdrop-blur-sm',
-                      dark ? 'bg-card/50' : 'bg-card/80 shadow-card',
-                    )}
+                    className="relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card"
                   >
                     <div className="relative z-[1] flex items-start gap-3">
-                      <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+                      <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
                       <div>
-                        <h3 data-grid-avoid className={cn('text-base font-bold text-foreground', guard)}>
+                        <h3 data-grid-avoid className={cn('text-base font-semibold text-foreground', guard)}>
                           {item.title}
                         </h3>
                         <p data-grid-avoid className={cn('mt-1.5 text-sm leading-relaxed text-muted-foreground', guard)}>
@@ -226,33 +189,24 @@ export function LandingPage() {
 
           <section
             id="workflow"
-            className={cn(
-              'scroll-mt-28 rounded-3xl border border-border p-8 backdrop-blur-sm sm:p-12',
-              dark ? 'bg-card/50' : 'bg-card/80',
-            )}
+            className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-8 shadow-card sm:p-12"
           >
             <div className="max-w-2xl">
-              <span data-grid-avoid className={cn('text-xs font-bold tracking-wider text-info-text uppercase', guard)}>
-                Lifecycle
-              </span>
-              <h2 data-grid-avoid className={cn('mt-1 text-3xl font-extrabold tracking-tight text-foreground', guard)}>
-                Operational workflow
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                From submit to reconcile
               </h2>
               <p data-grid-avoid className={cn('mt-2 text-sm text-muted-foreground', guard)}>
-                From submission to reconcile — only real stage trails, not decorative chrome.
+                Real stage trail — submission, review, dispatch, evidence.
               </p>
             </div>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {WORKFLOW.map((step) => (
                 <div
                   key={step.n}
-                  className={cn(
-                    'relative overflow-hidden rounded-2xl border border-border p-6',
-                    dark ? 'bg-background/80' : 'bg-background/90',
-                  )}
+                  className="relative overflow-hidden rounded-[var(--radius-inner)] border border-border bg-surface p-6"
                 >
-                  <span className="font-mono text-base font-extrabold text-primary">{step.n}</span>
-                  <h3 data-grid-avoid className={cn('mt-3 text-lg font-bold text-foreground', guard)}>
+                  <span className="text-base font-semibold tabular-nums text-primary">{step.n}</span>
+                  <h3 data-grid-avoid className={cn('mt-3 text-lg font-semibold text-foreground', guard)}>
                     {step.title}
                   </h3>
                   <p data-grid-avoid className={cn('mt-2 text-xs leading-relaxed text-muted-foreground', guard)}>
@@ -265,11 +219,8 @@ export function LandingPage() {
 
           <section id="faq" className="scroll-mt-28 mx-auto max-w-3xl">
             <div className="space-y-2 text-center">
-              <span data-grid-avoid className={cn('text-xs font-bold tracking-wider text-info-text uppercase', guard)}>
-                FAQ
-              </span>
-              <h2 data-grid-avoid className={cn('text-3xl font-extrabold tracking-tight text-foreground', guard)}>
-                Frequently asked questions
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                Common questions
               </h2>
             </div>
             <div className="mt-10 divide-y divide-border border-y border-border">
@@ -279,7 +230,7 @@ export function LandingPage() {
                   <div key={item.q}>
                     <button
                       type="button"
-                      className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       onClick={() => setOpenFaq(open ? -1 : idx)}
                       aria-expanded={open}
                     >
@@ -304,27 +255,20 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section
-            className={cn(
-              'rounded-3xl border p-10 text-center backdrop-blur-sm sm:p-14',
-              dark
-                ? 'border-primary/30 bg-gradient-to-r from-primary/15 via-transparent to-info/10'
-                : 'border-primary/25 bg-gradient-to-r from-accent/80 via-card/80 to-info-soft/40',
-            )}
-          >
+          <section className="rounded-[var(--radius)] border border-border bg-card p-10 text-center shadow-card sm:p-14">
             <div className="mx-auto max-w-2xl space-y-4">
-              <h2 data-grid-avoid className={cn('text-3xl font-extrabold tracking-tight text-foreground', guard)}>
-                Ready to govern quantum resources?
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                Open the operator workspace
               </h2>
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
-                Sign in with the demo admin account, open Approvals, and walk the real stage trail.
+                Sign in, open Approvals, and walk the live stage trail.
               </p>
               <div className="flex flex-wrap justify-center gap-4 pt-2">
                 <Link to="/login" className="btn-primary gap-2 px-6 py-3 text-base">
                   Sign in <ArrowRight className="size-4" />
                 </Link>
                 <Link to="/register" className="btn-secondary px-6 py-3 text-base">
-                  Create account
+                  Request access
                 </Link>
               </div>
             </div>

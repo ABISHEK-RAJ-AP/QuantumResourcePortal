@@ -94,7 +94,6 @@ export function RoleEditorPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title={isNew ? 'New role' : readOnly ? 'Role (system)' : 'Edit role'}
       description="Choose a scope and the permissions this role grants, grouped by module."
     >
@@ -160,7 +159,7 @@ export function RoleEditorPage() {
               return (
                 <div key={module} className="rounded-lg border border-border p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    <p className="label-quiet">
                       {module}
                     </p>
                     {!readOnly && (
