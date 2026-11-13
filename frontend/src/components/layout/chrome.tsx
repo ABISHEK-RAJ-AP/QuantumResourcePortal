@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Boxes,
   CalendarClock,
@@ -148,6 +148,7 @@ function initials(name: string) {
 
 function ShellInner() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user: authUser, permissions, logout: authLogout } = useAuth()
   const user = authUser
     ? { username: authUser.principal_id, role: authUser.roles[0] ?? 'User', full_name: '' }
@@ -424,12 +425,12 @@ function ShellInner() {
               <button
                 type="button"
                 className="grid size-9 min-h-9 min-w-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
-                aria-label="Refresh page"
-                title="Refresh"
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw className="size-4" />
-              </button>
+                  aria-label="Refresh page"
+                  title="Refresh"
+                  onClick={() => void queryClient.invalidateQueries()}
+                >
+                  <RefreshCw className="size-4" />
+                </button>
               <button
                 type="button"
                 className="grid size-9 min-h-9 min-w-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"

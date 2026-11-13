@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–9 are done. Do not start phase 10 until this commit is accepted.
+Phases 3–10 are done. Do not start phase 11 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -104,12 +104,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator fitting filters and freshness on one row.
 - **Shipped:** `chrome.tsx` header uses `.workspace-chrome-header` / `.workspace-toolbar`: tighter pad, title `text-xl`, freshness and controls on one wrapping row (no column stack). Shell control height stays `h-9` / `2.25rem`. `index.css` adds toolbar rules and `--qrp-canvas-pad-y` so compact density shortens page top pad. Sidebar unchanged. Palette, HoverGrid, empty copy, Retry unchanged.
 
-### Phase 10 — Refresh without a full reload
+### Phase 10 — Refresh without a full reload (done)
 
 - **Who:** operator who refreshed and lost in-page scroll and form state.
-- **Evidence:** `chrome.tsx` refresh button calls `window.location.reload()`.
-- **Size:** small if it only invalidates TanStack queries already on the page.
-- **Risk:** medium. **Changes behavior.** A reload today resets the SPA; query invalidation must not pretend data reloaded when a query is not mounted.
+- **Shipped:** header Refresh calls `queryClient.invalidateQueries()` (TanStack Query) instead of `window.location.reload()`. Same button label and placement. Active queries refetch; scroll and form state stay. Unmounted queries are not faked as fresh.
 
 ### Phase 11 — Relative time on freshness
 
@@ -134,7 +132,7 @@ Structural notes only (no refactor this sprint until that choice):
 - **Surplus:** `frontend/src/pages/workspace/continue.tsx` and `screens.tsx` hold most workspace screens, empty branches, and chart setup in two files.
 - **Surplus decoration:** landing hero runs `CubeWaveHero` plus a gradient veil (`LandingPage.tsx`); feature cards also mount `HoverGrid`.
 - **Special cases:** `QueryBody` vs direct `EmptyState` vs `Notice` for the same failure idea.
-- **Hidden control:** header refresh looks like a data refresh and reloads the document (`chrome.tsx`).
+- **Hidden control:** header refresh used to reload the document; Phase 10 now invalidates queries (`chrome.tsx`).
 
 ## Non-goals
 
