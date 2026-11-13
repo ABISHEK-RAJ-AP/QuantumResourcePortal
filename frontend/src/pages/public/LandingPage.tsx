@@ -12,10 +12,13 @@ import {
 } from 'lucide-react'
 
 import { PublicShell } from '@/components/marketing/PublicShell'
+import { GridPulse } from '@/components/ui/grid-pulse'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { cn } from '@/lib/utils'
 
-const guard = ''
+/** Halo so lit cells stay clear of copy. */
+const guard =
+  '[text-shadow:0_0_6px_var(--color-background),0_0_14px_var(--color-background),0_0_30px_var(--color-background)]'
 
 const CAPABILITIES = [
   {
@@ -75,8 +78,16 @@ export function LandingPage() {
     <PublicShell>
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
+        <GridPulse className="z-0 opacity-90" />
         <section className="relative z-10 flex min-h-[calc(100svh-7.5rem)] flex-col items-center justify-center px-4 py-16 sm:px-8 lg:px-10">
-          <div className="fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-[var(--radius)] border border-border bg-card px-6 py-10 text-center shadow-card sm:px-10 sm:py-12">
+          <div
+            className={cn(
+              'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-[var(--radius)] border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
+              dark
+                ? 'border-border bg-background/80 shadow-card'
+                : 'border-border/70 bg-card/80 shadow-card',
+            )}
+          >
             <p data-grid-avoid className={cn('mb-2 text-sm text-muted-foreground', guard)}>
               Centre for Development of Advanced Computing
             </p>
