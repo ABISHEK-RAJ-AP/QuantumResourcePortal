@@ -17,11 +17,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Brand palette */
-  --brand-primary: #536dfe;
+  /* Brand palette — primary nudged darker so white label text hits WCAG AA on buttons */
+  --brand-primary: #4a63f0;
   --brand-violet: #7957e8;
   --brand-cyan: #20b8d5;
-  --brand-gradient: linear-gradient(135deg, #536dfe 0%, #7957e8 100%);
+  --brand-gradient: linear-gradient(135deg, #4a63f0 0%, #7957e8 100%);
 
   /* Surfaces and text */
   --background: #ffffff;
@@ -33,18 +33,19 @@
   --popover-foreground: #172033;
 
   /* shadcn semantic tokens */
-  --primary: #536dfe;
+  --primary: #4a63f0;
   --primary-foreground: #ffffff;
   --secondary: #f1f3f9;
   --secondary-foreground: #172033;
   --muted: #f1f3f9;
-  --muted-foreground: #788397;
+  /* Was #788397 (~3.8:1 on white). #5f6e86 clears 4.5:1 on white, surface, and muted. */
+  --muted-foreground: #5f6e86;
   --accent: #eef1ff;
   --accent-foreground: #3a4fd6;
   --destructive: #e05252;
   --border: #e8ecf3;
   --input: #e8ecf3;
-  --ring: #536dfe;
+  --ring: #4a63f0;
 
   /* Status colours: solid (icons, bars) / soft (badge background) / text (AA on soft) */
   --success: #16a36a;
@@ -61,7 +62,7 @@
   --info-text: #0b7286;
 
   /* Charts: series order primary → violet → cyan → green → amber */
-  --chart-1: #536dfe;
+  --chart-1: #4a63f0;
   --chart-2: #7957e8;
   --chart-3: #20b8d5;
   --chart-4: #16a36a;
@@ -70,12 +71,12 @@
   /* Sidebar */
   --sidebar: #ffffff;
   --sidebar-foreground: #172033;
-  --sidebar-primary: #536dfe;
+  --sidebar-primary: #4a63f0;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eef1ff;
   --sidebar-accent-foreground: #3a4fd6;
   --sidebar-border: #e8ecf3;
-  --sidebar-ring: #536dfe;
+  --sidebar-ring: #4a63f0;
 
   --radius: 0.75rem;
   --a11y-preheader-height: 32px;
@@ -111,6 +112,10 @@
   --sidebar-ring: #7b8cff;
   --brand-primary: #7b8cff;
   --brand-cyan: #3ad0ea;
+  /* Light-theme info-text (#0b7286) fails on navy; cyan brand token clears AA on dark surfaces. */
+  --info: #3ad0ea;
+  --info-soft: #143044;
+  --info-text: #3ad0ea;
 }
 
 @theme inline {

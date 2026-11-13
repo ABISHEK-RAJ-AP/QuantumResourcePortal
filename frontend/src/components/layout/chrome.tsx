@@ -270,7 +270,7 @@ function ShellInner() {
                 {!collapsed && (
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase hover:bg-accent"
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
                     title={group.label}
                     aria-expanded={expanded}
                     onClick={() => setOpen((prev) => ({ ...prev, [group.label]: !expanded }))}
@@ -397,7 +397,7 @@ function ShellInner() {
               {chrome.crumbs && chrome.crumbs.length > 0 ? (
                 <Breadcrumbs items={chrome.crumbs} />
               ) : chrome.eyebrow ? (
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
+                <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
               <h1 className="text-2xl font-semibold tracking-tight text-balance">{chrome.title || 'Workspace'}</h1>
               {chrome.description ? (
@@ -416,7 +416,7 @@ function ShellInner() {
                   onClick={openPalette}
                 >
                   <Search className="size-4 shrink-0" />
-                  <kbd className="hidden rounded border border-input bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground sm:inline">
+                  <kbd className="hidden rounded border border-input bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline">
                     Ctrl/Cmd+K
                   </kbd>
                 </button>
@@ -431,12 +431,12 @@ function ShellInner() {
                 </button>
                 <button
                   type="button"
-                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
+                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
                   aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
                   title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
                   onClick={toggleTheme}
                 >
-                  {theme === 'dark' ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
+                  {theme === 'dark' ? <Sun className="size-4 text-warning" /> : <Moon className="size-4 text-foreground" />}
                 </button>
               </div>
             </div>

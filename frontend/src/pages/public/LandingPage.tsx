@@ -77,7 +77,7 @@ export function LandingPage() {
       <section
         className={cn(
           'relative isolate w-full min-h-[calc(100svh-7.5rem)] overflow-hidden',
-          dark ? 'bg-[#0b1220]' : 'bg-surface',
+          dark ? 'bg-background' : 'bg-surface',
         )}
       >
         <CubeWaveHero />
@@ -85,7 +85,7 @@ export function LandingPage() {
           className={cn(
             'pointer-events-none absolute inset-0 z-[1]',
             dark
-              ? 'bg-gradient-to-b from-[#0b1220]/25 via-transparent to-[#0b1220]'
+              ? 'bg-gradient-to-b from-background/25 via-transparent to-background'
               : 'bg-gradient-to-b from-surface/30 via-transparent to-surface',
           )}
           aria-hidden
@@ -95,17 +95,17 @@ export function LandingPage() {
             className={cn(
               'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-2xl border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
               dark
-                ? 'border-white/15 bg-[#0b1220]/75 shadow-2xl shadow-black/40'
-                : 'border-border/70 bg-white/75 shadow-raised',
+                ? 'border-border bg-background/80 shadow-2xl shadow-black/40'
+                : 'border-border/70 bg-card/75 shadow-raised',
             )}
           >
-            <p className={cn('mb-3 text-xs font-bold tracking-[0.2em] uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
+            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-info-text uppercase">
               Centre for Development of Advanced Computing
             </p>
-            <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-extrabold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl">
               Quantum Resource Portal
             </h1>
-            <p className={cn('mt-4 text-pretty text-base sm:text-lg', dark ? 'text-white/70' : 'text-muted-foreground')}>
+            <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
               Institution-wide governance for quantum workloads: approvals, capacity, operations, and evidence in one
               place.
             </p>
@@ -118,7 +118,7 @@ export function LandingPage() {
                 to="/register"
                 className={cn(
                   'inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-base font-semibold sm:w-auto sm:min-w-[160px]',
-                  dark ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-border bg-card hover:bg-accent',
+                  dark ? 'border-border bg-card/40 text-foreground hover:bg-accent' : 'border-border bg-card hover:bg-accent',
                 )}
               >
                 Request access
@@ -130,19 +130,14 @@ export function LandingPage() {
 
       <main className="relative z-20 mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
         <section id="capabilities" className="scroll-mt-28">
-          <div
-            className={cn(
-              'flex flex-col justify-between gap-6 border-b pb-4 md:flex-row md:items-end',
-              dark ? 'border-white/10' : 'border-border',
-            )}
-          >
+          <div className="flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
             <div>
-              <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
+              <span className="text-xs font-bold tracking-wider text-info-text uppercase">
                 Core governance
               </span>
-              <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Control beyond a single monitoring app</h2>
+              <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Control beyond a single monitoring app</h2>
             </div>
-            <p className={cn('max-w-md text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
               Approvals, capacity, fleet posture, and evidence for the active tenant — aligned to G1–G3.
             </p>
           </div>
@@ -153,22 +148,17 @@ export function LandingPage() {
                 <article
                   key={item.title}
                   className={cn(
-                    'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                    dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card shadow-card',
+                    'feature-card group relative overflow-hidden rounded-2xl border border-border p-6',
+                    dark ? 'bg-card/50' : 'bg-card shadow-card',
                   )}
                 >
                   <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={36} />
                   <div className="relative z-[1]">
-                    <span
-                      className={cn(
-                        'inline-flex size-11 items-center justify-center rounded-xl',
-                        dark ? 'bg-white/10 text-cyan-200' : 'bg-accent text-accent-foreground',
-                      )}
-                    >
+                    <span className="inline-flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
                       <Icon className="size-5" />
                     </span>
-                    <h3 className="mt-4 text-lg font-bold">{item.title}</h3>
-                    <p className={cn('mt-2 text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{item.body}</p>
+                    <h3 className="mt-4 text-lg font-bold text-foreground">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
                   </div>
                 </article>
               )
@@ -178,11 +168,11 @@ export function LandingPage() {
 
         <section id="modules" className="scroll-mt-28">
           <div className="mx-auto max-w-3xl space-y-2 text-center">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
+            <span className="text-xs font-bold tracking-wider text-info-text uppercase">
               Workspace modules
             </span>
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">End-to-end resource governance</h2>
-            <p className={cn('text-base', dark ? 'text-white/60' : 'text-muted-foreground')}>
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">End-to-end resource governance</h2>
+            <p className="text-base text-muted-foreground">
               Demo-ready surfaces for operators — no charter-only clutter in the primary nav.
             </p>
           </div>
@@ -193,16 +183,16 @@ export function LandingPage() {
                 <article
                   key={item.title}
                   className={cn(
-                    'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                    dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card shadow-card',
+                    'feature-card group relative overflow-hidden rounded-2xl border border-border p-6',
+                    dark ? 'bg-card/50' : 'bg-card shadow-card',
                   )}
                 >
                   <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={40} />
                   <div className="relative z-[1] flex items-start gap-3">
-                    <Icon className={cn('mt-0.5 size-5 shrink-0', dark ? 'text-cyan-300' : 'text-primary')} />
+                    <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
                     <div>
-                      <h3 className="text-base font-bold">{item.title}</h3>
-                      <p className={cn('mt-1.5 text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{item.body}</p>
+                      <h3 className="text-base font-bold text-foreground">{item.title}</h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
                     </div>
                   </div>
                 </article>
@@ -214,16 +204,16 @@ export function LandingPage() {
         <section
           id="workflow"
           className={cn(
-            'scroll-mt-28 rounded-3xl border p-8 sm:p-12',
-            dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card/80',
+            'scroll-mt-28 rounded-3xl border border-border p-8 sm:p-12',
+            dark ? 'bg-card/50' : 'bg-card/80',
           )}
         >
           <div className="max-w-2xl">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
+            <span className="text-xs font-bold tracking-wider text-info-text uppercase">
               Lifecycle
             </span>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-tight">Operational workflow</h2>
-            <p className={cn('mt-2 text-sm', dark ? 'text-white/60' : 'text-muted-foreground')}>
+            <h2 className="mt-1 text-3xl font-extrabold tracking-tight text-foreground">Operational workflow</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
               From submission to reconcile — only real stage trails, not decorative chrome.
             </p>
           </div>
@@ -232,15 +222,15 @@ export function LandingPage() {
               <div
                 key={step.n}
                 className={cn(
-                  'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                  dark ? 'border-white/10 bg-[#0b1220]/60' : 'border-border bg-background',
+                  'feature-card group relative overflow-hidden rounded-2xl border border-border p-6',
+                  dark ? 'bg-background/80' : 'bg-background',
                 )}
               >
                 <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={32} />
                 <div className="relative z-[1]">
-                  <span className={cn('font-mono text-base font-extrabold', dark ? 'text-cyan-300' : 'text-primary')}>{step.n}</span>
-                  <h3 className="mt-3 text-lg font-bold">{step.title}</h3>
-                  <p className={cn('mt-2 text-xs leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{step.body}</p>
+                  <span className="font-mono text-base font-extrabold text-primary">{step.n}</span>
+                  <h3 className="mt-3 text-lg font-bold text-foreground">{step.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{step.body}</p>
                 </div>
               </div>
             ))}
@@ -249,24 +239,24 @@ export function LandingPage() {
 
         <section id="faq" className="scroll-mt-28 mx-auto max-w-3xl">
           <div className="space-y-2 text-center">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>FAQ</span>
-            <h2 className="text-3xl font-extrabold tracking-tight">Frequently asked questions</h2>
+            <span className="text-xs font-bold tracking-wider text-info-text uppercase">FAQ</span>
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground">Frequently asked questions</h2>
           </div>
-          <div className={cn('mt-10 divide-y border-y', dark ? 'divide-white/10 border-white/10' : 'divide-border border-border')}>
+          <div className="mt-10 divide-y divide-border border-y border-border">
             {FAQ.map((item, idx) => {
               const open = openFaq === idx
               return (
                 <div key={item.q}>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between gap-4 py-6 text-left text-base font-bold"
+                    className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                     onClick={() => setOpenFaq(open ? -1 : idx)}
                     aria-expanded={open}
                   >
                     <span>{item.q}</span>
                     <ChevronDown className={cn('size-5 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180 text-primary')} />
                   </button>
-                  {open && <p className={cn('pb-6 text-sm leading-relaxed', dark ? 'text-white/65' : 'text-muted-foreground')}>{item.a}</p>}
+                  {open && <p className="pb-6 text-sm leading-relaxed text-muted-foreground">{item.a}</p>}
                 </div>
               )
             })}
@@ -282,8 +272,8 @@ export function LandingPage() {
           )}
         >
           <div className="mx-auto max-w-2xl space-y-4">
-            <h2 className="text-3xl font-extrabold tracking-tight">Ready to govern quantum resources?</h2>
-            <p className={cn('text-base', dark ? 'text-white/70' : 'text-muted-foreground')}>
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground">Ready to govern quantum resources?</h2>
+            <p className="text-base text-muted-foreground">
               Sign in with the demo admin account, open Approvals, and walk the real stage trail.
             </p>
             <div className="flex flex-wrap justify-center gap-4 pt-2">

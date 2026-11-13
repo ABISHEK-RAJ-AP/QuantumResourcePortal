@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phase 3 and Phase 4 are done. Do not start phase 5 until this commit is accepted.
+Phases 3–5 are done. Do not start phase 6 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -78,12 +78,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator moving across Govern routes without the sidebar.
 - **Shipped:** `chrome.tsx` loads `getNavigation()` once (`queryKey` `me-navigation`) and passes `items` into `frontend/src/components/layout/command-palette.tsx`. Header control plus Ctrl/Cmd+K open the dialog. Filter by label. Empty query lists server items. Arrow keys, Enter navigates to `route`, Escape closes and restores focus. Tab stays inside. Loading: "Loading navigation." Fetch failure: palette still opens with "Could not load navigation." No match: "No rows match search." Does not copy local `NAV` into the palette and does not fall back to it on error. Sidebar still uses local `NAV` with `permissions.has`.
 
-### Phase 5 — Theme contrast on public and shell chrome
+### Phase 5 — Theme contrast on public and shell chrome (done)
 
 - **Who:** operator and reviewer in light and dark, including a bright room.
-- **Evidence:** tokens in `frontend/src/styles/index.css`. Hardcoded `#0b1220`, `text-white/70`, `text-cyan-300` in `LandingPage.tsx`. Eyebrow `text-[11px]` in `chrome.tsx`.
-- **Size:** small, those files only.
-- **Risk:** low visual, check AA on cyan-on-navy and 11px uppercase.
+- **Shipped:** `index.css` light `--muted-foreground` darkened to `#5f6e86` (AA on white/surface/muted). Light `--primary` / brand / ring nudged to `#4a63f0` so white button labels clear AA. Dark `--info` / `--info-text` set to brand cyan so labels work on navy. `LandingPage.tsx` drops hardcoded `#0b1220` / `text-white/*` / `text-cyan-*` for background, card, muted, info-text, and primary tokens. `chrome.tsx` eyebrows and kbd use `text-xs` with the stronger muted token; theme sun uses `text-warning` (dark chrome only). Indigo/cyan brand kept. Command palette behavior unchanged.
+- **Skipped (outside file list):** auth heroes and login copy still use their own pages; name for a later polish if needed.
 
 ### Phase 6 — Query errors can retry
 
