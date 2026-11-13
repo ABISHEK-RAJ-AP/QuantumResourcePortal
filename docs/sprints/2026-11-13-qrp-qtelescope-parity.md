@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–7 are done. Do not start phase 8 until this commit is accepted.
+Phases 3–8 are done. Do not start phase 9 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -94,12 +94,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator who must not treat a quiet fleet as fake telemetry.
 - **Shipped:** Replaced vague empty strings in `continue.tsx` and `screens.tsx` (Empty sample, Fleet quiet, Empty provider sample, Empty catalogue, Empty inventory, and related). Each empty now names the missing list (alerts, jobs, backends, metering rollups, connectors, users, incidents, queue samples, fleet counts). `EmptyState` in `Page.tsx` unchanged. Retry behavior unchanged.
 
-### Phase 8 — Motion and focus on decorative grids
+### Phase 8 — Motion and focus on decorative grids (done)
 
 - **Who:** operator who set reduced motion, and keyboard users.
-- **Evidence:** `HoverGrid` in `frontend/src/components/ui/hover-grid.tsx` always listens to `mousemove` and sets `pointer-events-auto`. Shell focus ring exists at `index.css` `:focus-visible`. `A11yPreheader.tsx` already reads `prefers-reduced-motion`.
-- **Size:** small, `hover-grid.tsx` plus a check that icon buttons in `chrome.tsx` keep a visible focus ring.
-- **Risk:** low.
+- **Shipped:** `HoverGrid` reads `prefers-reduced-motion` and `a11y-pause-anim`. When reduced: no mousemove, `pointer-events-none`, static mask, no transition. Still `aria-hidden`. When motion is allowed, cursor tracking stays. `chrome.tsx`: visible `focus-visible` ring on sidebar route links and the refresh control (palette and theme already had it). GridPulse left unmounted. Empty copy and Retry unchanged.
 
 ### Phase 9 — Workspace toolbar density
 

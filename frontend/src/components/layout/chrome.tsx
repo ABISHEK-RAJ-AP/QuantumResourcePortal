@@ -296,7 +296,7 @@ function ShellInner() {
                             title={item.label}
                             className={({ isActive }) =>
                               cn(
-                                'relative flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
+                                'relative flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring/40',
                                 collapsed && 'justify-center px-0',
                                 isActive
                                   ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
@@ -422,7 +422,7 @@ function ShellInner() {
                 </button>
                 <button
                   type="button"
-                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
+                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
                   aria-label="Refresh page"
                   title="Refresh"
                   onClick={() => window.location.reload()}
