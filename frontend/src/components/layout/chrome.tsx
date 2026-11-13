@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Boxes,
@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   RefreshCw,
   ScrollText,
+  Search,
   Server,
   Settings2,
   Shield,
@@ -23,10 +24,12 @@ import {
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import type { LucideIcon } from 'lucide-react'
 
+import { getNavigation } from '@/api/rbac'
 import { asList, qre } from '@/api/qre'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { DataFreshness } from '@/components/data/DataFreshness'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
+import { CommandPalette, type PaletteNavStatus } from '@/components/layout/command-palette'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
@@ -154,12 +157,27 @@ function ShellInner() {
   const { theme, toggleTheme } = useTheme()
   const prefs = useWorkspacePrefs()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
     return Object.fromEntries(
       NAV.map((g) => [g.label, saved[g.label] ?? (g.label === 'Command' || g.label === 'Review')]),
     )
   })
+
+  const navigation = useQuery({
+    queryKey: ['me-navigation'],
+    queryFn: getNavigation,
+    retry: false,
+  })
+  const navItems = navigation.data?.items ?? []
+  const paletteStatus: PaletteNavStatus = navigation.isError
+    ? 'error'
+    : navigation.isLoading
+      ? 'loading'
+      : 'ready'
+  const openPalette = useCallback(() => setPaletteOpen(true), [])
+  const closePalette = useCallback(() => setPaletteOpen(false), [])
 
   useEffect(() => {
     localStorage.setItem(OPEN_KEY, JSON.stringify(open))
@@ -178,6 +196,16 @@ function ShellInner() {
       return next
     })
   }, [location.pathname])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'k') return
+      e.preventDefault()
+      openPalette()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openPalette])
 
   const queue = useQuery({
     queryKey: ['governance-summary'],
@@ -382,6 +410,18 @@ function ShellInner() {
                 <WorkspaceLayoutControls />
                 <button
                   type="button"
+                  className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-2.5 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"
+                  aria-label="Open command palette"
+                  title="Go to page (Ctrl/Cmd+K)"
+                  onClick={openPalette}
+                >
+                  <Search className="size-4 shrink-0" />
+                  <kbd className="hidden rounded border border-input bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground sm:inline">
+                    Ctrl/Cmd+K
+                  </kbd>
+                </button>
+                <button
+                  type="button"
                   className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
                   aria-label="Refresh page"
                   title="Refresh"
@@ -413,6 +453,12 @@ function ShellInner() {
           <Outlet />
         </div>
       </div>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={closePalette}
+        items={navItems}
+        status={paletteStatus}
+      />
       <QrpQuickActionDock />
     </div>
   )
