@@ -37,7 +37,8 @@ if curl -sf -m 1 -o /dev/null "http://127.0.0.1:${UI_PORT}/" 2>/dev/null; then
   qrp_log "UI already on :${UI_PORT}"
 else
   qrp_log "Starting UI :${UI_PORT} → ${API_TARGET}"
-  nohup bash -lc "cd $(printf %q "$ROOT/frontend") && QRP_API_TARGET=$(printf %q "$API_TARGET") npm run dev -- --host ${HOST_BIND} --port ${UI_PORT}" \
+  nohup env PATH="$PATH" QRP_API_TARGET="$API_TARGET" \
+    bash -c "cd $(printf %q "$ROOT/frontend") && npm run dev -- --host ${HOST_BIND} --port ${UI_PORT}" \
     >"$ROOT/logs/ui.log" 2>&1 &
   echo $! >"$ROOT/logs/ui.pid"
   for _ in $(seq 1 80); do
