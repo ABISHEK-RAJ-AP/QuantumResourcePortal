@@ -384,7 +384,7 @@ export function OverviewPage() {
             ) : ledger.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : quotaChart.length === 0 ? (
-              <EmptyState title="No quota sample" body="Ledger empty." />
+              <EmptyState title="No quota ledger rows" body="Daily shot ledger has no entries for this tenant yet." />
             ) : (
               <div className="flex h-full flex-col">
                 <div className="min-h-0 flex-1">
@@ -423,7 +423,7 @@ export function OverviewPage() {
             ) : alertSummary.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : alertBackendChart.length === 0 ? (
-              <EmptyState title="No active alerts" body="Fleet quiet." />
+              <EmptyState title="No active alerts" body="No active alerts returned for any backend." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={alertBackendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -480,7 +480,7 @@ export function OverviewPage() {
           {attempts.isError ? (
             <Notice tone="warning">Dispatch attempts unavailable.</Notice>
           ) : unresolvedRows.length === 0 ? (
-            <EmptyState title="Clear" body="No unresolved dispatch attempts." />
+            <EmptyState title="No unresolved attempts" body="No dispatch attempts need reconcile right now." />
           ) : (
             <Table
               rows={unresolvedRows.slice(0, 6)}
@@ -1337,7 +1337,7 @@ export function InventoryPage() {
         <ChartPanel className="xl:col-span-2" title="By execution class" empty={execChart.length === 0}>
           {(h) =>
             execChart.length === 0 ? (
-              <EmptyState title="No execution classes" body="Empty inventory." />
+              <EmptyState title="No execution classes" body="No inventory assets grouped by execution class yet." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={execChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
@@ -1380,7 +1380,7 @@ export function InventoryPage() {
           <Table
             rows={rows}
             emptyTitle="No assets"
-            emptyBody="Register an asset or import a provider catalogue. Empty ≠ zero capacity elsewhere."
+            emptyBody="Register an asset or import a provider catalogue. An empty asset list is not capacity elsewhere."
             columns={[
               {
                 key: 'asset_id',
@@ -1489,7 +1489,7 @@ export function ProvidersPage() {
         >
           {(h) =>
             stageChart.length === 0 ? (
-              <EmptyState title="No stages" body="Empty provider catalogue." />
+              <EmptyState title="No provider stages" body="No providers listed in the catalogue yet." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <PieChart>
@@ -2332,7 +2332,7 @@ export function MeteringPage() {
             ) : query.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : chart.length === 0 ? (
-              <EmptyState title="No numeric sums" body={`No rollups with sum_value in last ${hours} h. Empty ≠ zero.`} />
+              <EmptyState title="No metering sums" body={`No metering rollups with a sum in the last ${hours} h. Missing rollups are not zero usage.`} />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -2350,7 +2350,7 @@ export function MeteringPage() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>Rollups come from connector meters — not invented portal math.</li>
             <li>Daily shot cap lives on Quotas; this page is broader usage telemetry.</li>
-            <li>Empty window means no samples returned, not that usage was zero.</li>
+            <li>An empty metering window means no rollups returned, not that usage was zero.</li>
           </ul>
           <Link className="mt-3 inline-flex text-sm font-medium text-primary hover:underline" to="/qrp/quotas">
             Open shot ledger →
@@ -2361,8 +2361,8 @@ export function MeteringPage() {
         <QueryBody query={query}>
           <Table
             rows={rows}
-            emptyTitle="No meter samples"
-            emptyBody={`No rollups in the last ${hours} hours. Empty ≠ zero usage.`}
+            emptyTitle="No metering rollups"
+            emptyBody={`No metering rollups in the last ${hours} hours. Missing rollups are not zero usage.`}
             columns={[
               { key: 'dimension', label: 'Dimension', sortable: true },
               { key: 'metric', label: 'Metric', sortable: true },
@@ -2563,7 +2563,7 @@ export function SupportPage() {
             ) : summary.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : backendChart.length === 0 ? (
-              <EmptyState title="No active alerts" body="Fleet quiet on /alerts/summary." />
+              <EmptyState title="No active alerts" body="No active alerts in the summary rollup." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -2607,7 +2607,7 @@ export function SupportPage() {
           <Table
             rows={rows}
             emptyTitle="No active alerts"
-            emptyBody={search || severity !== 'all' ? 'No rows match filters.' : 'Fleet quiet.'}
+            emptyBody={search || severity !== 'all' ? 'No alerts match these filters.' : 'No active alerts for this tenant.'}
             columns={[
               {
                 key: 'alert_id',

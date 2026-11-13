@@ -2195,7 +2195,7 @@ export function ConnectorsPage() {
           <ChartPanel title="Stage mix" empty={stageChart.length === 0}>
             {(h) =>
               stageChart.length === 0 ? (
-                <EmptyState title="No connectors" body="Empty catalogue." />
+                <EmptyState title="No connectors" body="No connector stages in the catalogue yet." />
               ) : (
                 <ResponsiveContainer width="100%" height={h}>
                   <PieChart>
@@ -2829,7 +2829,7 @@ export function UsersPage() {
           <Table
             rows={rows}
             emptyTitle="No users"
-            emptyBody="Directory empty for this tenant."
+            emptyBody="No directory users for this tenant."
             columns={[
               {
                 key: 'username',
@@ -2866,7 +2866,7 @@ export function UsersPage() {
           <Table
             rows={roles as unknown as Row[]}
             emptyTitle="No roles"
-            emptyBody="Catalog unavailable."
+            emptyBody="No roles in the role catalog for this tenant."
             columns={[
               { key: 'id', label: 'Id' },
               { key: 'label', label: 'Label' },
@@ -3002,7 +3002,7 @@ export function IncidentsPage() {
         <ChartPanel title="By status" empty={statusChart.length === 0}>
           {(h) =>
             statusChart.length === 0 ? (
-              <EmptyState title="No status mix" body="Empty until incidents exist." />
+              <EmptyState title="No incident statuses" body="No incidents to chart by status yet." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={statusChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
@@ -3030,7 +3030,7 @@ export function IncidentsPage() {
           <Table
             rows={rows}
             emptyTitle="No incidents"
-            emptyBody={search || status !== 'all' ? 'No rows match filters.' : 'Incidents appear when triage opens a case.'}
+            emptyBody={search || status !== 'all' ? 'No incidents match these filters.' : 'Incidents appear when triage opens a case.'}
             columns={[
               {
                 key: 'title',
@@ -3451,7 +3451,7 @@ export function JobsPage() {
         <ChartPanel title="Status mix" empty={statusChart.length === 0}>
           {(h) =>
             statusChart.length === 0 ? (
-              <EmptyState title="No jobs" body="Empty provider sample." />
+              <EmptyState title="No provider jobs" body="No provider jobs in this sample window." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <PieChart>
@@ -3469,7 +3469,7 @@ export function JobsPage() {
         <ChartPanel className="xl:col-span-2" title="Jobs by backend" empty={backendChart.length === 0}>
           {(h) =>
             backendChart.length === 0 ? (
-              <EmptyState title="No backends" body="Empty sample." />
+              <EmptyState title="No backends with jobs" body="No backends reported jobs in this sample window." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={backendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -3497,7 +3497,7 @@ export function JobsPage() {
           <Table
             rows={rows}
             emptyTitle="No provider jobs"
-            emptyBody={search || status !== 'all' ? 'No rows match filters.' : 'Execution records appear after backends report jobs.'}
+            emptyBody={search || status !== 'all' ? 'No provider jobs match these filters.' : 'Execution records appear after backends report jobs.'}
             columns={[
               {
                 key: 'job_id',
@@ -3714,7 +3714,7 @@ export function CentrePage() {
           <ChartPanel title="Fleet reachability" empty={fleetChart.length === 0}>
             {(h) =>
               fleetChart.length === 0 ? (
-                <EmptyState title="No fleet sample" body="Centre returned empty fleet counts." />
+                <EmptyState title="No fleet counts" body="Operations Centre returned no fleet reachability counts." />
               ) : (
                 <>
                   <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
@@ -3828,8 +3828,8 @@ export function CentrePage() {
             />
             <Table
               rows={backendsSnap}
-              emptyTitle="No snapshot"
-              emptyBody="Centre backends_snapshot empty."
+              emptyTitle="No backend snapshot"
+              emptyBody="Operations Centre returned no backends in the snapshot."
               columns={[
                 {
                   key: 'backend_name',
@@ -4014,7 +4014,7 @@ export function BackendsPage() {
           <Table
             rows={rows}
             emptyTitle="No backends"
-            emptyBody="Catalogue empty for this filter."
+            emptyBody="No backends match this catalogue filter."
             columns={[
               {
                 key: 'backend_name',
@@ -4389,7 +4389,7 @@ export function QueuesPage() {
             query.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : conditionChart.length === 0 ? (
-              <EmptyState title="No conditions" body="Empty sample set." />
+              <EmptyState title="No queue conditions" body="No queue condition values in the latest telemetry rows." />
             ) : (
               <div className="flex h-full flex-col gap-2">
                 <div className="min-h-0 flex-1">
@@ -4433,8 +4433,8 @@ export function QueuesPage() {
             emptyTitle="No queue samples"
             emptyBody={
               search || condition !== 'all'
-                ? 'No rows match filters.'
-                : 'Register backends and wait for telemetry ingest. No telemetry samples for this filter.'
+                ? 'No queue samples match these filters.'
+                : 'Register backends and wait for telemetry ingest. No queue samples for this filter yet.'
             }
             columns={[
               {

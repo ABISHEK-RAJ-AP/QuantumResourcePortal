@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–6 are done. Do not start phase 7 until this commit is accepted.
+Phases 3–7 are done. Do not start phase 8 until this commit is accepted.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -89,12 +89,10 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 - **Who:** operator whose summary request failed.
 - **Shipped:** `Notice` accepts optional `action`. `QueryBody` on error shows the message plus a `btn-secondary` Retry that calls `query.refetch` (not a full page reload). Loading still uses `LoadingLine`. Other `Notice` call sites unchanged. Call sites that already pass a TanStack query keep working because `refetch` is on the result.
 
-### Phase 7 — Empty copy says what is actually empty
+### Phase 7 — Empty copy says what is actually empty (done)
 
 - **Who:** operator who must not treat a quiet fleet as fake telemetry.
-- **Evidence:** strings in `frontend/src/pages/workspace/continue.tsx` and `screens.tsx` such as “Empty sample.”, “Fleet quiet.”, “Empty provider sample.”
-- **Size:** small copy pass on those call sites. Keep `EmptyState` in `Page.tsx`.
-- **Risk:** low. **Changes behavior** of what the operator believes is missing. No invented metrics.
+- **Shipped:** Replaced vague empty strings in `continue.tsx` and `screens.tsx` (Empty sample, Fleet quiet, Empty provider sample, Empty catalogue, Empty inventory, and related). Each empty now names the missing list (alerts, jobs, backends, metering rollups, connectors, users, incidents, queue samples, fleet counts). `EmptyState` in `Page.tsx` unchanged. Retry behavior unchanged.
 
 ### Phase 8 — Motion and focus on decorative grids
 
