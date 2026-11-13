@@ -63,7 +63,7 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phases 3–12 are done. Build slices for this sprint are complete; next is the untangle gate (or backlog).
+Phases 3–12 are done. Phase 13 fixed the ForgotPassword parse error that blocked Vite and typecheck. Next is the untangle gate (or backlog).
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
@@ -118,6 +118,11 @@ Each item names who it helps, the file evidence, size, and risk. Fifteen ideas a
 
 - **Who:** analyst on the governance overview charts.
 - **Shipped:** `.dark` sets `--chart-1`…`--chart-5` to lighter indigo / violet / cyan / green / amber (`#7b8cff`, `#a78bfa`, `#3ad0ea`, `#34d399`, `#fbbf24`) so series stay readable on navy cards. Same order as light. `CHART_COLORS` in screens/continue already consume `var(--chart-*)`; no chart component rewrite.
+
+### Phase 13 — ForgotPassword compiles (done)
+
+- **Who:** anyone loading the Vite app (Landing and auth were blocked by the overlay).
+- **Shipped:** `ForgotPasswordPage.tsx` renamed illegal `function motionless-brand` to `BrandHeader` so it matches the JSX call site. No copy or layout change.
 
 ## Untangle (gated)
 

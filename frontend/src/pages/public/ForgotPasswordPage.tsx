@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
   )
 }
 
-function motionless-brand({ dark }: { dark: boolean }) {
+function BrandHeader({ dark }: { dark: boolean }) {
   return (
     <div className="mb-6 flex items-center gap-3">
       <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />
