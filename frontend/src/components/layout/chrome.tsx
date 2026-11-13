@@ -33,6 +33,7 @@ import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { CommandPalette, type PaletteNavStatus } from '@/components/layout/command-palette'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
+import { OperatorNoticeBell } from '@/components/shell/OperatorNoticeBell'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -413,6 +414,7 @@ function ShellInner() {
             <div className="workspace-toolbar">
               <DataFreshness updatedAt={chrome.updatedAt} />
               <WorkspaceLayoutControls />
+              <OperatorNoticeBell />
               <button
                 type="button"
                 className="inline-flex h-9 min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-2.5 text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/40"

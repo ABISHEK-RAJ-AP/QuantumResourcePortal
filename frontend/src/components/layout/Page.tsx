@@ -107,12 +107,12 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3">
+    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border/90 bg-gradient-to-b from-muted/35 to-muted/10 px-4 py-5">
       <div className="min-w-0">
-        <p className="text-sm font-semibold">{title}</p>
-        <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{body}</div>
+        <p className="text-sm font-semibold tracking-tight">{title}</p>
+        <div className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">{body}</div>
       </div>
-      {action}
+      {action ? <div className="flex flex-wrap items-center gap-2">{action}</div> : null}
     </div>
   )
 }
@@ -127,14 +127,25 @@ export function Notice({
   /** Optional control under the message (for example Retry on a failed query). */
   action?: ReactNode
 }) {
+  const shell =
+    tone === 'critical'
+      ? 'border-critical/25 bg-critical-soft/25'
+      : tone === 'warning'
+        ? 'border-warning/25 bg-warning-soft/30'
+        : tone === 'success'
+          ? 'border-success/20 bg-success-soft/25'
+          : 'border-border bg-card'
   return (
-    <Card className="flex items-start gap-3">
-      <StatusBadge tone={tone} label={tone === 'critical' ? 'Unavailable' : 'Note'} />
+    <div className={cn('flex items-start gap-3 rounded-xl border px-3.5 py-3 shadow-card', shell)}>
+      <StatusBadge
+        tone={tone}
+        label={tone === 'critical' ? 'Unavailable' : tone === 'warning' ? 'Attention' : 'Note'}
+      />
       <div className="min-w-0 flex-1">
-        <div className="text-sm text-muted-foreground">{children}</div>
-        {action ? <div className="mt-2">{action}</div> : null}
+        <div className="text-sm leading-snug text-muted-foreground">{children}</div>
+        {action ? <div className="mt-2 flex flex-wrap gap-2">{action}</div> : null}
       </div>
-    </Card>
+    </div>
   )
 }
 

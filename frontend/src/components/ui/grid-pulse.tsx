@@ -293,19 +293,23 @@ export function GridPulse({
       if (!pending) pending = requestAnimationFrame(paint)
     }
 
-    // A few cells find their own way on, so the grid is alive on arrival and
-    // on a screen with no pointer at all. Paused while out of sight.
+    // Ambient: cycle one row at a time (left→right sweep), then wrap to the
+    // next row — never a random scatter that reads as a broken next-line wrap.
     let visible = true
     let beat = 0
+    let ambRow = 0
+    let ambCol = 0
     const drift = () => {
-      beat = window.setTimeout(drift, 1400 + Math.random() * 1800)
+      beat = window.setTimeout(drift, 420 + Math.random() * 280)
       if (!visible || document.hidden) return
-      for (let i = 0; i < ambient; i++) {
-        light(
-          Math.floor(Math.random() * cols),
-          Math.floor(Math.random() * rows),
-          900 + Math.random() * 1600,
-        )
+      const count = Math.max(1, ambient)
+      for (let i = 0; i < count; i++) {
+        light(ambCol, ambRow % rows, 1100 + Math.random() * 900)
+        ambCol += 1
+        if (ambCol >= cols) {
+          ambCol = 0
+          ambRow = (ambRow + 1) % Math.max(1, rows)
+        }
       }
     }
     beat = window.setTimeout(drift, 500)

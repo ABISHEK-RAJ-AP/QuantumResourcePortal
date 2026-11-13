@@ -85,11 +85,6 @@ export function AssetDetailPage() {
       description={`Registry id ${shortId(assetId, 14)}. Lifecycle moves only along allowed transitions.`}
       steps={LIFECYCLE}
       stepIndex={lifecycleIndex(state)}
-      actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
-          Back to inventory
-        </Link>
-      }
     >
       <QueryBody query={query}>
         {row && (
@@ -394,13 +389,6 @@ export function SchedulingPage() {
       eyebrow="Governance · Allocation"
       title="Request reservation window"
       description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link to="/qrp/reservations" className="btn-secondary">
-            Reservation calendar
-          </Link>
-        </span>
-      }
     >
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
@@ -493,42 +481,74 @@ export function SlaPage() {
 }
 
 export function NotificationsPage() {
+  const query = useQuery({
+    queryKey: ['lab-notifications-page'],
+    queryFn: () => qre<unknown>('/notifications'),
+  })
+  const rows = asList(query.data)
+  const unread = rows.filter((r) => !r.read).length
   return (
     <Page
-      eyebrow="Not in operational scope"
+      crumbs={[{ label: 'Administration', to: '/qrp/settings' }, { label: 'Notifications' }]}
       title="Notifications"
-      description="Persistent notification delivery and preference centre are not implemented."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/audit">
-            Audit log
-          </Link>
-          <Link className="btn-secondary" to="/qrp/approvals/history">
-            Approval history
-          </Link>
-        </span>
-      }
+      description="Operator notices from review, alerts, and reconcile."
+      updatedAt={query.dataUpdatedAt}
     >
-      </Page>
+      <KpiStrip>
+        <MetricTile label="Total" value={query.isError ? '—' : rows.length} />
+        <MetricTile label="Unread" value={query.isError ? '—' : unread} tone={unread ? 'warning' : 'neutral'} />
+      </KpiStrip>
+      <Card>
+        <QueryBody query={query}>
+          <Table
+            rows={rows}
+            emptyTitle="No notices"
+            emptyBody="Review and fleet signals will land here."
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'body', label: 'Detail' },
+              {
+                key: 'tone',
+                label: 'Tone',
+                render: (row) => (
+                  <StatusBadge
+                    tone={
+                      String(row.tone) === 'critical'
+                        ? 'critical'
+                        : String(row.tone) === 'warning'
+                          ? 'warning'
+                          : 'info'
+                    }
+                    label={stateLabel(String(row.tone || 'info'))}
+                  />
+                ),
+              },
+              {
+                key: 'href',
+                label: 'Open',
+                render: (row) =>
+                  row.href ? (
+                    <Link className="font-medium text-primary hover:underline" to={String(row.href)}>
+                      Go
+                    </Link>
+                  ) : (
+                    '—'
+                  ),
+              },
+            ]}
+          />
+        </QueryBody>
+      </Card>
+    </Page>
   )
 }
 
 export function EntitlementsPage() {
   return (
     <Page
-      eyebrow="Not in operational scope"
+      crumbs={[{ label: 'Govern', to: '/qrp/quotas' }, { label: 'Entitlements' }]}
       title="Entitlements"
       description="Provider entitlement grants stay outside QRP. Daily simulation-shot caps live on the quota ledger."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/quotas">
-            Quotas
-          </Link>
-          <Link className="btn-secondary" to="/qrp/users">
-            Users
-          </Link>
-        </span>
-      }
     >
       <Notice tone="warning">Entitlement writes not enabled. Identity-provider entitlements are external to QRP.</Notice>
     </Page>
@@ -544,12 +564,8 @@ export function OnboardingPage() {
     <Page
       eyebrow="Resources"
       title="Provider onboarding board"
+      crumbs={[{ label: 'Catalogue', to: '/qrp/providers' }, { label: 'Onboarding' }]}
       description="Stage codes from the connector catalogue. Open a provider to publish a manifest and activate."
-      actions={
-        <Link className="btn-secondary" to="/qrp/providers">
-          Provider list
-        </Link>
-      }
     >
       <Card>
         <QueryBody query={query}>
@@ -600,11 +616,6 @@ export function RegisterAssetPage() {
       eyebrow="Resources"
       title="Register asset"
       description="One asset, one provider, one native id."
-      actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
-          Inventory
-        </Link>
-      }
     >
       <Card>
         <form
@@ -664,11 +675,6 @@ export function ImportAssetsPage() {
       eyebrow="Resources"
       title="Import assets"
       description="CSV columns: native_asset_id, asset_class, execution_class. A bad row commits nothing."
-      actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
-          Inventory
-        </Link>
-      }
     >
       <Card>
         <form
@@ -875,9 +881,6 @@ export function ProjectDetailPage() {
           <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
             {locked ? 'View requests' : 'Create resource request'}
           </button>
-          <Link to="/qrp/scheduling" className="btn-secondary">
-            Request hold
-          </Link>
         </span>
       }
       updatedAt={project.dataUpdatedAt}
@@ -1032,9 +1035,6 @@ export function ProjectDetailPage() {
                         <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
                           {locked ? 'Review open requests' : 'Create resource request'}
                         </button>
-                        <Link className="btn-secondary" to="/qrp/scheduling">
-                          Request hold window
-                        </Link>
                       </div>
                     </Card>
 
@@ -1242,11 +1242,6 @@ export function ProjectDetailPage() {
                 <Card className="space-y-3">
                   <PanelHeader
                     title="Reservation holds"
-                    action={
-                      <Link className="btn-secondary" to="/qrp/scheduling">
-                        Request window
-                      </Link>
-                    }
                   />
                   <QueryBody query={reservations}>
                     <Table
@@ -1507,9 +1502,6 @@ export function AlertDetailPage() {
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={alertId} keep={14} />
-          <Link to="/qrp/support" className="btn-secondary">
-            Alert queue
-          </Link>
           {incidentId ? (
             <Link to={`/qrp/incidents/${incidentId}`} className="btn-primary">
               Open incident ({String(incident.data?.alert_count ?? '…')})
@@ -2372,9 +2364,6 @@ export function DispatchPage() {
           <Link to="/qrp/reconciliation" className="btn-primary">
             Open reconciliation
           </Link>
-          <Link to="/qrp/jobs" className="btn-secondary">
-            Provider jobs
-          </Link>
         </span>
       }
       updatedAt={attempts.dataUpdatedAt}
@@ -2994,13 +2983,6 @@ export function IncidentsPage() {
       eyebrow="Operations"
       title="Incidents"
       description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link to="/qrp/support" className="btn-secondary">
-            Active alerts
-          </Link>
-        </span>
-      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3211,10 +3193,6 @@ export function IncidentDetailPage() {
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={incidentId} keep={14} />
-          
-          <Link to="/qrp/incidents" className="btn-secondary">
-            All incidents
-          </Link>
         </span>
       }
       updatedAt={query.dataUpdatedAt}
@@ -3417,16 +3395,10 @@ export function IncidentDetailPage() {
                 <Card className="space-y-2">
                   <PanelHeader title="Evidence" />
                   <p className="text-sm text-muted-foreground">Capture operational snapshots that support this incident claim.</p>
-                  <Link className="btn-secondary" to="/qrp/evidence">
-                    Open evidence
-                  </Link>
                 </Card>
                 <Card className="space-y-2">
                   <PanelHeader title="Audit" />
                   <p className="text-sm text-muted-foreground">Acknowledge / investigate / resolve append to the audit trail.</p>
-                  <Link className="btn-secondary" to="/qrp/audit">
-                    Open audit
-                  </Link>
                 </Card>
               </div>
             )}
@@ -3645,9 +3617,6 @@ export function JobDetailPage() {
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={jobId} keep={16} />
-          <Link to="/qrp/jobs" className="btn-secondary">
-            All jobs
-          </Link>
         </span>
       }
     >
@@ -3747,17 +3716,8 @@ export function CentrePage() {
     <Page
       eyebrow="Operations"
       title="Operations Centre"
+      crumbs={[{ label: 'Command', to: '/qrp' }, { label: 'Operations Centre' }]}
       description="Fleet posture, collector health, queue depth, and open exceptions."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/approvals">
-            Approvals
-          </Link>
-          <Link className="btn-secondary" to="/qrp/reconciliation">
-            Reconciliation
-          </Link>
-        </span>
-      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -4241,9 +4201,6 @@ export function BackendDetailPage() {
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={backendId} keep={14} />
-          <Link to="/qrp/backends" className="btn-secondary">
-            All backends
-          </Link>
         </span>
       }
       updatedAt={backend.dataUpdatedAt || queue.dataUpdatedAt}

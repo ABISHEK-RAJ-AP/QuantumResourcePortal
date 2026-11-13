@@ -300,16 +300,17 @@ export function OverviewPage() {
     >
       <Card>
         <PanelHeader title="Pipeline" />
-        <div className="grid gap-2 sm:grid-cols-5">
-          {pipeline.map((step) => (
+        <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
+          {pipeline.map((step, i) => (
             <Link
               key={step.label}
               to={step.to}
               className={cn(
-                'rounded-lg border px-3 py-2.5 hover:bg-accent',
+                'min-w-[7.5rem] shrink-0 rounded-lg border px-3 py-2.5 transition-[transform,background-color] duration-300 hover:bg-accent',
                 step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border',
                 focus.primaryTo === step.to ? 'ring-1 ring-primary/40' : '',
               )}
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{step.label}</span>
               <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
@@ -321,11 +322,6 @@ export function OverviewPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartPanel
           title="Request stages"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">
-              Queue
-            </Link>
-          }
           state={
             summary.isError
               ? 'error'
@@ -358,11 +354,6 @@ export function OverviewPage() {
 
         <ChartPanel
           title="Daily shot quota"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/quotas">
-              Ledger
-            </Link>
-          }
           state={
             ledger.isError
               ? 'error'
@@ -409,11 +400,6 @@ export function OverviewPage() {
 
         <ChartPanel
           title="Alerts by backend"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/support">
-              Alerts
-            </Link>
-          }
           state={
             alertSummary.isError
               ? 'error'
@@ -469,7 +455,7 @@ export function OverviewPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
-          <PanelHeader title="Queue" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">All</Link>} />
+          <PanelHeader title="Queue" />
           <QueryBody query={recent}>
             <Table
               rows={(recent.data ?? []).slice(0, 6)}
@@ -498,7 +484,7 @@ export function OverviewPage() {
           </QueryBody>
         </Card>
         <Card>
-          <PanelHeader title="Dispatch exceptions" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/reconciliation">All</Link>} />
+          <PanelHeader title="Dispatch exceptions" />
           {attempts.isError ? (
             <Notice tone="warning">Dispatch attempts unavailable.</Notice>
           ) : unresolvedRows.length === 0 ? (
@@ -540,7 +526,7 @@ export function OverviewPage() {
           )}
         </Card>
         <Card className="lg:col-span-2">
-          <PanelHeader title="Recent decisions" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/audit">Audit</Link>} />
+          <PanelHeader title="Recent decisions" />
           {activity.isError ? (
             <Notice tone="warning">Activity feed unavailable.</Notice>
           ) : (
@@ -939,9 +925,6 @@ export function ApprovalDetailPage() {
           <InfoTip label="Approval scope">
             Decision writes to audit and advances stages. Does not dispatch a provider job. After approved: Schedule hold → authorize dispatch.
           </InfoTip>
-          <Link to="/qrp/approvals" className="btn-secondary">
-            Queue
-          </Link>
           {govState === 'approved' ? (
             <Link to="/qrp/scheduling" className="btn-primary">
               Request hold
@@ -1491,15 +1474,8 @@ export function ProvidersPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Resources"
+      crumbs={[{ label: 'Catalogue', to: '/qrp/providers' }, { label: 'Providers' }]}
       title="Providers"
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-secondary" to="/qrp/providers/onboarding">
-            Onboarding board
-          </Link>
-        </span>
-      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -1512,11 +1488,6 @@ export function ProvidersPage() {
         <ChartPanel
           title="Integration stage"
           empty={stageChart.length === 0}
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/connectors">
-              I1–I5 legend
-            </Link>
-          }
         >
           {(h) =>
             stageChart.length === 0 ? (
@@ -1966,7 +1937,7 @@ export function QuotasPage() {
   const nearWarn = barPct != null && Number.isFinite(warnAt) && barPct >= warnAt
   return (
     <Page
-      eyebrow="Governance"
+      crumbs={[{ label: 'Govern', to: '/qrp/quotas' }, { label: 'Quotas & Usage' }]}
       title="Quotas"
       updatedAt={query.dataUpdatedAt}
     >
@@ -2051,11 +2022,6 @@ export function QuotasPage() {
               <EmptyState
                 title="No consumption yet"
                 body="Approve and complete simulation jobs to see project rollups. Missing meters stay unavailable — never invented as zero usage elsewhere."
-                action={
-                  <Link className="btn-secondary" to="/qrp">
-                    Overview · Load demo
-                  </Link>
-                }
               />
             )}
           </Card>
@@ -2164,7 +2130,7 @@ export function ReservationsPage() {
   const countFor = (state: string) => allRows.filter((r) => String(r.state) === state).length
   return (
     <Page
-      eyebrow="Governance · Allocation"
+      crumbs={[{ label: 'Schedule', to: '/qrp/reservations' }, { label: 'Allocation' }]}
       title="Reservations"
       actions={
         <span className="flex flex-wrap gap-2">
@@ -2321,7 +2287,7 @@ export function MeteringPage() {
   }, [query.data])
   return (
     <Page
-      eyebrow="Governance"
+      crumbs={[{ label: 'Govern', to: '/qrp/metering' }, { label: 'Metering' }]}
       title="Metering"
       actions={
         <span className="flex flex-wrap items-center gap-2">
@@ -2500,7 +2466,7 @@ export function AuditPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Records"
+      crumbs={[{ label: 'Records', to: '/qrp/audit' }, { label: 'Audit' }]}
       title="Audit Trail"
       actions={
         <span className="flex flex-wrap gap-2">
@@ -2598,7 +2564,7 @@ export function SupportPage() {
   })
   return (
     <Page
-      eyebrow="Operations"
+      crumbs={[{ label: 'Operate', to: '/qrp/support' }, { label: 'Alerts' }]}
       title="Alerts"
       actions={
         <span className="flex flex-wrap gap-2">
@@ -2620,11 +2586,6 @@ export function SupportPage() {
           className="xl:col-span-2"
           title="Active by backend"
           empty={summary.isError || summary.isPending || backendChart.length === 0}
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/incidents">
-              Open incidents
-            </Link>
-          }
         >
           {(h) =>
             summary.isError ? (
@@ -2726,18 +2687,9 @@ export function SupportPage() {
 export function ProcurementPage() {
   return (
     <Page
-      eyebrow="Not in operational scope"
+      crumbs={[{ label: 'Catalogue', to: '/qrp/inventory' }, { label: 'Procurement' }]}
       title="Procurement"
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/inventory">
-            Inventory
-          </Link>
-          <Link className="btn-secondary" to="/qrp/providers">
-            Providers
-          </Link>
-        </span>
-      }
+      description="Charter-only until a formal scope change."
     >
       <Notice tone="warning">
         Procurement stays charter-only until a formal scope change. Inventory and the daily shot ledger are the live capacity surfaces.
