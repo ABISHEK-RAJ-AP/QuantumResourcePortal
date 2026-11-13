@@ -63,18 +63,17 @@ Mount later on the first operator region that is `relative` and does not already
 
 ## Later phases
 
-Phase 3 is the only next slice. Do not start it in the GridPulse commit.
+Phase 3 is done. Phase 4 is the only next slice. Do not start it in the FilterBar commit.
 
 Each item names who it helps, the file evidence, size, and risk. Fifteen ideas are in `.afk/2026-11-13.md`. These are the ordered slices.
 
-### Phase 3 — One-line workspace search
+### Phase 3 — One-line workspace search (done)
 
 - **Who:** approver scanning approvals and inventory.
-- **Evidence:** QRP `frontend/src/components/data/FilterBar.tsx` wraps chips and a plain input. Q-TeleScope `frontend/src/components/ds/FilterBar.jsx` plus `label.outline-field` in `frontend/src/index.css`.
-- **Size:** small. Restyle `FilterBar` only. Callers stay on the same props.
-- **Risk:** low. Placeholder and `aria-label` must stay. Do not invent result counts.
+- **Shipped:** `frontend/src/components/data/FilterBar.tsx` only. Same props. The search control is one line: a visible "Search" label on the field border, `field` tokens (`border-input`, `bg-card`, `ring`), placeholder and `aria-label` unchanged. Typing still filters through `onSearch`. Enter does not submit a parent form. Escape clears the search text. Chip filters are unchanged.
+- **Not in this bar:** FilterBar does not render result rows. Pages that already list rows keep their own empty copy (for example "No rows match search." in `screens.tsx`). No new empty-state component. No result counts. No command palette.
 
-### Phase 4 — Command palette
+### Phase 4 — Command palette (next)
 
 - **Who:** operator moving across Govern routes without the sidebar.
 - **Evidence:** missing under `frontend/src`. Q-TeleScope `CommandPalette.jsx` and `useCommandPaletteShortcut` in `App.jsx`. QRP nav is server-shaped in `chrome.tsx`.

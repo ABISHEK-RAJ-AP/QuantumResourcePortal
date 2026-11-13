@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -25,16 +25,32 @@ export function FilterBar({
   trailing?: ReactNode
 }) {
   const dirty = value !== defaultId || Boolean(search?.trim())
+  const onSearchKey = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!onSearch) return
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onSearch('')
+      return
+    }
+    if (event.key === 'Enter') event.preventDefault()
+  }
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
+    <div className="mb-4 flex flex-wrap items-center gap-2" role="search">
       {onSearch && (
-        <input
-          className="field-input max-w-xs"
-          value={search ?? ''}
-          placeholder={searchPlaceholder}
-          onChange={(e) => onSearch(e.target.value)}
-          aria-label={searchPlaceholder}
-        />
+        <label className="relative inline-flex h-9 max-w-xs min-w-0 flex-1 items-center rounded-lg border border-input bg-card px-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+          <span className="pointer-events-none absolute -top-2 left-2 bg-card px-1 text-xs font-medium text-muted-foreground">
+            Search
+          </span>
+          <input
+            type="search"
+            className="w-full bg-transparent text-sm text-foreground outline-none"
+            value={search ?? ''}
+            placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
+            onChange={(e) => onSearch(e.target.value)}
+            onKeyDown={onSearchKey}
+          />
+        </label>
       )}
       {options.map((opt) => (
         <button
