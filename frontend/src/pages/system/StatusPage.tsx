@@ -6,12 +6,14 @@ import { fetchLiveness, fetchReadiness, systemKeys, type Check } from '@/api/sys
 import { LogoMark } from '@/components/brand/LogoMark'
 import { useSetPageChrome } from '@/components/layout/page-context'
 import { StatusBadge } from '@/components/status/StatusBadge'
+import { DeploymentCapabilitiesPanel } from '@/components/deployment/DeploymentCapabilitiesPanel'
 import { cn } from '@/lib/utils'
 
 const CHECK_META: Record<string, { label: string; icon: LucideIcon }> = {
   configuration: { label: 'Configuration', icon: Settings2 },
   database: { label: 'PostgreSQL database', icon: Database },
   migrations: { label: 'Schema migrations', icon: GitBranch },
+  identity_mfa: { label: 'MFA configuration', icon: Settings2 },
 }
 
 const REFRESH_MS = 15_000
@@ -173,6 +175,8 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
           </Card>
         </div>
       )}
+
+      <DeploymentCapabilitiesPanel />
 
       <Card>
         <h2 className="text-base font-semibold">Readiness checks</h2>

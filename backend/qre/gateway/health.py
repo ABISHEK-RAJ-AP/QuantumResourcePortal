@@ -16,6 +16,7 @@ from pydantic import BaseModel
 
 from qre.core.config import APP_VERSION
 from qre.core.db import CheckResult, Database
+from qre.services.svc02_identity.capabilities import identity_mfa_readiness
 
 router = APIRouter(tags=["system"])
 
@@ -57,10 +58,13 @@ async def readyz(request: Request) -> JSONResponse:
         migrations = await db.migration_check()
     else:
         migrations = CheckResult(False, "skipped: database unreachable")
+    settings = db.settings
+    mfa_ok, mfa_detail = identity_mfa_readiness(settings)
     checks = {
         "configuration": CheckOut(ok=True, detail="valid"),  # invalid config never starts
         "database": CheckOut(ok=database.ok, detail=database.detail),
         "migrations": CheckOut(ok=migrations.ok, detail=migrations.detail),
+        "identity_mfa": CheckOut(ok=mfa_ok, detail=mfa_detail),
     }
     ready = all(c.ok for c in checks.values())
     body = ReadinessOut(

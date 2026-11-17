@@ -15,6 +15,7 @@ import {
 
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { CopyableId } from '@/components/data/CopyableId'
+import { DeploymentCapabilitiesPanel } from '@/components/deployment/DeploymentCapabilitiesPanel'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { ChartPanel } from '@/components/data/ChartPanel'
 import { FilterBar } from '@/components/data/FilterBar'
@@ -5199,6 +5200,7 @@ export function SettingsPage() {
         )}
       </Card>
       <AccountSecurity />
+      <DeploymentCapabilitiesPanel compact />
       <Card className="space-y-2 text-sm">
         <PanelHeader title="Institution" />
         <QueryBody query={boundary} compactLoading notReportedTitle="Institution boundary not reported">

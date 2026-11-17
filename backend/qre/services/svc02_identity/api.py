@@ -15,6 +15,7 @@ from qre.core import authz
 from qre.core.context import TenantContext
 from qre.core.deps import db_session, get_ctx, require_permission
 from qre.services.svc02_identity import captcha as captcha_svc
+from qre.services.svc02_identity.capabilities import build_auth_capabilities
 from qre.services.svc02_identity.service import (
     AuthInvalidCredentials,
     LoginSuccess,
@@ -72,6 +73,13 @@ def _set_session_cookie(request: Request, response: Response, sid: str) -> None:
         path="/",
         max_age=settings.session_absolute_h * 3600,
     )
+
+
+@router.get("/auth/capabilities")
+async def auth_capabilities(request: Request) -> dict:
+    """Unauthenticated deployment contract for login/MFA/captcha UI (no secrets)."""
+    settings = request.app.state.settings
+    return build_auth_capabilities(settings)
 
 
 @router.get("/auth/captcha")
