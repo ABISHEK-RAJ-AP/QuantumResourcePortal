@@ -18,10 +18,11 @@ import { asList, qre, qreDownload, text } from '@/api/qre'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { useAuth } from '@/auth/hooks'
 import { OverviewDashboardGrid } from '@/components/dashboard/OverviewDashboardGrid'
+import { OverviewKpiScroll, type OverviewKpiItem } from '@/components/dashboard/OverviewKpiScroll'
 import { DataState } from '@/components/data/DataState'
 import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
 import { formatApiError } from '@/lib/apiMessage'
-import { formatDateTime, formatEnum, formatPrincipalId, formatRole } from '@/lib/display'
+import { formatDateTime, formatEnum, formatRole } from '@/lib/display'
 import { demoActionsAllowed } from '@/lib/demo'
 import { policyDisplayName, policyVersion, stagePermission } from '@/lib/qreFields'
 import { scopedApprovalsPath } from '@/lib/projectScope'
@@ -229,33 +230,104 @@ export function OverviewPage() {
   const fleetTotal = Number(fleet.total ?? 0)
   const fleetOffline = Math.max(fleetTotal - fleetOnline, 0)
 
+  const kpiRail = useMemo((): OverviewKpiItem[] => {
+    const items: OverviewKpiItem[] = [
+      {
+        id: 'approvals',
+        label: 'In queue',
+        value: summary.isError ? '—' : queueCount,
+        hint: 'Approvals',
+        to: '/qrp/approvals',
+        tone: queueCount > 0 ? 'warning' : 'neutral',
+      },
+      {
+        id: 'mine',
+        label: 'My queue',
+        value: myApprovals.isError ? '—' : myRows.length,
+        to: '/qrp/approvals?filter=mine',
+      },
+      {
+        id: 'reconcile',
+        label: 'Reconcile',
+        value: attempts.isError ? '—' : unresolvedAttempts,
+        to: '/qrp/reconciliation',
+        tone: unresolvedAttempts > 0 ? 'critical' : 'neutral',
+      },
+      {
+        id: 'jobs',
+        label: 'Pending jobs',
+        value: queues.isError ? '—' : pendingJobs,
+        to: '/qrp/jobs',
+        tone: pendingJobs > 0 ? 'warning' : 'neutral',
+      },
+      {
+        id: 'incidents',
+        label: 'Incidents',
+        value: centre.isError ? '—' : openIncidents,
+        to: '/qrp/support',
+        tone: openIncidents > 0 ? 'critical' : 'neutral',
+      },
+      {
+        id: 'fleet',
+        label: 'Fleet online',
+        value: centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`,
+        hint: fleetOffline ? `${fleetOffline} down` : undefined,
+        to: '/qrp/centre',
+        tone: fleetOffline > 0 ? 'warning' : 'success',
+      },
+      {
+        id: 'assets',
+        label: 'Assets',
+        value: summary.isError ? '—' : String(summary.data?.inventory_assets ?? '—'),
+        to: '/qrp/inventory',
+      },
+      {
+        id: 'alerts',
+        label: 'Alerts',
+        value: alertSummary.isError ? '—' : String(alertSummary.data?.active ?? ops.active_alerts ?? '—'),
+        to: '/qrp/support',
+        tone: Number(alertSummary.data?.active ?? ops.active_alerts ?? 0) > 0 ? 'warning' : 'neutral',
+      },
+    ]
+    return items
+  }, [
+    summary.isError,
+    summary.data?.inventory_assets,
+    queueCount,
+    myApprovals.isError,
+    myRows.length,
+    attempts.isError,
+    unresolvedAttempts,
+    queues.isError,
+    pendingJobs,
+    centre.isError,
+    openIncidents,
+    fleetOnline,
+    fleetTotal,
+    fleetOffline,
+    alertSummary.isError,
+    alertSummary.data?.active,
+    ops.active_alerts,
+  ])
+
   return (
     <Page
       crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Home' }]}
       title="Home"
-      description={`${formatRole(user?.roles?.[0])} · ${formatPrincipalId(user?.principal_id, user?.roles?.[0])}`}
+      description={formatRole(user?.roles?.[0])}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
       actions={
         <InfoTip label="Layout help">
-          Drag tiles to rearrange. Keyboard: focus a tile, hold Alt, use arrow keys. Touch: press and hold, then drag.
+          Drag tiles below. Alt+arrow keys when focused. Touch: press and hold, then drag.
         </InfoTip>
       }
     >
+      <OverviewKpiScroll items={kpiRail} />
       <OverviewDashboardGrid
         lens={focus.kind}
-        queueCount={queueCount}
         summaryError={summary.isError}
         summaryPending={summary.isPending}
         lifecycleChart={lifecycleChart}
-        myCount={myApprovals.isError ? 0 : myRows.length}
-        unresolvedAttempts={attempts.isError ? 0 : unresolvedAttempts}
-        openIncidents={centre.isError ? 0 : openIncidents}
-        pendingJobs={queues.isError ? 0 : pendingJobs}
-        centreError={centre.isError}
-        fleetOnline={fleetOnline}
-        fleetTotal={fleetTotal}
-        fleetOffline={fleetOffline}
-        inventoryAssets={summary.data?.inventory_assets}
         ledgerError={ledger.isError}
         ledgerPending={ledger.isPending}
         quotaChart={quotaChart}
@@ -265,7 +337,6 @@ export function OverviewPage() {
         alertSummaryError={alertSummary.isError}
         alertSummaryPending={alertSummary.isPending}
         alertBackendChart={alertBackendChart}
-        activeAlerts={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active}
         attemptsError={attempts.isError}
         unresolvedRows={unresolvedRows}
         recentRows={recent.data ?? []}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
   Bar,
@@ -14,9 +14,8 @@ import {
 
 import DraggableWidgetGrid from '@/components/ui/draggable-widget-grid'
 import type { WidgetSize } from '@/components/ui/draggable-widget-grid-layout'
-import { KpiStrip } from '@/components/data/KpiStrip'
 import { DataTable } from '@/components/data/DataTable'
-import { EmptyState, MetricTile, Notice, stateLabel, stateTone } from '@/components/layout/Page'
+import { EmptyState, Notice, stateLabel, stateTone } from '@/components/layout/Page'
 import type { WidgetItem } from '@/components/ui/draggable-widget-grid-layout'
 import {
   DEFAULT_OVERVIEW_WIDGETS,
@@ -56,19 +55,9 @@ function ChartFrame({ children, minH = 200 }: { children: ReactNode; minH?: numb
 
 export function OverviewDashboardGrid({
   lens,
-  queueCount,
   summaryError,
   summaryPending,
   lifecycleChart,
-  myCount,
-  unresolvedAttempts,
-  openIncidents,
-  pendingJobs,
-  centreError,
-  fleetOnline,
-  fleetTotal,
-  fleetOffline,
-  inventoryAssets,
   ledgerError,
   ledgerPending,
   quotaChart,
@@ -78,7 +67,6 @@ export function OverviewDashboardGrid({
   alertSummaryError,
   alertSummaryPending,
   alertBackendChart,
-  activeAlerts,
   attemptsError,
   unresolvedRows,
   recentRows,
@@ -86,19 +74,9 @@ export function OverviewDashboardGrid({
   activityError,
 }: {
   lens: string
-  queueCount: number
   summaryError: boolean
   summaryPending: boolean
   lifecycleChart: { name: string; value: number }[]
-  myCount: number
-  unresolvedAttempts: number
-  openIncidents: number
-  pendingJobs: number
-  centreError: boolean
-  fleetOnline: number
-  fleetTotal: number
-  fleetOffline: number
-  inventoryAssets: unknown
   ledgerError: boolean
   ledgerPending: boolean
   quotaChart: { name: string; value: number; fill?: string }[]
@@ -108,7 +86,6 @@ export function OverviewDashboardGrid({
   alertSummaryError: boolean
   alertSummaryPending: boolean
   alertBackendChart: { name: string; value: number; full?: string }[]
-  activeAlerts: unknown
   attemptsError: boolean
   unresolvedRows: Row[]
   recentRows: Row[]
@@ -126,37 +103,8 @@ export function OverviewDashboardGrid({
     setWidgetItems(mergeSavedOrder(DEFAULT_OVERVIEW_WIDGETS, readWidgetLayout(lens)))
   }, [lens])
 
-  const kpiStrip = useMemo(
-    () => (
-      <KpiStrip className="[&_.metric-tile]:py-4">
-        <Link to="/qrp/approvals" className="block rounded-xl border border-border bg-card transition-colors hover:bg-accent">
-          <MetricTile label="Approvals" value={summaryError ? '—' : queueCount} tone={queueCount > 0 ? 'warning' : 'neutral'} />
-        </Link>
-        <Link to="/qrp/reconciliation" className="block rounded-xl border border-border bg-card transition-colors hover:bg-accent">
-          <MetricTile
-            label="Reconcile"
-            value={attemptsError ? '—' : unresolvedAttempts}
-            tone={unresolvedAttempts > 0 ? 'critical' : 'neutral'}
-          />
-        </Link>
-        <Link to="/qrp/jobs" className="block rounded-xl border border-border bg-card transition-colors hover:bg-accent">
-          <MetricTile label="Pending jobs" value={pendingJobs} tone={pendingJobs > 0 ? 'warning' : 'neutral'} />
-        </Link>
-        <Link to="/qrp/support" className="block rounded-xl border border-border bg-card transition-colors hover:bg-accent">
-          <MetricTile label="Incidents" value={centreError ? '—' : openIncidents} tone={openIncidents > 0 ? 'critical' : 'neutral'} />
-        </Link>
-        <Link to="/qrp/approvals?filter=mine" className="block rounded-xl border border-border bg-card transition-colors hover:bg-accent">
-          <MetricTile label="My queue" value={myCount} />
-        </Link>
-      </KpiStrip>
-    ),
-    [summaryError, queueCount, attemptsError, unresolvedAttempts, pendingJobs, centreError, openIncidents, myCount],
-  )
-
   function renderWidget(item: { id: string; size: WidgetSize }) {
     switch (item.id) {
-      case 'kpis':
-        return <WidgetChrome title="Operational summary">{kpiStrip}</WidgetChrome>
       case 'stages':
         return (
           <WidgetChrome
@@ -170,9 +118,9 @@ export function OverviewDashboardGrid({
             {summaryError ? (
               <EmptyState title="Summary unavailable" body="Governance summary could not be loaded." />
             ) : summaryPending ? (
-              <div className="h-full min-h-[12rem] animate-pulse rounded-lg bg-muted" />
+              <div className="h-full min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : lifecycleChart.every((d) => d.value === 0) ? (
-              <EmptyState title="No request volume" body="Submissions appear when projects request resources." />
+              <EmptyState title="No requests" body="Queue is clear." />
             ) : (
               <ChartFrame minH={chartH}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -202,11 +150,11 @@ export function OverviewDashboardGrid({
             }
           >
             {ledgerError ? (
-              <EmptyState title="Quota unavailable" body="Ledger endpoint not available on this deployment." />
+              <EmptyState title="Quota n/a" body="Ledger not on this stack." />
             ) : ledgerPending ? (
-              <div className="min-h-[10rem] animate-pulse rounded-lg bg-muted" />
+              <div className="min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : quotaChart.length === 0 ? (
-              <EmptyState title="No quota sample" body="Ledger is empty for today." />
+              <EmptyState title="No quota" body="No ledger for today." />
             ) : (
               <div className="flex h-full min-h-[10rem] flex-col gap-2">
                 <ChartFrame minH={Math.max(chartH - 40, 140)}>
@@ -221,9 +169,8 @@ export function OverviewDashboardGrid({
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartFrame>
-                <p className="shrink-0 text-center text-sm tabular-nums text-foreground">
-                  <span className="font-semibold">{used}</span> used · <span className="font-semibold">{remaining || Math.max(cap - used, 0)}</span> left
-                  {cap ? ` / ${cap}` : ''} · UTC today
+                <p className="shrink-0 text-center text-xs tabular-nums text-muted-foreground">
+                  {used} / {cap || used + (remaining || 0)} shots · UTC
                 </p>
               </div>
             )}
@@ -240,11 +187,11 @@ export function OverviewDashboardGrid({
             }
           >
             {alertSummaryError ? (
-              <EmptyState title="Alert rollup unavailable" body="Alert summary not reported." />
+              <EmptyState title="Alerts n/a" body="Rollup unavailable." />
             ) : alertSummaryPending ? (
-              <div className="min-h-[10rem] animate-pulse rounded-lg bg-muted" />
+              <div className="min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : alertBackendChart.length === 0 ? (
-              <EmptyState title="No active alerts" body="Fleet is quiet." />
+              <EmptyState title="No alerts" body="All clear." />
             ) : (
               <ChartFrame minH={chartH}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -262,41 +209,6 @@ export function OverviewDashboardGrid({
             )}
           </WidgetChrome>
         )
-      case 'fleet':
-        return (
-          <WidgetChrome title="Fleet posture">
-            <KpiStrip className="[&_.metric-tile]:py-4">
-              <MetricTile
-                label="Fleet online"
-                value={centreError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`}
-                hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'}
-                tone="success"
-              />
-              <MetricTile label="Assets" value={summaryError ? '—' : inventoryAssets ?? '—'} />
-              <MetricTile label="Active alerts" value={alertSummaryError ? '—' : activeAlerts ?? '—'} tone="warning" />
-              <MetricTile label="Open incidents" value={centreError ? '—' : openIncidents} tone={openIncidents ? 'critical' : 'neutral'} />
-            </KpiStrip>
-          </WidgetChrome>
-        )
-      case 'actions':
-        return (
-          <WidgetChrome title="Shortcuts">
-            <nav className="flex flex-col gap-2.5 text-base" aria-label="Related workspaces">
-              <Link className="font-medium text-primary hover:underline" to="/qrp/approvals">
-                Review queue
-              </Link>
-              <Link className="font-medium text-primary hover:underline" to="/qrp/reservations">
-                Reservations
-              </Link>
-              <Link className="font-medium text-primary hover:underline" to="/qrp/centre">
-                Operations centre
-              </Link>
-              <Link className="font-medium text-primary hover:underline" to="/qrp/audit">
-                Audit trail
-              </Link>
-            </nav>
-          </WidgetChrome>
-        )
       case 'queue':
         return (
           <WidgetChrome
@@ -309,8 +221,8 @@ export function OverviewDashboardGrid({
           >
             <DataTable
               rows={recentRows.slice(0, 8)}
-              emptyTitle="Queue empty"
-              emptyBody="Nothing waiting on policy stages."
+              emptyTitle="Queue clear"
+              emptyBody="—"
               columns={[
                 {
                   key: 'workload_id',
@@ -347,9 +259,9 @@ export function OverviewDashboardGrid({
             }
           >
             {attemptsError ? (
-              <Notice tone="warning">Dispatch attempts unavailable on this deployment.</Notice>
+              <Notice tone="warning">Dispatch n/a</Notice>
             ) : unresolvedRows.length === 0 ? (
-              <EmptyState title="Clear" body="No unresolved dispatch attempts." />
+              <EmptyState title="Dispatch clear" body="—" />
             ) : (
               <DataTable
                 rows={unresolvedRows.slice(0, 6)}
@@ -401,12 +313,12 @@ export function OverviewDashboardGrid({
             }
           >
             {activityError ? (
-              <Notice tone="warning">Activity feed unavailable.</Notice>
+              <Notice tone="warning">Activity n/a</Notice>
             ) : (
               <DataTable
                 rows={activityRows.slice(0, 8)}
-                emptyTitle="No decisions yet"
-                emptyBody="Approve and reject events land here."
+                emptyTitle="No activity"
+                emptyBody="—"
                 columns={[
                   {
                     key: 'timestamp',
@@ -442,8 +354,8 @@ export function OverviewDashboardGrid({
       className="overview-dashboard-grid"
       items={widgetItems}
       maxColumns={4}
-      cellSize={268}
-      gap={14}
+      cellSize={292}
+      gap={12}
       radius={12}
       editable
       onChange={(next: WidgetItem[]) => {

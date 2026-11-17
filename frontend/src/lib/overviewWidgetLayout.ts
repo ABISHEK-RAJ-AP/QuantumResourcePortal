@@ -1,17 +1,14 @@
 import type { WidgetItem } from '@/components/ui/draggable-widget-grid-layout'
 
-const STORAGE_PREFIX = 'qrp-overview-widgets-v2'
+const STORAGE_PREFIX = 'qrp-overview-widgets-v3'
 
 export const DEFAULT_OVERVIEW_WIDGETS: WidgetItem[] = [
-  { id: 'kpis', size: 'wide', label: 'Operational summary' },
   { id: 'stages', size: 'wide', label: 'Request stages' },
-  { id: 'quota', size: 'sm', label: 'Daily quota' },
-  { id: 'alerts', size: 'sm', label: 'Alerts by backend' },
-  { id: 'fleet', size: 'wide', label: 'Fleet posture' },
+  { id: 'quota', size: 'wide', label: 'Daily quota' },
+  { id: 'alerts', size: 'wide', label: 'Alerts by backend' },
   { id: 'queue', size: 'lg', label: 'Review queue' },
   { id: 'dispatch', size: 'wide', label: 'Dispatch exceptions' },
   { id: 'decisions', size: 'wide', label: 'Recent decisions' },
-  { id: 'actions', size: 'tall', label: 'Shortcuts' },
 ]
 
 export function readWidgetLayout(lens: string): WidgetItem[] | null {

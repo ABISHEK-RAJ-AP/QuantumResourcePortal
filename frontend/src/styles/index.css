@@ -935,9 +935,103 @@ html:not(.dark) .cyber-matrix-spot {
   @apply transition-colors hover:bg-muted/45;
 }
 
+/* Home KPI rail — horizontal scroll (Q-TeleScope fleet strip pattern) */
+.overview-kpi-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-block: 2px 6px;
+  margin-bottom: 0.25rem;
+}
+
+.overview-kpi-scroll__track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  width: max-content;
+  min-width: 100%;
+  padding-inline: 1px;
+}
+
+.overview-kpi-tile {
+  flex: 0 0 auto;
+  width: clamp(10.5rem, 19vw, 13.25rem);
+  min-height: 6.75rem;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow-card, 0 1px 2px rgb(0 0 0 / 0.06));
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.overview-kpi-tile:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 10%, transparent);
+  transform: translateY(-1px);
+}
+
+.overview-kpi-tile--success {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  background: linear-gradient(165deg, color-mix(in srgb, var(--success) 8%, var(--card)) 0%, var(--card) 72%);
+}
+
+.overview-kpi-tile--warning {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
+  background: linear-gradient(165deg, color-mix(in srgb, var(--warning) 10%, var(--card)) 0%, var(--card) 72%);
+}
+
+.overview-kpi-tile--critical {
+  border-color: color-mix(in srgb, var(--critical) 42%, var(--border));
+  background: linear-gradient(165deg, color-mix(in srgb, var(--critical) 10%, var(--card)) 0%, var(--card) 72%);
+}
+
+.overview-kpi-tile__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+
+.overview-kpi-tile__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.overview-kpi-tile--warning .overview-kpi-tile__value {
+  color: color-mix(in srgb, var(--warning) 85%, var(--foreground));
+}
+
+.overview-kpi-tile--critical .overview-kpi-tile__value {
+  color: color-mix(in srgb, var(--critical) 90%, var(--foreground));
+}
+
+.overview-kpi-tile--success .overview-kpi-tile__value {
+  color: color-mix(in srgb, var(--success) 85%, var(--foreground));
+}
+
+.overview-kpi-tile__hint {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  line-height: 1.25;
+  align-self: end;
+}
+
 /* Home overview — Govern-style widget chrome (Q-TeleScope parity) */
 .overview-dashboard-grid {
   width: 100%;
+  margin-top: 0.5rem;
 }
 
 .overview-widget {
