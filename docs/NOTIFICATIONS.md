@@ -22,8 +22,15 @@
 ```bash
 export PATH="$HOME/miniforge3/bin:$PATH"
 cd ~/QuantumResourcePortal   # git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
-git pull origin main
-make check                   # or: pytest + cd frontend && npm ci && npm run build
+
+# sync main (use if you were on afk/* or pull failed with "divergent branches")
+bash scripts/vm-pull-main.sh
+
+# install + migrate + start API + UI (background)
+bash scripts/vm-setup.sh
+
+# or interactive launcher (separate terminals :8000 / :5176)
+bash scripts/start-qrp.sh
 ```
 
 ## Verify in UI

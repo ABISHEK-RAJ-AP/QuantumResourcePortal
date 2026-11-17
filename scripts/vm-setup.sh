@@ -12,7 +12,18 @@ export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 [[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"
 export PATH="$HOME/miniforge3/bin:$HOME/.local/bin:/usr/local/bin:${PATH:-}"
 
-command -v git >/dev/null && git pull --ff-only || log "git pull skipped"
+if command -v git >/dev/null; then
+  if git rev-parse --verify origin/main >/dev/null 2>&1; then
+  CUR="$(git branch --show-current 2>/dev/null || true)"
+    if [[ "$CUR" == "main" ]]; then
+      git pull --ff-only origin main || log "git pull skipped (diverged — run: bash scripts/vm-pull-main.sh)"
+    else
+      log "Not on main ($CUR) — skipping pull (run: bash scripts/vm-pull-main.sh for origin/main)"
+    fi
+  else
+    git fetch origin 2>/dev/null || log "git fetch skipped"
+  fi
+fi
 
 API_PORT="${API_PORT:-8000}"
 UI_PORT="${UI_PORT:-5176}"
