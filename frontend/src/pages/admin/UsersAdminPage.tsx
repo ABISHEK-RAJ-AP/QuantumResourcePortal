@@ -11,7 +11,11 @@ import { ApiError } from '@/api/client'
 import * as rbac from '@/api/rbac'
 import { PermissionGate } from '@/auth/PermissionGate'
 import { DataState } from '@/components/data/DataState'
+import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import { Card, Notice, Page } from '@/components/layout/Page'
+import { parseForm } from '@/lib/validation/parseForm'
+import { membershipGrantSchema } from '@/lib/validation/schemas'
+import { cn } from '@/lib/utils'
 import { formatApiError } from '@/lib/apiMessage'
 import { StatusBadge } from '@/components/status/StatusBadge'
 
@@ -39,6 +43,10 @@ export function UsersAdminPage() {
 
   return (
     <Page
+      crumbs={[
+        { label: 'Admin', to: '/qrp/settings' },
+        { label: 'Users & roles' },
+      ]}
       eyebrow="Administration"
       title="Users & roles"
       description="Assign and revoke roles. Scope and escalation rules are enforced by the server."
@@ -162,6 +170,7 @@ function GrantForm({
   const [principalId, setPrincipalId] = useState('')
   const [roleCode, setRoleCode] = useState('')
   const [scopeId, setScopeId] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const role = roles.find((r) => r.code === roleCode)
   const needsScope = role && role.assignable_scope !== 'TENANT'
@@ -188,14 +197,32 @@ function GrantForm({
       <h2 className="text-base font-semibold">Assign a role</h2>
       <form
         className="flex flex-wrap items-end gap-2"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault()
+          onError('')
+          setFieldErrors({})
+          const parsed = parseForm(membershipGrantSchema, {
+            principal_id: principalId,
+            role_code: roleCode,
+            scope_type: role?.assignable_scope ?? 'TENANT',
+            scope_id: scopeId,
+          })
+          if (!parsed.ok) {
+            setFieldErrors(parsed.fieldErrors)
+            if (parsed.formError) onError(parsed.formError)
+            return
+          }
           grant.mutate()
         }}
       >
-        <label className="text-sm">
-          User
-          <select className="field-input min-w-48" value={principalId} onChange={(e) => setPrincipalId(e.target.value)} required>
+        <FormField label="User" htmlFor="grant-user" error={fieldErrors.principal_id}>
+          <select
+            id="grant-user"
+            className={cn('field-input min-w-48', fieldErrorClass(Boolean(fieldErrors.principal_id)))}
+            value={principalId}
+            onChange={(e) => setPrincipalId(e.target.value)}
+          >
             <option value="">Select…</option>
             {users.map((u) => (
               <option key={u.user_id} value={u.user_id}>
@@ -203,10 +230,14 @@ function GrantForm({
               </option>
             ))}
           </select>
-        </label>
-        <label className="text-sm">
-          Role
-          <select className="field-input min-w-48" value={roleCode} onChange={(e) => setRoleCode(e.target.value)} required>
+        </FormField>
+        <FormField label="Role" htmlFor="grant-role" error={fieldErrors.role_code}>
+          <select
+            id="grant-role"
+            className={cn('field-input min-w-48', fieldErrorClass(Boolean(fieldErrors.role_code)))}
+            value={roleCode}
+            onChange={(e) => setRoleCode(e.target.value)}
+          >
             <option value="">Select…</option>
             {roles
               .filter((r) => r.status === 'ACTIVE')
@@ -216,13 +247,21 @@ function GrantForm({
                 </option>
               ))}
           </select>
-        </label>
-        {needsScope && (
-          <label className="text-sm">
-            {role?.assignable_scope === 'PROJECT' ? 'Project id' : 'Provider id'}
-            <input className="field-input font-mono" value={scopeId} onChange={(e) => setScopeId(e.target.value)} required />
-          </label>
-        )}
+        </FormField>
+        {needsScope ? (
+          <FormField
+            label={role?.assignable_scope === 'PROJECT' ? 'Project id' : 'Provider id'}
+            htmlFor="grant-scope"
+            error={fieldErrors.scope_id}
+          >
+            <input
+              id="grant-scope"
+              className={cn('field-input font-mono', fieldErrorClass(Boolean(fieldErrors.scope_id)))}
+              value={scopeId}
+              onChange={(e) => setScopeId(e.target.value)}
+            />
+          </FormField>
+        ) : null}
         <button type="submit" className="btn-primary px-3 py-2 text-sm" disabled={grant.isPending}>
           {grant.isPending ? 'Granting…' : 'Grant role'}
         </button>

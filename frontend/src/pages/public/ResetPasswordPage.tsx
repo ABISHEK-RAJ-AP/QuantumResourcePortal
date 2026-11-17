@@ -7,6 +7,11 @@ import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
 import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { FieldAlert } from '@/components/auth/FormAlerts'
+import { parseForm } from '@/lib/validation/parseForm'
+import { passwordResetSchema } from '@/lib/validation/schemas'
+import { fieldErrorClass } from '@/components/forms/FormField'
+import { cn } from '@/lib/utils'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -21,12 +26,21 @@ export function ResetPasswordPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [captchaFieldError, setCaptchaFieldError] = useState('')
+  const [fields, setFields] = useState<Record<string, string>>({})
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setBusy(true)
     setError('')
     setCaptchaFieldError('')
+    setFields({})
+    const parsed = parseForm(passwordResetSchema, { token, password, confirm })
+    if (!parsed.ok) {
+      setBusy(false)
+      setFields(parsed.fieldErrors)
+      if (parsed.formError) setError(parsed.formError)
+      return
+    }
     const captchaErr = validateCaptchaBeforeSubmit(captchaEnabled, captchaOn, captchaCode)
     if (captchaErr) {
       setBusy(false)
@@ -61,35 +75,41 @@ export function ResetPasswordPage() {
           <input
             id="reset-token"
             required
-            className={`${authOutlineControlClass} font-mono text-sm`}
+            className={cn(authOutlineControlClass, fieldErrorClass(Boolean(fields.token)), 'font-mono text-sm')}
             value={token}
+            aria-invalid={Boolean(fields.token)}
             onChange={(e) => setToken(e.target.value)}
           />
         </AuthOutlineField>
+        <FieldAlert message={fields.token} />
         <AuthOutlineField label="New password" htmlFor="reset-password">
           <input
             id="reset-password"
             required
             type="password"
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
-            className={authOutlineControlClass}
+            className={cn(authOutlineControlClass, fieldErrorClass(Boolean(fields.password)))}
             value={password}
+            aria-invalid={Boolean(fields.password)}
             onChange={(e) => setPassword(e.target.value)}
           />
         </AuthOutlineField>
+        <FieldAlert message={fields.password} />
         <AuthOutlineField label="Confirm password" htmlFor="reset-confirm">
           <input
             id="reset-confirm"
             required
             type="password"
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
-            className={authOutlineControlClass}
+            className={cn(authOutlineControlClass, fieldErrorClass(Boolean(fields.confirm)))}
             value={confirm}
+            aria-invalid={Boolean(fields.confirm)}
             onChange={(e) => setConfirm(e.target.value)}
           />
         </AuthOutlineField>
+        <FieldAlert message={fields.confirm} />
         <AuthCaptchaBlock
           captchaCode={captchaCode}
           onCodeChange={setCaptchaCode}

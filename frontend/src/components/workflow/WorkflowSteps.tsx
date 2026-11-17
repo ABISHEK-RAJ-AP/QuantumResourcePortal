@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils'
 export interface WorkflowStep {
   id: string
   label: string
+  detail?: string
+  roles?: string[]
 }
 
 /**
@@ -22,7 +24,9 @@ export function WorkflowSteps({
   label?: string
 }) {
   if (steps.length === 0) return null
+  const activeStep = current != null && current >= 0 && current < steps.length ? steps[current] : null
   return (
+    <div className="space-y-2">
     <ol className="flex flex-wrap items-center gap-y-3" aria-label={label}>
       {steps.map((step, index) => {
         const done = current != null && index < current
@@ -61,5 +65,11 @@ export function WorkflowSteps({
         )
       })}
     </ol>
+    {activeStep?.detail ? (
+      <p className="text-sm text-muted-foreground" id="workflow-step-detail">
+        <span className="font-medium text-foreground">{activeStep.label}.</span> {activeStep.detail}
+      </p>
+    ) : null}
+    </div>
   )
 }

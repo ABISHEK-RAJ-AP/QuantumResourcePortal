@@ -34,7 +34,15 @@ import { KpiStrip } from '@/components/data/KpiStrip'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
+import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
+import { parseForm } from '@/lib/validation/parseForm'
+import { approvalDecisionSchema, projectCreateSchema } from '@/lib/validation/schemas'
+import {
+  enrichWorkflowSteps,
+  GOVERNANCE_LIFECYCLE,
+  governanceStepIndexForState,
+} from '@/lib/workflow/governance'
 import { BackendsPage, PoolsPage } from '@/pages/workspace/continue'
 import {
   Card,
@@ -129,11 +137,7 @@ export function QueryBody({
   )
 }
 
-const APPROVAL_PATH: WorkflowStep[] = [
-  { id: 'submit', label: 'Submit' },
-  { id: 'review', label: 'Review' },
-  { id: 'authorise', label: 'Authorise' },
-]
+const APPROVAL_PATH: WorkflowStep[] = GOVERNANCE_LIFECYCLE.slice(0, 3)
 
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
 
@@ -309,10 +313,28 @@ export function OverviewPage() {
     ops.active_alerts,
   ])
 
+  const homeStepIndex =
+    focus.kind === 'researcher'
+      ? 0
+      : focus.kind === 'reviewer'
+        ? 1
+        : focus.kind === 'ops' || focus.kind === 'incident'
+          ? 4
+          : focus.kind === 'auditor'
+            ? 5
+            : 1
+
   return (
     <Page
-      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Home' }]}
+      crumbs={[
+        { label: 'Workspace', to: '/qrp' },
+        { label: 'Home' },
+      ]}
       title="Home"
+      description="Role-aware entry to governance, capacity, and operations hubs."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={homeStepIndex}
+      workflowGuide
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
       <OverviewKpiScroll items={kpiRail} />
@@ -440,8 +462,15 @@ export function ApprovalsPage() {
   const nextRow = rows[0]
   return (
     <Page
-      crumbs={[{ label: 'Review', to: '/qrp/approvals' }, { label: 'Queue' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp' },
+        { label: 'Review queue', to: '/qrp/approvals' },
+      ]}
       title="Review Queue"
+      description="Multi-stage approvals before capacity holds or dispatch. Filter by project or open the next item in queue."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={1}
+      workflowGuide
       actions={
         nextRow?.workload_id ? (
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
@@ -619,15 +648,27 @@ function progressSteps(row: Row): { steps: WorkflowStep[]; index: number } {
       : APPROVAL_PATH
   const index = Number(progress.stage_index ?? 0)
   const state = String(row.governance_state || '')
-  if (state === 'approved') return { steps, index: steps.length }
-  return { steps, index: Number.isFinite(index) ? index : 0 }
+  if (state === 'approved') return { steps: enrichWorkflowSteps(steps), index: steps.length }
+  return { steps: enrichWorkflowSteps(steps), index: Number.isFinite(index) ? index : 0 }
 }
 
 export function ApprovalDetailPage() {
   const { workloadId = '' } = useParams()
   const client = useQueryClient()
   const [comment, setComment] = useState('')
+  const [commentError, setCommentError] = useState('')
   const [tab, setTab] = useState('overview')
+
+  const tabCrumb =
+    tab === 'governance'
+      ? 'Governance'
+      : tab === 'decide'
+        ? 'Decide'
+        : tab === 'activity'
+          ? 'Activity'
+          : tab === 'ops'
+            ? 'Operations'
+            : null
   const query = useQuery({
     queryKey: ['approval', workloadId],
     queryFn: () => qre<Row>(`/approvals/${encodeURIComponent(workloadId)}`),
@@ -661,6 +702,20 @@ export function ApprovalDetailPage() {
   })
   const confirmDecide = (decision: string) => {
     if (decide.isPending) return
+    setCommentError('')
+    const d = decision as 'approve' | 'reject' | 'changes_requested'
+    if (d === 'approve' || d === 'reject' || d === 'changes_requested') {
+      const parsed = parseForm(approvalDecisionSchema, {
+        decision: d,
+        comment,
+        requireRationale: false,
+      })
+      if (!parsed.ok) {
+        setCommentError(parsed.fieldErrors.comment || parsed.formError || 'Fix validation errors')
+        setTab('decide')
+        return
+      }
+    }
     const ok = window.confirm(`Record decision “${decision}” for ${workloadId}?`)
     if (ok) decide.mutate(decision)
   }
@@ -709,13 +764,20 @@ export function ApprovalDetailPage() {
   return (
     <Page
       crumbs={[
-        { label: 'Review', to: '/qrp/approvals' },
+        { label: 'Governance', to: '/qrp/approvals' },
         { label: 'Queue', to: '/qrp/approvals' },
-        { label: shortId(workloadId, 10) },
+        { label: shortId(workloadId, 10), to: `/qrp/approvals/${workloadId}` },
+        ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={row ? stateLabel(String(row.governance_state || 'review')) : 'Request'}
-      steps={trail.steps}
-      stepIndex={trail.index}
+      description={
+        row
+          ? `Stage ${Number(progress.stage_index ?? 0) + 1} of ${progress.stage_total ?? trail.steps.length} · ${text(stage, 'label')}`
+          : undefined
+      }
+      steps={trail.steps.length > 0 ? trail.steps : APPROVAL_PATH}
+      stepIndex={row ? trail.index : governanceStepIndexForState(govState)}
+      workflowGuide
       actions={
         <span className="flex flex-wrap items-center gap-2">
           <CopyableId value={workloadId} keep={16} />
@@ -895,12 +957,21 @@ export function ApprovalDetailPage() {
                   {!closed && (
                     <>
                       <textarea
-                        className="field-input min-h-[88px]"
+                        className={cn('field-input min-h-[88px]', fieldErrorClass(Boolean(commentError)))}
                         rows={3}
-                        placeholder="Decision rationale (stored on the audit trail)"
+                        placeholder="Decision rationale (required for reject / request changes)"
                         value={comment}
-                        onChange={(event) => setComment(event.target.value)}
+                        aria-invalid={Boolean(commentError)}
+                        onChange={(event) => {
+                          setComment(event.target.value)
+                          if (commentError) setCommentError('')
+                        }}
                       />
+                      {commentError ? (
+                        <p className="text-sm text-critical" role="alert">
+                          {commentError}
+                        </p>
+                      ) : null}
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -1434,6 +1505,7 @@ export function ProjectsPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [createFields, setCreateFields] = useState<Record<string, string>>({})
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'table' | 'cards'>('table')
@@ -1518,25 +1590,46 @@ export function ProjectsPage() {
       <Modal open={createOpen} title="New project" onClose={() => setCreateOpen(false)}>
         <form
           className="flex flex-col gap-3"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault()
+            setCreateFields({})
+            const parsed = parseForm(projectCreateSchema, {
+              name,
+              description: description.trim() || undefined,
+            })
+            if (!parsed.ok) {
+              setCreateFields(parsed.fieldErrors)
+              return
+            }
             create.mutate()
           }}
         >
-          <input
-            required
-            className="field-input w-full"
-            value={name}
-            placeholder="Project name"
-            onChange={(event) => setName(event.target.value)}
-            autoFocus
-          />
-          <input
-            className="field-input w-full"
-            value={description}
-            placeholder="Description (optional)"
-            onChange={(event) => setDescription(event.target.value)}
-          />
+          <FormField label="Project name" htmlFor="project-name" error={createFields.name}>
+            <input
+              id="project-name"
+              className={cn('field-input w-full', fieldErrorClass(Boolean(createFields.name)))}
+              value={name}
+              placeholder="e.g. QEC benchmark lane"
+              onChange={(event) => {
+                setName(event.target.value)
+                if (createFields.name) setCreateFields((f) => ({ ...f, name: '' }))
+              }}
+              autoFocus
+            />
+          </FormField>
+          <FormField label="Description" htmlFor="project-desc" error={createFields.description} hint="Optional · shown in project hub">
+            <input
+              id="project-desc"
+              className={cn('field-input w-full', fieldErrorClass(Boolean(createFields.description)))}
+              value={description}
+              placeholder="Short purpose for reviewers"
+              onChange={(event) => {
+                setDescription(event.target.value)
+                if (createFields.description) setCreateFields((f) => ({ ...f, description: '' }))
+              }}
+            />
+          </FormField>
           {create.error ? <p className="text-sm text-critical">{message(create.error)}</p> : null}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setCreateOpen(false)}>

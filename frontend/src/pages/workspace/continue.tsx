@@ -34,7 +34,12 @@ import {
 import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
 import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
+import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
+import { parseForm } from '@/lib/validation/parseForm'
+import { reservationHoldSchema } from '@/lib/validation/schemas'
+import { GOVERNANCE_LIFECYCLE } from '@/lib/workflow/governance'
+import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
@@ -465,6 +470,7 @@ export function SchedulingPage() {
   })
   const [form, setForm] = useState({ resource_ref: '', project_id: '', purpose: '', ...defaultLocalWindow() })
   const [formError, setFormError] = useState('')
+  const [formFields, setFormFields] = useState<Record<string, string>>({})
   const prefillFromDay = (dateStr: string) => {
     const start = `${dateStr}T10:00`
     const end = `${dateStr}T12:00`
@@ -478,23 +484,23 @@ export function SchedulingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill only when URL query changes
   }, [searchParams])
   const create = useMutation({
-    mutationFn: () => {
-      const startMs = new Date(form.window_start).getTime()
-      const endMs = new Date(form.window_end).getTime()
-      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
-        throw new Error('Window end must be after window start.')
-      }
-      return qre<Row>('/reservations', {
+    mutationFn: (payload: {
+      resource_ref: string
+      project_id?: string
+      window_start: string
+      window_end: string
+      purpose: string
+    }) =>
+      qre<Row>('/reservations', {
         method: 'POST',
         body: JSON.stringify({
-          resource_ref: form.resource_ref,
-          project_id: form.project_id || null,
-          window_start: new Date(form.window_start).toISOString(),
-          window_end: new Date(form.window_end).toISOString(),
-          purpose: form.purpose,
+          resource_ref: payload.resource_ref,
+          project_id: payload.project_id?.trim() || null,
+          window_start: new Date(payload.window_start).toISOString(),
+          window_end: new Date(payload.window_end).toISOString(),
+          purpose: payload.purpose,
         }),
-      })
-    },
+      }),
     onSuccess: () => {
       setFormError('')
       const pid = form.project_id || searchParams.get('project_id') || ''
@@ -506,9 +512,16 @@ export function SchedulingPage() {
   const holds = asList(query.data)
   return (
     <Page
-      crumbs={[{ label: 'Compute', to: '/qrp/reservations' }, { label: 'Request hold' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/approvals' },
+        { label: 'Holds', to: '/qrp/reservations' },
+        { label: 'Request window' },
+      ]}
       title="Request reservation window"
       description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={3}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reservations" className="btn-secondary">
@@ -522,20 +535,27 @@ export function SchedulingPage() {
           <PanelHeader title="New hold" />
           <form
             className="grid gap-3 sm:grid-cols-2"
+            noValidate
             onSubmit={(event) => {
               event.preventDefault()
               setFormError('')
-              create.mutate(undefined, {
+              setFormFields({})
+              const parsed = parseForm(reservationHoldSchema, form)
+              if (!parsed.ok) {
+                setFormFields(parsed.fieldErrors)
+                if (parsed.formError) setFormError(parsed.formError)
+                return
+              }
+              create.mutate(parsed.data, {
                 onError: (err) => setFormError(message(err)),
               })
             }}
           >
-            <label className="text-sm sm:col-span-2">
-              Resource
+            <FormField className="sm:col-span-2" label="Resource" htmlFor="hold-resource" error={formFields.resource_ref}>
               <input
-                required
+                id="hold-resource"
                 list="sched-assets"
-                className={fieldClass}
+                className={cn(fieldClass, fieldErrorClass(Boolean(formFields.resource_ref)))}
                 value={form.resource_ref}
                 placeholder="Asset or backend ref"
                 onChange={(e) => setForm({ ...form, resource_ref: e.target.value })}
@@ -547,10 +567,14 @@ export function SchedulingPage() {
                   </option>
                 ))}
               </datalist>
-            </label>
-            <label className="text-sm sm:col-span-2">
-              Project
-              <select className={fieldClass} value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
+            </FormField>
+            <FormField className="sm:col-span-2" label="Project" htmlFor="hold-project" hint="Optional · scopes hold to an approved project">
+              <select
+                id="hold-project"
+                className={fieldClass}
+                value={form.project_id}
+                onChange={(e) => setForm({ ...form, project_id: e.target.value })}
+              >
                 <option value="">No project</option>
                 {projects.data?.map((p) => (
                   <option key={String(p.project_id)} value={String(p.project_id)}>
@@ -558,19 +582,33 @@ export function SchedulingPage() {
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="text-sm">
-              Window start (local)
-              <input required type="datetime-local" className={fieldClass} value={form.window_start} onChange={(e) => setForm({ ...form, window_start: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              Window end (local)
-              <input required type="datetime-local" className={fieldClass} value={form.window_end} onChange={(e) => setForm({ ...form, window_end: e.target.value })} />
-            </label>
-            <label className="text-sm sm:col-span-2">
-              Purpose
-              <input required className={fieldClass} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} />
-            </label>
+            </FormField>
+            <FormField label="Window start (local)" htmlFor="hold-start" error={formFields.window_start}>
+              <input
+                id="hold-start"
+                type="datetime-local"
+                className={cn(fieldClass, fieldErrorClass(Boolean(formFields.window_start)))}
+                value={form.window_start}
+                onChange={(e) => setForm({ ...form, window_start: e.target.value })}
+              />
+            </FormField>
+            <FormField label="Window end (local)" htmlFor="hold-end" error={formFields.window_end}>
+              <input
+                id="hold-end"
+                type="datetime-local"
+                className={cn(fieldClass, fieldErrorClass(Boolean(formFields.window_end)))}
+                value={form.window_end}
+                onChange={(e) => setForm({ ...form, window_end: e.target.value })}
+              />
+            </FormField>
+            <FormField className="sm:col-span-2" label="Purpose" htmlFor="hold-purpose" error={formFields.purpose}>
+              <input
+                id="hold-purpose"
+                className={cn(fieldClass, fieldErrorClass(Boolean(formFields.purpose)))}
+                value={form.purpose}
+                onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+              />
+            </FormField>
             <div className="sm:col-span-2">
               <button type="submit" className={buttonClass} disabled={create.isPending}>
                 {create.isPending ? 'Submitting…' : 'Request window'}

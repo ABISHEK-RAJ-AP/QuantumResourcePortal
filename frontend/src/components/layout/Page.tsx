@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import type { Crumb } from '@/components/layout/Breadcrumbs'
 import { StatusBadge, type StatusTone } from '@/components/status/StatusBadge'
+import { WorkflowGuide } from '@/components/workflow/WorkflowGuide'
 import { WorkflowSteps, type WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { useSetPageChrome } from '@/components/layout/page-context'
 import { cn } from '@/lib/utils'
@@ -14,6 +15,7 @@ export function Page({
   updatedAt,
   steps,
   stepIndex,
+  workflowGuide,
   actions,
   children,
 }: {
@@ -25,11 +27,18 @@ export function Page({
   updatedAt?: number
   steps?: WorkflowStep[]
   stepIndex?: number | null
+  /** Role-aware detail card under the step trail (uses active step metadata). */
+  workflowGuide?: boolean
   /** Primary work only (create / decide). Nav links belong in the quick-actions dock. */
   actions?: ReactNode
   children?: ReactNode
 }) {
   useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt })
+
+  const activeStep =
+    workflowGuide && steps && steps.length > 0 && stepIndex != null && stepIndex >= 0
+      ? steps[Math.min(stepIndex, steps.length - 1)]
+      : undefined
 
   return (
     <div className="flex w-full max-w-none flex-col gap-4">
@@ -39,6 +48,7 @@ export function Page({
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />
         </section>
       ) : null}
+      {workflowGuide ? <WorkflowGuide step={activeStep} /> : null}
       {children}
     </div>
   )

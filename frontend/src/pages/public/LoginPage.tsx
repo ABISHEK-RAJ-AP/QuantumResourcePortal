@@ -8,6 +8,8 @@ import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
 import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { parseForm } from '@/lib/validation/parseForm'
+import { loginSchema } from '@/lib/validation/schemas'
 
 const LAB_PRESETS = [{ label: 'Admin', username: 'admin', password: 'Admin-Strong-Pw-2026' }] as const
 const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
@@ -33,12 +35,10 @@ export function LoginPage() {
     setBanner('')
     setFields({})
     try {
-      if (!user.trim()) {
-        setFields({ username: 'Username is required' })
-        return
-      }
-      if (!pass) {
-        setFields({ password: 'Password is required' })
+      const parsed = parseForm(loginSchema, { username: user, password: pass })
+      if (!parsed.ok) {
+        setFields(parsed.fieldErrors)
+        if (parsed.formError) setBanner(parsed.formError)
         return
       }
       const captchaErr = validateCaptchaBeforeSubmit(captchaEnabled, captchaOn, captchaCode)
