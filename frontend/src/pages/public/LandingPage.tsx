@@ -106,12 +106,12 @@ export function LandingPage() {
             >
               Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
-            <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link to="/login" className="btn-primary w-full gap-2 px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
+            <div className="mt-10 flex w-full max-w-lg flex-col gap-4 sm:mx-auto sm:flex-row sm:justify-center">
+              <Link to="/login" className="btn-primary landing-hero-cta w-full gap-2 sm:w-auto">
                 Enter portal
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-5" aria-hidden />
               </Link>
-              <Link to="/register" className="btn-secondary w-full px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
+              <Link to="/register" className="btn-secondary landing-hero-cta w-full sm:w-auto">
                 Request access
               </Link>
             </div>
@@ -274,11 +274,11 @@ export function LandingPage() {
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
                 Sign in, open Approvals, and walk the live stage trail.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 pt-2">
-                <Link to="/login" className="btn-primary gap-2 px-6 py-3 text-base">
-                  Sign in <ArrowRight className="size-4" />
+              <div className="flex flex-col flex-wrap justify-center gap-4 pt-2 sm:flex-row">
+                <Link to="/login" className="btn-primary landing-hero-cta gap-2">
+                  Sign in <ArrowRight className="size-5" aria-hidden />
                 </Link>
-                <Link to="/register" className="btn-secondary px-6 py-3 text-base">
+                <Link to="/register" className="btn-secondary landing-hero-cta">
                   Request access
                 </Link>
               </div>

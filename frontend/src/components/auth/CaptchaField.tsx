@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { RotateCw } from 'lucide-react'
 
+import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
+import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { cn } from '@/lib/utils'
 
 type CaptchaPayload = {
@@ -9,10 +11,19 @@ type CaptchaPayload = {
   captcha_image: string
 }
 
-/**
- * Image challenge when the API exposes GET /auth/captcha (QRE_CAPTCHA_ENABLED).
- * If the endpoint is missing, renders nothing and clears the challenge.
- */
+function normalizeCaptchaSrc(raw: string): string {
+  if (!raw) return ''
+  if (raw.startsWith('data:')) return raw
+  if (raw.trim().startsWith('<svg')) {
+    try {
+      return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(raw)))}`
+    } catch {
+      return raw
+    }
+  }
+  return raw
+}
+
 export function CaptchaField({
   value,
   onChange,
@@ -26,102 +37,109 @@ export function CaptchaField({
   onChallenge: (id: string) => void
   onAvailability?: (available: boolean) => void
   className?: string
-  /** When true, show offline state instead of hiding (auth pages expect captcha on). */
   showWhenDisabled?: boolean
 }) {
   const [image, setImage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [available, setAvailable] = useState(false)
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true)
     setError('')
     onChange('')
     try {
       const data = await authFetch<CaptchaPayload>('/auth/captcha')
-      setImage(data.captcha_image)
+      const src = normalizeCaptchaSrc(data.captcha_image)
+      if (!data.captcha_id || !src) throw new Error('empty challenge')
+      setImage(src)
       onChallenge(data.captcha_id)
       setAvailable(true)
       onAvailability?.(true)
-    } catch {
+    } catch (err) {
       setImage('')
       onChallenge('')
       setAvailable(false)
       onAvailability?.(false)
-      setError('')
+      if (err instanceof ApiError) {
+        setError(err.detail || 'Could not load verification image.')
+      } else {
+        setError('Could not load verification image. Confirm API is running, then retry.')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [onAvailability, onChallenge, onChange])
 
   useEffect(() => {
     void refresh()
-    // ponytail: mount-only challenge probe
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [refresh])
 
-  useEffect(() => {
-    if (available || !showWhenDisabled) return
-    const id = window.setInterval(() => void refresh(), 8000)
-    return () => window.clearInterval(id)
-  }, [available, showWhenDisabled])
-
-  if (!available && !showWhenDisabled) return null
+  if (!showWhenDisabled && !available && !loading && !error) return null
 
   return (
-    <div className={cn('space-y-2', className)}>
-      <div className="flex items-center justify-between gap-2">
-        <label className="text-base font-medium" htmlFor="login-captcha">
-          Image verification
-        </label>
+    <div className={cn('captcha-field', className)}>
+      <div className="captcha-field__head">
+        <span className="captcha-field__legend" id="auth-captcha-legend">
+          Security check
+        </span>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           onClick={() => void refresh()}
           disabled={loading}
+          className="captcha-field__refresh"
+          aria-label="New image"
         >
-          <RotateCw className={cn('size-3', loading && 'animate-spin')} aria-hidden />
-          New image
+          <RotateCw className={cn('size-4', loading && 'animate-spin')} aria-hidden />
+          <span className="captcha-field__refresh-label">New image</span>
         </button>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <div className="flex h-[5.5rem] w-full max-w-[17rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:w-[17rem]">
+      <div className="captcha-field__row" role="group" aria-labelledby="auth-captcha-legend">
+        <div className="captcha-field__image" aria-live="polite">
           {loading ? (
-            <span className="text-sm text-muted-foreground">Generating…</span>
+            <span className="captcha-field__placeholder">Generating…</span>
           ) : image ? (
             <img
               src={image}
               alt="Enter the characters shown"
-              className="h-full w-full object-contain select-none"
+              className="captcha-field__img"
+              width={180}
+              height={72}
               draggable={false}
+              onError={() => {
+                setError('Image failed to render. Click New image.')
+                setImage('')
+              }}
             />
           ) : (
-            <button
-              type="button"
-              className="px-3 text-center text-sm font-medium text-primary hover:underline"
-              onClick={() => void refresh()}
-            >
-              Load verification image
+            <button type="button" className="captcha-field__placeholder underline" onClick={() => void refresh()}>
+              Retry load
             </button>
           )}
         </div>
-        <input
-          id="login-captcha"
-          required={available}
-          disabled={!available}
-          type="text"
-          inputMode="text"
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={12}
-          placeholder="Characters shown"
-          className="field-input qrp-auth-input min-w-0 flex-1 self-center"
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\s/g, ''))}
-        />
+        <AuthOutlineField label="Characters" htmlFor="login-captcha" className="captcha-field__input auth-outline-field--flush">
+          <input
+            id="login-captcha"
+            required={available}
+            disabled={!available}
+            type="text"
+            inputMode="text"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={12}
+            value={value}
+            onChange={(e) => onChange(e.target.value.replace(/\s/g, '').toUpperCase())}
+            className={`${authOutlineControlClass} captcha-field__control font-mono text-lg tracking-widest tabular-nums uppercase`}
+            aria-invalid={Boolean(error)}
+          />
+        </AuthOutlineField>
       </div>
-      {error ? <p className="text-xs text-critical">{error}</p> : null}
+      <p className="captcha-field__help">Type the characters from the image.</p>
+      {error ? (
+        <p className="captcha-field__error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   )
 }

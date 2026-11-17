@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { authFetch } from '@/api/qre'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
+import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
 import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 
@@ -54,41 +55,41 @@ export function ResetPasswordPage() {
 
   return (
     <AuthPanel title="Set new password" subtitle="Use the token from your administrator" footer={<AuthFooterLinks />}>
-      <form className="space-y-5" onSubmit={onSubmit}>
+      <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={error} />
-        <label className="block text-base font-medium">
-          Reset token
+        <AuthOutlineField label="Reset token" htmlFor="reset-token">
           <input
+            id="reset-token"
             required
-            className="field-input qrp-auth-input mt-1.5 font-mono text-sm"
+            className={`${authOutlineControlClass} font-mono text-sm`}
             value={token}
             onChange={(e) => setToken(e.target.value)}
           />
-        </label>
-        <label className="block text-base font-medium">
-          New password
+        </AuthOutlineField>
+        <AuthOutlineField label="New password" htmlFor="reset-password">
           <input
+            id="reset-password"
             required
             type="password"
             minLength={6}
             autoComplete="new-password"
-            className="field-input qrp-auth-input mt-1.5"
+            className={authOutlineControlClass}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </label>
-        <label className="block text-base font-medium">
-          Confirm password
+        </AuthOutlineField>
+        <AuthOutlineField label="Confirm password" htmlFor="reset-confirm">
           <input
+            id="reset-confirm"
             required
             type="password"
             minLength={6}
             autoComplete="new-password"
-            className="field-input qrp-auth-input mt-1.5"
+            className={authOutlineControlClass}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
-        </label>
+        </AuthOutlineField>
         <AuthCaptchaBlock
           captchaCode={captchaCode}
           onCodeChange={setCaptchaCode}

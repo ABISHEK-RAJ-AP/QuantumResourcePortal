@@ -49,10 +49,13 @@ export function RegisterPage() {
         fieldError={fieldError}
       />
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button type="button" className="btn-primary qrp-auth-submit flex-1" onClick={continueToSignIn}>
+        <button type="button" className="btn-primary qrp-auth-submit auth-cta flex-1" onClick={continueToSignIn}>
           Continue to sign in
         </button>
-        <Link className="btn-secondary qrp-auth-submit inline-flex flex-1 items-center justify-center" to="/login">
+        <Link
+          className="btn-secondary qrp-auth-submit auth-cta inline-flex flex-1 items-center justify-center"
+          to="/login"
+        >
           Back to sign in
         </Link>
       </div>

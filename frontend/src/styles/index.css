@@ -945,6 +945,222 @@ html:not(.dark) .cyber-matrix-spot {
   min-height: 3rem;
 }
 
+/* TeleScope-style outlined fields + captcha (scoped to auth shell) */
+.qrp-auth-shell .auth-outline-field--flush {
+  margin-top: 0;
+}
+
+.qrp-auth-shell .auth-outline-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 3.25rem;
+  margin-top: 0.75rem;
+  padding: 0.85rem 0.85rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.qrp-auth-shell .auth-outline-field__name {
+  position: absolute;
+  top: 0;
+  left: 0.65rem;
+  transform: translateY(-50%);
+  padding: 0 0.35rem;
+  background: var(--card);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.qrp-auth-shell .auth-outline-field:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.qrp-auth-shell .auth-outline-field:focus-within .auth-outline-field__name {
+  color: var(--foreground);
+}
+
+.qrp-auth-shell .auth-outline-field__control,
+.qrp-auth-shell .auth-outline-field input,
+.qrp-auth-shell .auth-outline-field select {
+  border: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  min-width: 0;
+  width: 100%;
+  min-height: 1.75rem;
+}
+
+.qrp-auth-shell .auth-outline-field__control:focus,
+.qrp-auth-shell .auth-outline-field input:focus,
+.qrp-auth-shell .auth-outline-field select:focus {
+  outline: none;
+}
+
+.qrp-auth-shell .captcha-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.qrp-auth-shell .captcha-field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+}
+
+.qrp-auth-shell .captcha-field__legend {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.qrp-auth-shell .captcha-field__row {
+  display: grid;
+  grid-template-columns: minmax(11.25rem, 40%) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+@media (max-width: 380px) {
+  .qrp-auth-shell .captcha-field__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qrp-auth-shell .captcha-field__image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #efe8d8;
+  overflow: hidden;
+}
+
+.dark .qrp-auth-shell .captcha-field__image {
+  background: color-mix(in srgb, var(--card) 85%, #1a1a1a);
+}
+
+.qrp-auth-shell .captcha-field__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 4.25rem;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+}
+
+.qrp-auth-shell .captcha-field__placeholder {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+.qrp-auth-shell .captcha-field__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.qrp-auth-shell .captcha-field__refresh:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.qrp-auth-shell .captcha-field__refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qrp-auth-shell .auth-outline-field.captcha-field__input {
+  margin-top: 0;
+  min-height: 4.5rem;
+  align-self: stretch;
+}
+
+.qrp-auth-shell .captcha-field__help {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+}
+
+.qrp-auth-shell .captcha-field__error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--destructive);
+}
+
+.qrp-auth-shell .auth-demo-presets {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--muted) 35%, var(--card));
+}
+
+.qrp-auth-shell .auth-demo-presets__summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
+  user-select: none;
+}
+
+.qrp-auth-shell .auth-demo-presets__summary::-webkit-details-marker {
+  display: none;
+}
+
+.qrp-auth-shell .auth-demo-presets__summary::after {
+  content: '+';
+  float: right;
+  font-weight: 400;
+}
+
+.qrp-auth-shell .auth-demo-presets[open] .auth-demo-presets__summary::after {
+  content: '−';
+}
+
+.landing-hero-cta {
+  min-height: 3.25rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+@media (min-width: 640px) {
+  .landing-hero-cta {
+    min-width: 13.75rem;
+  }
+}
+
 .btn-primary {
   @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50;
 }

@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/hooks'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
+import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
 import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 
@@ -80,35 +81,33 @@ export function LoginPage() {
       subtitle="Use your portal credentials"
       footer={<AuthFooterLinks showForgot showRegister />}
     >
-      <form className="space-y-5" onSubmit={onSubmit} noValidate>
+      <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
-        <label className="block text-base font-medium">
-          Username
+        <AuthOutlineField label="Username" htmlFor="login-username">
           <input
+            id="login-username"
             required
             autoComplete="username"
-            className="field-input qrp-auth-input mt-1.5"
+            className={authOutlineControlClass}
             value={username}
             aria-invalid={Boolean(fields.username)}
-            aria-describedby={fields.username ? 'user-err' : undefined}
             onChange={(e) => setUsername(e.target.value)}
           />
-          <FieldAlert id="user-err" message={fields.username} />
-        </label>
-        <label className="block text-base font-medium">
-          Password
+        </AuthOutlineField>
+        <FieldAlert message={fields.username} />
+        <AuthOutlineField label="Password" htmlFor="login-password">
           <input
+            id="login-password"
             required
             type="password"
             autoComplete="current-password"
-            className="field-input qrp-auth-input mt-1.5"
+            className={authOutlineControlClass}
             value={password}
             aria-invalid={Boolean(fields.password)}
-            aria-describedby={fields.password ? 'pass-err' : undefined}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <FieldAlert id="pass-err" message={fields.password} />
-        </label>
+        </AuthOutlineField>
+        <FieldAlert message={fields.password} />
         <AuthCaptchaBlock
           captchaCode={captchaCode}
           onCodeChange={setCaptchaCode}
@@ -116,15 +115,15 @@ export function LoginPage() {
           onAvailability={setCaptchaOn}
           fieldError={fields.captcha_code || fields.captcha_id}
         />
-        <button type="submit" disabled={busy} className="btn-primary qrp-auth-submit w-full">
+        <button type="submit" disabled={busy} className="btn-primary auth-cta qrp-auth-submit w-full">
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
 
       {showLabPresets ? (
-        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
-          <p className="mb-3 text-sm font-semibold text-muted-foreground">Demo account</p>
-          <div className="grid grid-cols-1 gap-2">
+        <details className="auth-demo-presets mt-5">
+          <summary className="auth-demo-presets__summary">Demo accounts</summary>
+          <div className="mt-2 grid gap-2 p-3">
             {LAB_PRESETS.map((p) => (
               <button
                 key={p.label}
@@ -141,7 +140,7 @@ export function LoginPage() {
               </button>
             ))}
           </div>
-        </div>
+        </details>
       ) : null}
     </AuthPanel>
   )

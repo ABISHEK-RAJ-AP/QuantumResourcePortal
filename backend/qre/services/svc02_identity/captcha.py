@@ -7,7 +7,7 @@ import random
 import secrets
 import threading
 import time
-import urllib.parse
+import base64
 from dataclasses import dataclass
 
 from qre.core.errors import FieldError, ValidationFailed
@@ -56,7 +56,8 @@ def _svg(code: str) -> str:
             f'transform="rotate({rot}, {cx}, {cy})">{ch}</text>'
         )
     parts.append("</svg>")
-    return "data:image/svg+xml;utf8," + urllib.parse.quote("".join(parts))
+    raw = "".join(parts).encode("utf-8")
+    return "data:image/svg+xml;base64," + base64.b64encode(raw).decode("ascii")
 
 
 @dataclass(frozen=True)
