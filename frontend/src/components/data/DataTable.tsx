@@ -53,7 +53,7 @@ export function DataTable<T extends DataTableRow = DataTableRow>({
           return sortDir === 'asc' ? cmp : -cmp
         })
   return (
-    <div className="overflow-x-auto">
+    <div className="scroll-bar-hidden overflow-x-auto">
       <table className="data-table w-full text-left text-sm">
         <thead>
           <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">

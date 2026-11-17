@@ -83,7 +83,7 @@ export function UsersAdminPage() {
           emptyBody="Create users to assign roles."
           compactLoading
         >
-          <div className="overflow-x-auto">
+          <div className="scroll-bar-hidden overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">

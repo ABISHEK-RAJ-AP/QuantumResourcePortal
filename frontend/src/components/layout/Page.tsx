@@ -119,11 +119,16 @@ export function EmptyState({
   body: ReactNode
   action?: ReactNode
 }) {
+  const showBody =
+    body != null &&
+    body !== '' &&
+    body !== '—' &&
+    !(typeof body === 'string' && body.trim() === '—')
   return (
-    <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-3 py-3">
+    <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
       <div className="min-w-0">
-        <p className="text-sm font-semibold">{title}</p>
-        <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{body}</div>
+        <p className="text-sm font-semibold leading-snug">{title}</p>
+        {showBody ? <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{body}</div> : null}
       </div>
       {action}
     </div>

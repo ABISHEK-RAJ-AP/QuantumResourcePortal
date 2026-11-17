@@ -8,17 +8,15 @@ export function KpiStrip({ children, className }: { children: ReactNode; classNa
   const prefs = useWorkspacePrefs()
   if (prefs.kpiLayout === 'hidden') return null
   return (
-    <div
-      className={cn(
-        'grid w-full gap-2 sm:gap-3',
-        'grid-cols-[repeat(auto-fit,minmax(12.5rem,1fr))]',
-        prefs.kpiLayout === 'dense' && '[&_.metric-tile]:py-2.5',
-        className,
-      )}
-      role="list"
-      aria-label="Key metrics"
-    >
-      {children}
+    <div className={cn('kpi-rail', className)} role="list" aria-label="Key metrics">
+      <div
+        className={cn(
+          'kpi-rail__track kpi-rail__track--auto',
+          prefs.kpiLayout === 'dense' && '[&_.metric-tile]:py-2.5',
+        )}
+      >
+        {children}
+      </div>
     </div>
   )
 }

@@ -47,7 +47,7 @@ export function RolesPage() {
         ) : (roles.data ?? []).length === 0 ? (
           <EmptyState title="No roles" body="Create a role to get started." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="scroll-bar-hidden overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">

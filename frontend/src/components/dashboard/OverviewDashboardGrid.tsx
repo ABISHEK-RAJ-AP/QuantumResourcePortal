@@ -15,7 +15,7 @@ import {
 import DraggableWidgetGrid from '@/components/ui/draggable-widget-grid'
 import type { WidgetSize } from '@/components/ui/draggable-widget-grid-layout'
 import { DataTable } from '@/components/data/DataTable'
-import { EmptyState, Notice, stateLabel, stateTone } from '@/components/layout/Page'
+import { Notice, stateLabel, stateTone } from '@/components/layout/Page'
 import type { WidgetItem } from '@/components/ui/draggable-widget-grid-layout'
 import {
   DEFAULT_OVERVIEW_WIDGETS,
@@ -51,6 +51,14 @@ function WidgetChrome({ title, meta, children }: { title: string; meta?: ReactNo
 
 function ChartFrame({ children, minH = 200 }: { children: ReactNode; minH?: number }) {
   return <div className="min-h-0 w-full flex-1" style={{ minHeight: minH }}>{children}</div>
+}
+
+function WidgetPlaceholder({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-[10.5rem] flex-1 flex-col items-center justify-center rounded-lg border border-border/70 bg-muted/10 px-3 text-center text-sm text-muted-foreground">
+      {children}
+    </div>
+  )
 }
 
 export function OverviewDashboardGrid({
@@ -116,11 +124,11 @@ export function OverviewDashboardGrid({
             }
           >
             {summaryError ? (
-              <EmptyState title="Summary unavailable" body="Governance summary could not be loaded." />
+              <WidgetPlaceholder>Summary unavailable</WidgetPlaceholder>
             ) : summaryPending ? (
               <div className="h-full min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : lifecycleChart.every((d) => d.value === 0) ? (
-              <EmptyState title="No requests" body="Queue is clear." />
+              <WidgetPlaceholder>Queue clear — no stages yet</WidgetPlaceholder>
             ) : (
               <ChartFrame minH={chartH}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -150,11 +158,11 @@ export function OverviewDashboardGrid({
             }
           >
             {ledgerError ? (
-              <EmptyState title="Quota n/a" body="Ledger not on this stack." />
+              <WidgetPlaceholder>Quota not on this stack</WidgetPlaceholder>
             ) : ledgerPending ? (
               <div className="min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : quotaChart.length === 0 ? (
-              <EmptyState title="No quota" body="No ledger for today." />
+              <WidgetPlaceholder>No ledger for today</WidgetPlaceholder>
             ) : (
               <div className="flex h-full min-h-[10rem] flex-col gap-2">
                 <ChartFrame minH={Math.max(chartH - 40, 140)}>
@@ -187,11 +195,11 @@ export function OverviewDashboardGrid({
             }
           >
             {alertSummaryError ? (
-              <EmptyState title="Alerts n/a" body="Rollup unavailable." />
+              <WidgetPlaceholder>Alerts unavailable</WidgetPlaceholder>
             ) : alertSummaryPending ? (
               <div className="min-h-[11rem] animate-pulse rounded-lg bg-muted" />
             ) : alertBackendChart.length === 0 ? (
-              <EmptyState title="No alerts" body="All clear." />
+              <WidgetPlaceholder>No active alerts</WidgetPlaceholder>
             ) : (
               <ChartFrame minH={chartH}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -261,7 +269,7 @@ export function OverviewDashboardGrid({
             {attemptsError ? (
               <Notice tone="warning">Dispatch n/a</Notice>
             ) : unresolvedRows.length === 0 ? (
-              <EmptyState title="Dispatch clear" body="—" />
+              <WidgetPlaceholder>Dispatch clear</WidgetPlaceholder>
             ) : (
               <DataTable
                 rows={unresolvedRows.slice(0, 6)}
