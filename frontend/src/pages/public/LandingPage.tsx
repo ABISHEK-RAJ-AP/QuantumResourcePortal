@@ -170,7 +170,7 @@ export function LandingPage() {
                 Operator modules for the live fleet
               </h2>
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
-                Surfaces operators use day to day — not charter-only placeholders.
+                Operator surfaces for governance, capacity, and fleet oversight.
               </p>
             </div>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

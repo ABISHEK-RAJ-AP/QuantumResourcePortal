@@ -15,12 +15,13 @@ export function ForgotPasswordPage() {
   return (
     <AuthPanel
       title="Password reset"
-      subtitle="Self-service email reset is not enabled in this build"
+      subtitle="Administrator-assisted password reset"
       footer={<AuthFooterLinks showRegister />}
     >
       <p className="text-base leading-relaxed text-muted-foreground">
-        Contact a platform administrator or use the Users screen after sign-in. Complete image verification when
-        password self-service is enabled.
+        Self-service email reset is not enabled on this deployment. Contact your platform administrator for a reset token,
+        then use Set new password with that token. Image verification below matches the sign-in flow when self-service is
+        turned on later.
       </p>
       {captchaEnabled ? (
         <AuthCaptchaBlock

@@ -38,6 +38,7 @@ import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { parseForm } from '@/lib/validation/parseForm'
 import { approvalDecisionSchema, projectCreateSchema } from '@/lib/validation/schemas'
+import { EMPTY_SAMPLE } from '@/lib/operatorCopy'
 import {
   enrichWorkflowSteps,
   GOVERNANCE_LIFECYCLE,
@@ -939,7 +940,7 @@ export function ApprovalDetailPage() {
                             <dd className="mt-1 font-mono text-xs">{text(quota.data, 'reason_code')}</dd>
                           </div>
                         </dl>
-                        <p className="text-xs text-muted-foreground">Daily simulation-shot window · UTC · missing ≠ zero elsewhere.</p>
+                        <p className="text-xs text-muted-foreground">Daily simulation-shot window (UTC). Missing ledger rows are not treated as zero usage elsewhere.</p>
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">{quota.isError ? message(quota.error) : 'Checking the shot cap…'}</p>
@@ -1050,7 +1051,7 @@ export function ApprovalDetailPage() {
                     <Table
                       rows={relatedAttempts.data ?? []}
                       emptyTitle="No attempts for this request"
-                      emptyBody="Attempts appear after authorize → record attempt. Approved ≠ dispatched."
+                      emptyBody="Attempts appear after authorise and record-attempt. Approved workloads are not dispatched automatically."
                       columns={[
                         {
                           key: 'attempt_id',
@@ -1254,7 +1255,7 @@ export function InventoryPage() {
           <Table
             rows={rows}
             emptyTitle="No assets"
-            emptyBody="Register an asset or import a provider catalogue. Empty ≠ zero capacity elsewhere."
+            emptyBody={`Register an asset or import a provider catalogue. ${EMPTY_SAMPLE}`}
             columns={[
               {
                 key: 'asset_id',
@@ -1447,7 +1448,7 @@ export function ProvidersPage() {
           <ol className="list-inside list-decimal space-y-1 text-muted-foreground">
             <li>Open a provider → publish capability manifest (moves toward I2).</li>
             <li>Confirm collector runs on Connectors (I3 evidence).</li>
-            <li>Activate / suspend from provider detail — catalogue status ≠ dispatch claim.</li>
+            <li>Activate or suspend from provider detail. Catalogue status is not a dispatch authorization.</li>
           </ol>
           <Link className="font-medium text-primary hover:underline" to="/qrp/connectors">
             Open connectors board →
@@ -2450,7 +2451,7 @@ export function MeteringPage() {
             ) : query.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : chart.length === 0 ? (
-              <EmptyState title="No numeric sums" body={`No rollups with sum_value in last ${hours} h. Empty ≠ zero.`} />
+              <EmptyState title="No numeric sums" body={`No rollups with sum_value in the last ${hours} h. ${EMPTY_SAMPLE}`} />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -2480,7 +2481,7 @@ export function MeteringPage() {
           <Table
             rows={rows}
             emptyTitle="No meter samples"
-            emptyBody={`No rollups in the last ${hours} hours. Empty ≠ zero usage.`}
+            emptyBody={`No rollups in the last ${hours} hours. ${EMPTY_SAMPLE}`}
             columns={[
               { key: 'dimension', label: 'Dimension', sortable: true },
               { key: 'metric', label: 'Metric', sortable: true },
@@ -2675,8 +2676,15 @@ export function SupportPage() {
   })
   return (
     <Page
-      eyebrow="Operations"
+      crumbs={[
+        { label: 'Operations', to: '/qrp/centre' },
+        { label: 'Alerts' },
+      ]}
       title="Alerts"
+      description="Active detector rows from the fleet. Group related warnings into incidents before deep-drilling single alerts."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={4}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/incidents" className="btn-primary">
@@ -2801,24 +2809,51 @@ export function SupportPage() {
 }
 
 export function ProcurementPage() {
+  const summary = useQuery({
+    queryKey: ['procurement-scope-summary'],
+    queryFn: () => qre<Row>('/governance/summary'),
+    retry: false,
+  })
   return (
     <Page
-      eyebrow="Not in operational scope"
+      crumbs={[
+        { label: 'Resources', to: '/qrp/inventory' },
+        { label: 'Procurement' },
+      ]}
       title="Procurement"
+      description="Purchasing and entitlement contracts are outside this release. Use inventory registration and the quota ledger for live capacity control."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/inventory">
             Inventory
+          </Link>
+          <Link className="btn-secondary" to="/qrp/quotas">
+            Quotas
           </Link>
           <Link className="btn-secondary" to="/qrp/providers">
             Providers
           </Link>
         </span>
       }
+      updatedAt={summary.dataUpdatedAt}
     >
-      <Notice tone="warning">
-        Procurement stays charter-only until a formal scope change. Inventory and the daily shot ledger are the live capacity surfaces.
-      </Notice>
+      <KpiStrip className="sm:grid-cols-3">
+        <MetricTile label="Open reviews" value={summary.isError ? '—' : summary.data?.queue} hint="Governance queue" />
+        <MetricTile
+          label="In review"
+          value={summary.isError ? '—' : (summary.data?.counts as Row | undefined)?.in_review}
+          hint="Active stages"
+        />
+        <MetricTile label="Policy" value="Published" hint="Approvals use live policy version" />
+      </KpiStrip>
+      <Card className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+        <PanelHeader title="What to use instead" />
+        <ul className="list-disc space-y-1 ps-4">
+          <li>Register assets and backends under Inventory before scheduling holds.</li>
+          <li>Track daily simulation-shot headroom on Quotas; metering rollups sit on Metering.</li>
+          <li>Procurement workflows will attach here when scope expands; no placeholder purchase forms ship in this build.</li>
+        </ul>
+      </Card>
     </Page>
   )
 }

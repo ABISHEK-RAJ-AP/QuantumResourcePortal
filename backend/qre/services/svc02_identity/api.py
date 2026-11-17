@@ -48,6 +48,15 @@ class LoginOut(BaseModel):
     csrf_token: str
 
 
+class PasswordResetIn(BaseModel):
+    model_config = {"extra": "forbid"}
+    token: str = Field(min_length=1, max_length=512)
+    new_password: str = Field(min_length=8, max_length=256)
+    confirm_password: str = Field(min_length=8, max_length=256)
+    captcha_id: str | None = None
+    captcha_code: str | None = None
+
+
 def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "0.0.0.0"  # noqa: S104 — placeholder, not a bind
 
@@ -107,6 +116,28 @@ async def auth_login(
             display_name=result.display_name, tenant_id=result.tenant_id,
         ),
         csrf_token=result.csrf,
+    )
+
+
+@router.post("/auth/password/reset")
+async def auth_password_reset(body: PasswordResetIn, request: Request) -> dict:
+    """Explicit stub until admin token reset ships — avoids a silent 404 from the SPA."""
+    settings = request.app.state.settings
+    if settings.captcha_enabled:
+        captcha_svc.verify(body.captcha_id, body.captcha_code)
+    if body.new_password != body.confirm_password:
+        from qre.core.errors import FieldError, ValidationFailed
+
+        raise ValidationFailed(
+            field_errors=[
+                FieldError("confirm_password", "PASSWORD_MISMATCH", "Passwords do not match."),
+            ],
+        )
+    from fastapi import HTTPException
+
+    raise HTTPException(
+        status_code=501,
+        detail="Password self-service reset is not enabled on this deployment. Contact an administrator.",
     )
 
 

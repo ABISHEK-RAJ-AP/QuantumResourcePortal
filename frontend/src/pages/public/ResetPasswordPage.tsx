@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
+import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
@@ -61,7 +62,12 @@ export function ResetPasswordPage() {
       })
       navigate('/login', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Reset failed')
+      const detail = err instanceof ApiError ? err.detail : err instanceof Error ? err.message : 'Reset failed'
+      setError(
+        detail.includes('not enabled') || detail.includes('501')
+          ? 'Password reset is not enabled on this deployment. Ask an administrator to set your password, then sign in.'
+          : detail,
+      )
     } finally {
       setBusy(false)
     }

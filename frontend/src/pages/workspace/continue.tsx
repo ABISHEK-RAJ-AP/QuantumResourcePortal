@@ -46,6 +46,7 @@ import {
   evidenceLabelSchema,
   workloadSubmitSchema,
 } from '@/lib/validation/schemas'
+import { APPROVAL_VS_DISPATCH, HOLD_VS_DISPATCH } from '@/lib/operatorCopy'
 import { GOVERNANCE_LIFECYCLE } from '@/lib/workflow/governance'
 import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
@@ -539,7 +540,7 @@ export function SchedulingPage() {
         { label: 'Request window' },
       ]}
       title="Request reservation window"
-      description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
+      description={`Plan a governance hold. Calendar shows existing holds, not live provider availability. ${HOLD_VS_DISPATCH}`}
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
       workflowGuide
@@ -655,28 +656,61 @@ export function SchedulingPage() {
 }
 
 export function SlaPage() {
+  const meter = useQuery({
+    queryKey: ['sla-meter-peek'],
+    queryFn: () => qre<Row>('/meter-rollups?hours=24'),
+    retry: false,
+  })
+  const rollups = asList(meter.data).length
   return (
     <Page
-      eyebrow="Not in operational scope"
-      title="SLA"
-      description="QRP does not provide an SLA ledger, breach predictions, or service credits in this release."
+      crumbs={[
+        { label: 'Governance', to: '/qrp/metering' },
+        { label: 'SLA' },
+      ]}
+      title="Service levels"
+      description="Formal SLA targets, breach prediction, and credits are not implemented in this release."
       actions={
-        <Link className="btn-primary" to="/qrp/metering">
-          Metering
-        </Link>
+        <span className="flex flex-wrap gap-2">
+          <Link className="btn-primary" to="/qrp/metering">
+            Metering
+          </Link>
+          <Link className="btn-secondary" to="/qrp/incidents">
+            Incidents
+          </Link>
+        </span>
       }
+      updatedAt={meter.dataUpdatedAt}
     >
-      <Notice tone="warning">No SLA target or breach API. Observed usage stays on Metering — not an SLA %.</Notice>
+      <KpiStrip className="sm:grid-cols-3">
+        <MetricTile label="SLA ledger" value="Not in scope" hint="No breach API" tone="neutral" />
+        <MetricTile label="24 h rollups" value={meter.isError ? '—' : rollups} hint="Observed usage sample" />
+        <MetricTile label="Credits" value="Not in scope" hint="Finance integration deferred" />
+      </KpiStrip>
+      <Card className="text-sm leading-relaxed text-muted-foreground">
+        <p>
+          Use Metering for connector usage samples and Incidents for operational exceptions. Do not infer SLA compliance from
+          empty charts; missing telemetry is reported as unavailable, not as 100% availability.
+        </p>
+      </Card>
     </Page>
   )
 }
 
 export function NotificationsPage() {
+  const summary = useQuery({
+    queryKey: ['notifications-governance-summary'],
+    queryFn: () => qre<Row>('/governance/summary'),
+    retry: false,
+  })
   return (
     <Page
-      eyebrow="Workspace"
+      crumbs={[
+        { label: 'Workspace', to: '/qrp' },
+        { label: 'Notifications' },
+      ]}
       title="Notifications"
-      description="Session inbox in the header bell — toasts, review queue, and approval items synced from governance APIs."
+      description="Session inbox in the header bell. Governance toasts and review items sync from the same APIs as Home and Approvals."
       actions={
         <span className="flex flex-wrap gap-2">
           <button
@@ -695,31 +729,62 @@ export function NotificationsPage() {
         </span>
       }
     >
-      <Notice tone="info">
-        Delivery preferences and email/webhook channels are configured server-side. This page opens the same inbox as the top bar bell.
-      </Notice>
+      <KpiStrip className="sm:grid-cols-3">
+        <MetricTile label="Queue" value={summary.isError ? '—' : summary.data?.queue} hint="Needs review" tone="primary" />
+        <MetricTile
+          label="In review"
+          value={summary.isError ? '—' : (summary.data?.counts as Row | undefined)?.in_review}
+          hint="Open stages"
+        />
+        <MetricTile label="Delivery" value="In-app" hint="Email and webhooks are server-configured" />
+      </KpiStrip>
+      <Card className="text-sm text-muted-foreground">
+        Open the notification panel from the bell in the header, or use Approval history and Audit for durable records.
+      </Card>
     </Page>
   )
 }
 
 export function EntitlementsPage() {
+  const ledger = useQuery({
+    queryKey: ['entitlements-ledger'],
+    queryFn: () => qre<Row>('/quotas/ledger?window=today'),
+    retry: false,
+  })
   return (
     <Page
-      eyebrow="Not in operational scope"
+      crumbs={[
+        { label: 'Governance', to: '/qrp/quotas' },
+        { label: 'Entitlements' },
+      ]}
       title="Entitlements"
-      description="Provider entitlement grants stay outside QRP. Daily simulation-shot caps live on the quota ledger."
+      description="Provider entitlement grants and contract SKUs are outside this portal. Enforce capacity with the quota ledger and reservations."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/quotas">
             Quotas
           </Link>
-          <Link className="btn-secondary" to="/qrp/users">
+          <Link className="btn-secondary" to="/qrp/admin/users">
             Users
           </Link>
         </span>
       }
+      updatedAt={ledger.dataUpdatedAt}
     >
-      <Notice tone="warning">Entitlement writes not enabled. Identity-provider entitlements are external to QRP.</Notice>
+      <KpiStrip className="sm:grid-cols-3">
+        <MetricTile label="Today's cap" value={ledger.isError ? '—' : ledger.data?.daily_cap} hint="Simulation shots" />
+        <MetricTile label="Used" value={ledger.isError ? '—' : ledger.data?.used_today} hint="Ledger window" />
+        <MetricTile
+          label="Remaining"
+          value={ledger.isError ? '—' : ledger.data?.remaining}
+          hint="Before approve"
+          tone="primary"
+        />
+      </KpiStrip>
+      <Card className="text-sm text-muted-foreground">
+        Contract entitlements and provider SKU grants are maintained outside QRP. Capacity enforcement for approvals uses the quota
+        ledger and project-scoped reservations.
+      </Card>
     </Page>
   )
 }
@@ -2736,7 +2801,7 @@ export function DispatchPage() {
       ]}
       eyebrow="Operations"
       title="Dispatch & Jobs"
-      description="Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs / reconcile. Approval ≠ provider submission."
+      description={`Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs and reconciliation. ${APPROVAL_VS_DISPATCH}`}
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
       workflowGuide
@@ -3249,7 +3314,7 @@ export function UsersPage() {
           <Table
             rows={roles as unknown as Row[]}
             emptyTitle="No roles"
-            emptyBody="Catalog unavailable."
+            emptyBody="Role catalogue did not load. Refresh the page or ask an administrator to verify the roles API."
             columns={[
               { key: 'id', label: 'Id' },
               { key: 'label', label: 'Label' },
@@ -3932,7 +3997,7 @@ export function JobsPage() {
       description={
         tab === 'queues'
           ? 'Telemetry-backed pending counts per backend. Not governance approval state.'
-          : 'Provider execution records (TeleScope job catalogue). Not QRP governance approval state — use Approvals for that.'
+          : `Provider execution records from connected backends. ${APPROVAL_VS_DISPATCH}`
       }
       updatedAt={query.dataUpdatedAt}
     >
@@ -4092,7 +4157,7 @@ export function CentrePage() {
         { label: 'Operations centre' },
       ]}
       title="Operations Centre"
-      description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions — not a live provider console."
+      description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions for this tenant."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
       workflowGuide

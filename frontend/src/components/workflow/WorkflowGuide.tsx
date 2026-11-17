@@ -2,7 +2,6 @@ import { Link } from 'react-router'
 import { Users } from 'lucide-react'
 
 import { useAuth } from '@/auth/hooks'
-import { Card } from '@/components/layout/Page'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { workflowHintForRole } from '@/lib/workflow/governance'
 import { cn } from '@/lib/utils'
@@ -11,7 +10,6 @@ export function WorkflowGuide({
   step,
   className,
 }: {
-  /** Active step from the pipeline (detail + roles come from governance metadata). */
   step: WorkflowStep | undefined
   className?: string
 }) {
@@ -20,40 +18,48 @@ export function WorkflowGuide({
   const hint = workflowHintForRole(role, step)
   if (!hint || !step) return null
 
+  const bullets = hint.bullets.slice(0, 3)
+
   return (
-    <Card className={cn('border-primary/15 bg-gradient-to-br from-accent/30 to-card', className)}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-2">
-          <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">In this step</p>
-          <h2 className="text-base font-semibold tracking-tight">{hint.title}</h2>
-          {step.detail ? <p className="text-sm text-muted-foreground">{step.detail}</p> : null}
-          <ul className="list-disc space-y-1 ps-4 text-sm text-muted-foreground">
-            {hint.bullets.map((line) => (
+    <details
+      open
+      className={cn(
+        'rounded-xl border border-border/80 bg-card px-3 py-2 shadow-card',
+        className,
+      )}
+    >
+      <summary className="cursor-pointer list-none text-sm font-semibold tracking-tight text-foreground [&::-webkit-details-marker]:hidden">
+        <span className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+          Step guide
+        </span>
+        <span className="ms-2">{hint.title}</span>
+      </summary>
+      <div className="mt-2 grid gap-2 border-t border-border/60 pt-2 lg:grid-cols-[1fr_minmax(10rem,14rem)]">
+        <div className="min-w-0 space-y-1.5 text-sm text-muted-foreground">
+          {step.detail ? <p className="text-foreground/90">{step.detail}</p> : null}
+          <ul className="list-disc space-y-0.5 ps-4">
+            {bullets.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
         </div>
         {step.roles && step.roles.length > 0 ? (
-          <div className="flex max-w-xs flex-col gap-1 rounded-lg border border-border/80 bg-card/80 px-3 py-2 text-xs">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+          <div className="rounded-lg border border-border/70 bg-muted/20 px-2.5 py-2 text-xs">
+            <span className="inline-flex items-center gap-1 font-semibold text-foreground">
               <Users className="size-3.5" aria-hidden />
-              Typical actors
+              Typical roles
             </span>
-            <ul className="text-muted-foreground">
-              {step.roles.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
+            <p className="mt-1 text-muted-foreground">{step.roles.join(' · ')}</p>
           </div>
         ) : null}
       </div>
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-border/60 pt-3">
-        {hint.links.map((link) => (
-          <Link key={link.to} to={link.to} className="btn-ghost text-xs font-semibold">
-            {link.label} →
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        {hint.links.slice(0, 5).map((link) => (
+          <Link key={link.to} to={link.to} className="text-xs font-semibold text-primary hover:underline">
+            {link.label}
           </Link>
         ))}
       </div>
-    </Card>
+    </details>
   )
 }
