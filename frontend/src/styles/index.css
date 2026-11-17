@@ -915,6 +915,36 @@ html:not(.dark) .cyber-matrix-spot {
   border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
 }
 
+/* Auth shell (login / register / reset) */
+.qrp-auth-hero-tile {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgb(32 184 213 / 0.22), transparent 65%),
+    linear-gradient(165deg, #0c1628 0%, #070b14 72%);
+  background-size: 40px 40px, 40px 40px, auto, auto;
+}
+
+.qrp-auth-shell .field-input.qrp-auth-input,
+.qrp-auth-input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  line-height: 1.35;
+  min-height: 3rem;
+}
+
+.qrp-auth-submit {
+  min-height: 3rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.qrp-auth-captcha .field-input {
+  font-size: 1rem;
+  min-height: 3rem;
+}
+
 .btn-primary {
   @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-95 disabled:opacity-50;
 }

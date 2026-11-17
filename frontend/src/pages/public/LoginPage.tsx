@@ -1,21 +1,22 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/hooks'
+import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
-import { CaptchaField } from '@/components/auth/CaptchaField'
 import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
+import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 
 const LAB_PRESETS = [{ label: 'Admin', username: 'admin', password: 'Admin-Strong-Pw-2026' }] as const
 const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
-const captchaEnabled = import.meta.env.VITE_QRE_CAPTCHA === '1'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
   const from = (location.state as { from?: string } | null)?.from || '/qrp'
+  const captchaEnabled = isAuthCaptchaEnabled()
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -39,14 +40,13 @@ export function LoginPage() {
         setFields({ password: 'Password is required' })
         return
       }
-      if (captchaEnabled && captchaOn && !captchaCode.trim()) {
-        setFields({ captcha_code: 'Enter the characters shown' })
+      const captchaErr = validateCaptchaBeforeSubmit(captchaEnabled, captchaOn, captchaCode)
+      if (captchaErr) {
+        if (captchaErr.includes('Enter the')) setFields({ captcha_code: captchaErr })
+        else setBanner(captchaErr)
         return
       }
-      const captcha =
-        captchaEnabled && captchaOn && captchaId && captchaCode
-          ? { captcha_id: captchaId, captcha_code: captchaCode }
-          : undefined
+      const captcha = buildCaptchaPayload(captchaEnabled, captchaOn, captchaId, captchaCode)
       const result = await login(user.trim(), pass, captcha)
       if (result?.status === 'MFA_REQUIRED' || result?.status === 'MFA_CHALLENGE') {
         navigate('/mfa', {
@@ -80,14 +80,14 @@ export function LoginPage() {
       subtitle="Use your portal credentials"
       footer={<AuthFooterLinks showForgot showRegister />}
     >
-      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <form className="space-y-5" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
-        <label className="block text-sm font-medium">
+        <label className="block text-base font-medium">
           Username
           <input
             required
             autoComplete="username"
-            className="field-input"
+            className="field-input qrp-auth-input mt-1.5"
             value={username}
             aria-invalid={Boolean(fields.username)}
             aria-describedby={fields.username ? 'user-err' : undefined}
@@ -95,13 +95,13 @@ export function LoginPage() {
           />
           <FieldAlert id="user-err" message={fields.username} />
         </label>
-        <label className="block text-sm font-medium">
+        <label className="block text-base font-medium">
           Password
           <input
             required
             type="password"
             autoComplete="current-password"
-            className="field-input"
+            className="field-input qrp-auth-input mt-1.5"
             value={password}
             aria-invalid={Boolean(fields.password)}
             aria-describedby={fields.password ? 'pass-err' : undefined}
@@ -109,32 +109,28 @@ export function LoginPage() {
           />
           <FieldAlert id="pass-err" message={fields.password} />
         </label>
-        {captchaEnabled ? (
-          <div>
-            <CaptchaField
-              value={captchaCode}
-              onChange={setCaptchaCode}
-              onChallenge={setCaptchaId}
-              onAvailability={setCaptchaOn}
-            />
-            <FieldAlert message={fields.captcha_code || fields.captcha_id} />
-          </div>
-        ) : null}
-        <button type="submit" disabled={busy} className="btn-primary w-full">
+        <AuthCaptchaBlock
+          captchaCode={captchaCode}
+          onCodeChange={setCaptchaCode}
+          onChallenge={setCaptchaId}
+          onAvailability={setCaptchaOn}
+          fieldError={fields.captcha_code || fields.captcha_id}
+        />
+        <button type="submit" disabled={busy} className="btn-primary qrp-auth-submit w-full">
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
 
       {showLabPresets ? (
-        <div className="mt-4 rounded-[var(--radius-inner)] border border-border bg-muted/40 p-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Demo account</p>
+        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+          <p className="mb-3 text-sm font-semibold text-muted-foreground">Demo account</p>
           <div className="grid grid-cols-1 gap-2">
             {LAB_PRESETS.map((p) => (
               <button
                 key={p.label}
                 type="button"
                 disabled={busy}
-                className="btn-secondary text-sm"
+                className="btn-secondary text-base"
                 onClick={() => {
                   setUsername(p.username)
                   setPassword(p.password)
@@ -147,12 +143,6 @@ export function LoginPage() {
           </div>
         </div>
       ) : null}
-
-      <p className="mt-3 text-center text-sm">
-        <Link className="font-medium text-primary hover:underline" to="/forgot-password">
-          Forgot password
-        </Link>
-      </p>
     </AuthPanel>
   )
 }

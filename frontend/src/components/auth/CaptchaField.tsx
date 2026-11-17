@@ -19,12 +19,15 @@ export function CaptchaField({
   onChallenge,
   onAvailability,
   className,
+  showWhenDisabled = false,
 }: {
   value: string
   onChange: (code: string) => void
   onChallenge: (id: string) => void
   onAvailability?: (available: boolean) => void
   className?: string
+  /** When true, show offline state instead of hiding (auth pages expect captcha on). */
+  showWhenDisabled?: boolean
 }) {
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -58,18 +61,17 @@ export function CaptchaField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Probe quietly: hide until the API actually serves a challenge (QRP lab has captcha off).
-  if (!available) return null
+  if (!available && !showWhenDisabled) return null
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('space-y-2', className)}>
       <div className="flex items-center justify-between gap-2">
-        <label className="text-sm font-medium" htmlFor="login-captcha">
+        <label className="text-base font-medium" htmlFor="login-captcha">
           Image verification
         </label>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           onClick={() => void refresh()}
           disabled={loading}
         >
@@ -77,10 +79,10 @@ export function CaptchaField({
           New image
         </button>
       </div>
-      <div className="flex items-stretch gap-3">
-        <div className="flex h-[72px] w-[200px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+        <div className="flex h-[5.5rem] w-full max-w-[17rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40 sm:w-[17rem]">
           {loading ? (
-            <span className="text-xs text-muted-foreground">Generating…</span>
+            <span className="text-sm text-muted-foreground">Generating…</span>
           ) : image ? (
             <img
               src={image}
@@ -89,19 +91,22 @@ export function CaptchaField({
               draggable={false}
             />
           ) : (
-            <span className="px-2 text-center text-xs text-muted-foreground">Challenge offline</span>
+            <span className="px-3 text-center text-sm text-muted-foreground">
+              Server captcha off — set QRE_CAPTCHA_ENABLED on API
+            </span>
           )}
         </div>
         <input
           id="login-captcha"
-          required
+          required={available}
+          disabled={!available}
           type="text"
           inputMode="text"
           autoComplete="off"
           spellCheck={false}
           maxLength={12}
           placeholder="Characters shown"
-          className="field-input min-w-0 flex-1 self-center"
+          className="field-input qrp-auth-input min-w-0 flex-1 self-center"
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/\s/g, ''))}
         />

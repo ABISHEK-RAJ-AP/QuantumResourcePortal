@@ -1,47 +1,61 @@
-import { Link } from 'react-router'
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 
-import { AuthPanel } from '@/components/auth/AuthPanel'
-import { CaptchaField } from '@/components/auth/CaptchaField'
-
-const captchaEnabled = import.meta.env.VITE_QRE_CAPTCHA === '1'
+import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
+import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
+import { FormBanner } from '@/components/auth/FormAlerts'
+import { isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 
 /**
- * Request-access page (RBAC-6). Self-service registration with a self-chosen role is
- * disabled; admins create accounts and assign roles.
+ * Request-access page (RBAC-6). Self-service registration is disabled; captcha gates the path to sign-in.
  */
 export function RegisterPage() {
+  const navigate = useNavigate()
+  const captchaEnabled = isAuthCaptchaEnabled()
+  const [captchaId, setCaptchaId] = useState('')
   const [captchaCode, setCaptchaCode] = useState('')
+  const [captchaOn, setCaptchaOn] = useState(false)
+  const [banner, setBanner] = useState('')
+  const [fieldError, setFieldError] = useState('')
+
+  function continueToSignIn() {
+    setBanner('')
+    setFieldError('')
+    const err = validateCaptchaBeforeSubmit(captchaEnabled, captchaOn, captchaCode)
+    if (err) {
+      if (err.includes('Enter the')) setFieldError(err)
+      else setBanner(err)
+      return
+    }
+    navigate('/login', { state: { accessRequest: true, captcha_id: captchaId } })
+  }
 
   return (
     <AuthPanel
       title="Request access"
       subtitle="Accounts are created by a platform administrator"
-      footer={
-        <Link className="font-medium text-primary hover:underline" to="/login">
+      footer={<AuthFooterLinks showForgot />}
+    >
+      <p className="text-base leading-relaxed text-muted-foreground">
+        Self-service sign-up is disabled on this deployment. Complete verification below, then sign in once an admin has
+        created your account.
+      </p>
+      <FormBanner message={banner} />
+      <AuthCaptchaBlock
+        captchaCode={captchaCode}
+        onCodeChange={setCaptchaCode}
+        onChallenge={setCaptchaId}
+        onAvailability={setCaptchaOn}
+        fieldError={fieldError}
+      />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button type="button" className="btn-primary qrp-auth-submit flex-1" onClick={continueToSignIn}>
+          Continue to sign in
+        </button>
+        <Link className="btn-secondary qrp-auth-submit inline-flex flex-1 items-center justify-center" to="/login">
           Back to sign in
         </Link>
-      }
-    >
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        Self-service sign-up is disabled on this deployment. Contact your administrator to be added,
-        then sign in with the credentials they provide.
-      </p>
-      {captchaEnabled ? (
-        <div className="mt-4">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">
-            Image verification (required when you sign in)
-          </p>
-          <CaptchaField
-            value={captchaCode}
-            onChange={setCaptchaCode}
-            onChallenge={() => undefined}
-          />
-        </div>
-      ) : null}
-      <Link className="btn-primary mt-6 inline-flex w-full justify-center" to="/login">
-        Back to sign in
-      </Link>
+      </div>
     </AuthPanel>
   )
 }

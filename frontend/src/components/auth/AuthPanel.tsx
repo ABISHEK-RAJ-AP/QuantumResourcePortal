@@ -3,11 +3,9 @@ import { Link } from 'react-router'
 
 import { LogoMark } from '@/components/brand/LogoMark'
 import { PublicShell } from '@/components/marketing/PublicShell'
-import { useTheme } from '@/components/theme/ThemeProvider'
 import CyberMatrixHero from '@/components/ui/cyber-matrix-hero'
-import { cn } from '@/lib/utils'
 
-/** Shared auth card — login / MFA / reset / forgot / register. Hover grid behind card. */
+/** Auth layout — two-column grid (Q-TeleScope auth shell pattern). */
 export function AuthPanel({
   title,
   subtitle,
@@ -19,30 +17,52 @@ export function AuthPanel({
   children: ReactNode
   footer?: ReactNode
 }) {
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
-
   return (
     <PublicShell>
-      <div className="relative flex-1">
-        <CyberMatrixHero
-          showDefaultContent={false}
-          className={cn('min-h-[calc(100svh-104px)]', !dark && 'bg-surface')}
-        >
-          <div className="auth-panel-rise mx-auto w-full max-w-md rounded-[var(--radius)] border border-border bg-card/95 p-8 text-foreground shadow-raised backdrop-blur-sm">
-            <div className="mb-6 flex items-center gap-3">
-              <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />
-              <div>
-                <p className="text-sm font-semibold">C-DAC</p>
-                <p className="text-xs text-muted-foreground">Quantum Resource Portal</p>
+      <div className="qrp-auth-shell relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+        <CyberMatrixHero showDefaultContent={false} className="absolute inset-0 -z-10 min-h-full bg-surface" />
+        <div className="qrp-auth-panel auth-panel-rise w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+          <div className="grid grid-cols-1 lg:grid-cols-12">
+            <aside className="qrp-auth-brand flex flex-col gap-4 border-b border-border bg-[#070b14] p-6 text-white sm:p-8 lg:col-span-5 lg:min-h-[32rem] lg:border-b-0 lg:border-e">
+              <div className="flex items-center gap-3">
+                <LogoMark className="h-10 w-auto brightness-0 invert" />
+                <div>
+                  <p className="text-base font-semibold tracking-tight">C-DAC</p>
+                  <p className="text-sm text-white/70">Quantum Resource Portal</p>
+                </div>
+              </div>
+              <div
+                className="qrp-auth-hero-tile relative min-h-[220px] flex-1 overflow-hidden rounded-xl border border-white/10"
+                aria-hidden
+              />
+              <div className="mt-auto space-y-2">
+                <h2 className="text-lg font-semibold leading-snug tracking-tight sm:text-xl">
+                  Governance-first quantum resource operations
+                </h2>
+                <p className="max-w-[36ch] text-sm leading-relaxed text-white/60">
+                  Approvals, quotas, dispatch, and audit in one console.
+                </p>
+                <Link to="/" className="inline-flex min-h-10 items-center text-sm font-medium text-cyan-300/90 hover:text-cyan-200">
+                  ← Back to home
+                </Link>
+              </div>
+            </aside>
+            <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7">
+              <div className="mx-auto w-full max-w-md space-y-6">
+                <header>
+                  <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[1.65rem]">{title}</h1>
+                  {subtitle ? (
+                    <p className="mt-2 text-base leading-relaxed text-muted-foreground">{subtitle}</p>
+                  ) : null}
+                </header>
+                {children}
+                {footer ? (
+                  <footer className="border-t border-border pt-4 text-center text-base text-muted-foreground">{footer}</footer>
+                ) : null}
               </div>
             </div>
-            <h1 className="text-xl font-semibold text-balance">{title}</h1>
-            {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
-            <div className="mt-6">{children}</div>
-            {footer ? <div className="mt-4 text-center text-sm text-muted-foreground">{footer}</div> : null}
           </div>
-        </CyberMatrixHero>
+        </div>
       </div>
     </PublicShell>
   )
@@ -56,19 +76,23 @@ export function AuthFooterLinks({
   showRegister?: boolean
 }) {
   return (
-    <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+    <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
       {showForgot ? (
         <Link className="font-medium text-primary hover:underline" to="/forgot-password">
           Forgot password
         </Link>
       ) : null}
-      {showForgot && showRegister ? <span aria-hidden>·</span> : null}
+      {showForgot && showRegister ? <span aria-hidden className="text-muted-foreground">
+        ·
+      </span> : null}
       {showRegister ? (
         <Link className="font-medium text-primary hover:underline" to="/register">
           Request access
         </Link>
       ) : null}
-      <span aria-hidden>·</span>
+      <span aria-hidden className="text-muted-foreground">
+        ·
+      </span>
       <Link className="font-medium text-primary hover:underline" to="/">
         Home
       </Link>
