@@ -10,7 +10,9 @@ import { Link } from 'react-router'
 import { ApiError } from '@/api/client'
 import * as rbac from '@/api/rbac'
 import { PermissionGate } from '@/auth/PermissionGate'
-import { Card, EmptyState, Notice, Page } from '@/components/layout/Page'
+import { DataState } from '@/components/data/DataState'
+import { Card, Notice, Page } from '@/components/layout/Page'
+import { formatApiError } from '@/lib/apiMessage'
 import { StatusBadge } from '@/components/status/StatusBadge'
 
 export function UsersAdminPage() {
@@ -42,11 +44,27 @@ export function UsersAdminPage() {
       description="Assign and revoke roles. Scope and escalation rules are enforced by the server."
     >
       {error && <Notice tone="critical">{error}</Notice>}
+      {memberships.isError ? (
+        <Notice tone="warning">
+          Could not load role assignments: {formatApiError(memberships.error)}. User list may be incomplete.
+          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => void memberships.refetch()}>
+            Retry assignments
+          </button>
+        </Notice>
+      ) : null}
+      {roles.isError ? (
+        <Notice tone="warning">
+          Could not load role catalogue: {formatApiError(roles.error)}. Grant form may be limited.
+          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => void roles.refetch()}>
+            Retry roles
+          </button>
+        </Notice>
+      ) : null}
 
       <PermissionGate permission="membership:admin">
         <GrantForm
           users={users.data ?? []}
-          roles={roles.data ?? []}
+          roles={roles.isError ? [] : (roles.data ?? [])}
           onError={setError}
           onDone={() => {
             void client.invalidateQueries({ queryKey: ['memberships'] })
@@ -56,11 +74,15 @@ export function UsersAdminPage() {
       </PermissionGate>
 
       <Card>
-        {users.isLoading ? (
-          <p className="p-4 text-sm text-muted-foreground">Loading users…</p>
-        ) : (users.data ?? []).length === 0 ? (
-          <EmptyState title="No users" body="Create users to assign roles." />
-        ) : (
+        <DataState
+          pending={users.isPending}
+          error={users.error ?? undefined}
+          onRetry={users.isError ? () => void users.refetch() : undefined}
+          empty={(users.data ?? []).length === 0}
+          emptyTitle="No users"
+          emptyBody="Create users to assign roles."
+          compactLoading
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -120,7 +142,7 @@ export function UsersAdminPage() {
               </tbody>
             </table>
           </div>
-        )}
+        </DataState>
       </Card>
     </Page>
   )

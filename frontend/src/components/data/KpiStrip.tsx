@@ -10,10 +10,13 @@ export function KpiStrip({ children, className }: { children: ReactNode; classNa
   return (
     <div
       className={cn(
-        'grid gap-3',
-        prefs.kpiLayout === 'dense' ? 'sm:grid-cols-3 xl:grid-cols-6' : 'sm:grid-cols-2 xl:grid-cols-4',
+        'grid w-full gap-2 sm:gap-3',
+        'grid-cols-[repeat(auto-fit,minmax(10.75rem,1fr))]',
+        prefs.kpiLayout === 'dense' && '[&_.metric-tile]:py-2.5',
         className,
       )}
+      role="list"
+      aria-label="Key metrics"
     >
       {children}
     </div>

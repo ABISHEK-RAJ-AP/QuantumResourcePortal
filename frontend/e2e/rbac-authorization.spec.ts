@@ -32,7 +32,7 @@ test('admin can read roles and sees the Access Control nav', async ({ page }) =>
   expect(res.ok()).toBeTruthy()
 
   await page.goto('/qrp')
-  await expect(page.getByText('Access Control')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Access' })).toBeVisible()
 })
 
 test('researcher is denied admin APIs and the admin screens (deny-by-default)', async ({ page }) => {
@@ -42,6 +42,6 @@ test('researcher is denied admin APIs and the admin screens (deny-by-default)', 
   expect(res.status()).toBe(403)
 
   // Navigating straight to the admin URL shows the in-place access-denied page, not the data.
-  await page.goto('/qrp/admin/roles')
+  await page.goto('/qrp/admin/users')
   await expect(page.getByRole('heading', { name: /access denied/i })).toBeVisible()
 })

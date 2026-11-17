@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Boxes,
   CalendarClock,
   ChevronDown,
   ClipboardList,
+  Activity,
   Gauge,
   LayoutDashboard,
   LogOut,
+  Scale,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -37,6 +39,7 @@ import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutContr
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useAuth } from '@/auth/hooks'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
+import { formatPrincipalId, formatRole } from '@/lib/display'
 import { cn } from '@/lib/utils'
 
 /**
@@ -48,75 +51,45 @@ const NAV: {
   items: { to: string; label: string; icon: LucideIcon; end?: boolean; perm?: string; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
 }[] = [
   {
-    label: 'Command',
+    label: 'Work',
     items: [
-      { to: '/qrp', label: 'Overview', icon: LayoutDashboard, end: true },
-      { to: '/qrp/centre', label: 'Operations Centre', icon: Gauge },
-    ],
-  },
-  {
-    label: 'Review',
-    items: [
-      { to: '/qrp/approvals', label: 'Review Queue', icon: ClipboardList, badgeKey: 'approvals' },
+      { to: '/qrp', label: 'Home', icon: LayoutDashboard, end: true },
+      { to: '/qrp/centre', label: 'Operations', icon: Gauge },
+      { to: '/qrp/approvals', label: 'Approvals', icon: ClipboardList, badgeKey: 'approvals' },
       { to: '/qrp/projects', label: 'Projects', icon: Users },
     ],
   },
   {
-    label: 'Operate',
+    label: 'Resources',
     items: [
-      { to: '/qrp/backends', label: 'Backends', icon: Server },
-      { to: '/qrp/queues', label: 'Queues', icon: Gauge },
-      { to: '/qrp/jobs', label: 'Dispatch & Jobs', icon: ClipboardList },
-      { to: '/qrp/reconciliation', label: 'Reconciliation', icon: ClipboardList, badgeKey: 'reconcile' },
-      { to: '/qrp/support', label: 'Alerts', icon: Siren, badgeKey: 'alerts' },
-      { to: '/qrp/incidents', label: 'Incidents', icon: Siren, badgeKey: 'incidents' },
+      { to: '/qrp/inventory', label: 'Resources', icon: Boxes },
+      { to: '/qrp/providers', label: 'Facilities & Providers', icon: Server, end: true },
     ],
   },
   {
-    label: 'Schedule',
+    label: 'Compute',
     items: [
+      { to: '/qrp/jobs', label: 'Jobs & Queues', icon: ClipboardList },
+      { to: '/qrp/reconciliation', label: 'Dispatch reconcile', icon: ClipboardList, badgeKey: 'reconcile' },
+      { to: '/qrp/support', label: 'Incidents', icon: Siren, badgeKey: 'alerts' },
       { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
-      { to: '/qrp/scheduling', label: 'Schedule hold', icon: CalendarClock },
     ],
   },
   {
     label: 'Govern',
     items: [
       { to: '/qrp/policies', label: 'Policies', icon: Shield },
-      { to: '/qrp/quotas', label: 'Quotas & Usage', icon: Gauge },
+      { to: '/qrp/quotas', label: 'Quotas', icon: Scale },
       { to: '/qrp/metering', label: 'Metering', icon: Gauge },
+      { to: '/qrp/audit', label: 'Audit & Evidence', icon: ScrollText },
     ],
   },
   {
-    label: 'Catalogue',
+    label: 'Admin',
     items: [
-      { to: '/qrp/inventory', label: 'Inventory', icon: Boxes },
-      { to: '/qrp/pools', label: 'Resource Pools', icon: Boxes },
-      { to: '/qrp/providers', label: 'Providers', icon: Server, end: true },
-      { to: '/qrp/connectors', label: 'Connectors', icon: Server },
-    ],
-  },
-  {
-    label: 'Records',
-    items: [
-      { to: '/qrp/audit', label: 'Audit Trail', icon: ScrollText },
-      { to: '/qrp/evidence', label: 'Evidence', icon: ScrollText },
-    ],
-  },
-  {
-    label: 'Access Control',
-    items: [
-      { to: '/qrp/admin/roles', label: 'Roles', icon: Shield, perm: 'role:read' },
-      { to: '/qrp/admin/permissions', label: 'Permissions', icon: Shield, perm: 'permission:read' },
-      { to: '/qrp/admin/users', label: 'Users & Roles', icon: Users, perm: 'user:read' },
-    ],
-  },
-  {
-    label: 'Administration',
-    items: [
-      { to: '/qrp/profile', label: 'My Profile', icon: Users },
-      { to: '/qrp/settings', label: 'Platform Settings', icon: Settings2 },
-      { to: '/system/status', label: 'Platform Status', icon: Settings2 },
+      { to: '/qrp/admin/users', label: 'Access', icon: Users, perm: 'user:read' },
+      { to: '/qrp/settings', label: 'Settings', icon: Settings2 },
+      { to: '/system/status', label: 'Platform status', icon: Activity },
     ],
   },
 ]
@@ -148,9 +121,14 @@ function initials(name: string) {
 
 function ShellInner() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user: authUser, permissions, logout: authLogout } = useAuth()
+  const primaryRole = authUser?.roles?.[0]
   const user = authUser
-    ? { username: authUser.principal_id, role: authUser.roles[0] ?? 'User', full_name: '' }
+    ? {
+        username: formatPrincipalId(authUser.principal_id, primaryRole),
+        role: formatRole(primaryRole),
+      }
     : null
   const location = useLocation()
   const { chrome } = usePageChrome()
@@ -160,7 +138,7 @@ function ShellInner() {
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
     return Object.fromEntries(
-      NAV.map((g) => [g.label, saved[g.label] ?? (g.label === 'Command' || g.label === 'Review')]),
+      NAV.map((g) => [g.label, saved[g.label] ?? (g.label === 'Work' || g.label === 'Resources')]),
     )
   })
 
@@ -209,7 +187,7 @@ function ShellInner() {
     alerts: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.active_alerts ?? 0),
     incidents: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.open_incidents ?? 0),
   }
-  const displayName = user?.full_name || user?.username || 'Signed in'
+  const displayName = user?.username || 'Operator'
 
   useEffect(() => {
     if (queue.isSuccess) {
@@ -352,9 +330,7 @@ function ShellInner() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{displayName}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {user?.role || 'Operator'}
-                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{user?.role ?? 'Operator'}</p>
                   </div>
                 </div>
                 <button
@@ -395,7 +371,10 @@ function ShellInner() {
                   className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
                   aria-label="Refresh page"
                   title="Refresh"
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    void queryClient.invalidateQueries()
+                    window.dispatchEvent(new CustomEvent('qrp:data-refresh'))
+                  }}
                 >
                   <RefreshCw className="size-4" />
                 </button>

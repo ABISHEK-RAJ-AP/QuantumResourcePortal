@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import {
@@ -38,6 +38,14 @@ import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
+import { formatDateTime, formatEnum, formatPrincipalId, formatRole } from '@/lib/display'
+import {
+  scopedApprovalsPath,
+  scopedAuditPath,
+  scopedQuotasPath,
+  scopedReservationsPath,
+} from '@/lib/projectScope'
+import { formatApiError } from '@/lib/apiMessage'
 import { message, QueryBody, shortId, Table } from '@/pages/workspace/screens'
 
 const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)']
@@ -61,19 +69,28 @@ function lifecycleIndex(state: string) {
 
 export function AssetDetailPage() {
   const { assetId = '' } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'lifecycle' ? 'lifecycle' : 'overview'
+  const setTab = (id: string) => {
+    if (id === 'overview') setSearchParams({}, { replace: true })
+    else setSearchParams({ tab: id }, { replace: true })
+  }
   const client = useQueryClient()
   const query = useQuery({
     queryKey: ['asset', assetId],
     queryFn: () => qre<Row>(`/inventory/assets/${encodeURIComponent(assetId)}`),
     enabled: !!assetId,
   })
+  const [moveError, setMoveError] = useState('')
   const move = useMutation({
     mutationFn: (lifecycle_state: string) =>
       qre(`/inventory/assets/${encodeURIComponent(assetId)}/lifecycle`, {
         method: 'POST',
         body: JSON.stringify({ lifecycle_state }),
       }),
+    onMutate: () => setMoveError(''),
     onSuccess: () => void client.invalidateQueries({ queryKey: ['asset', assetId] }),
+    onError: (err) => setMoveError(formatApiError(err)),
   })
   const row = query.data
   const state = String(row?.lifecycle_state || 'registered')
@@ -81,7 +98,11 @@ export function AssetDetailPage() {
 
   return (
     <Page
-      eyebrow="Resources · Asset"
+      crumbs={[
+        { label: 'Resources', to: '/qrp/inventory' },
+        { label: 'Inventory', to: '/qrp/inventory' },
+        { label: shortId(assetId, 12) },
+      ]}
       title={row ? stateLabel(state) : 'Asset'}
       description={`Registry id ${shortId(assetId, 14)}. Lifecycle moves only along allowed transitions.`}
       steps={LIFECYCLE}
@@ -94,34 +115,72 @@ export function AssetDetailPage() {
     >
       <QueryBody query={query}>
         {row && (
-          <Card className="space-y-4">
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
-              <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Class</dt>
-                <dd className="mt-1 font-medium">{text(row, 'asset_class')}</dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Execution</dt>
-                <dd className="mt-1 font-medium">{text(row, 'execution_class')}</dd>
-              </div>
-              <div>
-                <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Provider</dt>
-                <dd className="mt-1 font-mono text-xs">{text(row, 'provider_id')}</dd>
-              </div>
-            </dl>
-            <div className="flex flex-wrap items-center gap-3">
-              <StatusBadge tone={stateTone(state)} label={stateLabel(state)} />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {allowed.map((next) => (
-                <button key={next} type="button" disabled={move.isPending} onClick={() => move.mutate(next)} className="btn-primary">
-                  Move to {stateLabel(next)}
+          <RecordWorkspace
+            tabs={[
+              { id: 'overview', label: 'Overview' },
+              { id: 'lifecycle', label: 'Lifecycle', count: allowed.length || undefined },
+            ]}
+            activeTab={tab}
+            onTabChange={setTab}
+            nextAction={{
+              title: allowed.length ? 'Lifecycle transition available' : 'Terminal or blocked',
+              body: 'Moves follow server allowed_transitions — not every state is reachable from here.',
+              primary:
+                allowed.length > 0
+                  ? { label: 'Move asset', onClick: () => setTab('lifecycle') }
+                  : { to: '/qrp/inventory', label: 'Catalogue' },
+              secondary: row.provider_id
+                ? { to: `/qrp/providers/${row.provider_id}`, label: 'Provider' }
+                : undefined,
+            }}
+            related={[
+              { to: '/qrp/scheduling', label: 'Request hold', hint: 'Governance window' },
+              { to: '/qrp/jobs', label: 'Provider jobs', hint: 'Execution sample' },
+              ...(row.provider_id ? [{ to: `/qrp/providers/${row.provider_id}`, label: 'Provider record' }] : []),
+            ]}
+          >
+            {moveError ? (
+              <Notice tone="critical">
+                {moveError}
+                <button type="button" className="btn-ghost ms-2 text-sm" onClick={() => setMoveError('')}>
+                  Dismiss
                 </button>
-              ))}
-              {allowed.length === 0 && <p className="text-sm text-muted-foreground">No further transitions.</p>}
-            </div>
-            {move.error && <p className="text-sm text-critical">{message(move.error)}</p>}
-          </Card>
+              </Notice>
+            ) : null}
+            {tab === 'overview' && (
+              <Card className="space-y-4">
+                <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Class</dt>
+                    <dd className="mt-1 font-medium">{text(row, 'asset_class')}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Execution</dt>
+                    <dd className="mt-1 font-medium">{text(row, 'execution_class')}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Provider</dt>
+                    <dd className="mt-1 font-mono text-xs">{text(row, 'provider_id')}</dd>
+                  </div>
+                </dl>
+                <StatusBadge tone={stateTone(state)} label={stateLabel(state)} />
+                <CopyableId value={assetId} keep={18} />
+              </Card>
+            )}
+            {tab === 'lifecycle' && (
+              <Card className="space-y-4">
+                <PanelHeader title="Allowed transitions" />
+                <div className="flex flex-wrap gap-2">
+                  {allowed.map((next) => (
+                    <button key={next} type="button" disabled={move.isPending} onClick={() => move.mutate(next)} className="btn-primary">
+                      {move.isPending ? 'Moving…' : `Move to ${stateLabel(next)}`}
+                    </button>
+                  ))}
+                  {allowed.length === 0 && <p className="text-sm text-muted-foreground">No further transitions.</p>}
+                </div>
+              </Card>
+            )}
+          </RecordWorkspace>
         )}
       </QueryBody>
     </Page>
@@ -135,7 +194,7 @@ export function ApprovalHistoryPage() {
   })
   return (
     <Page
-      eyebrow="Governance"
+      crumbs={[{ label: 'Work', to: '/qrp/approvals' }, { label: 'History' }]}
       title="Approval history"
       description="Append-only decisions. A later decision does not rewrite an earlier one."
       actions={
@@ -149,9 +208,9 @@ export function ApprovalHistoryPage() {
           <Table
             rows={asList(query.data)}
             columns={[
-              { key: 'timestamp', label: 'When' },
+              { key: 'timestamp', label: 'When', render: (row) => formatDateTime(row.timestamp) },
               { key: 'actor', label: 'Actor' },
-              { key: 'action', label: 'Decision' },
+              { key: 'action', label: 'Decision', render: (row) => formatEnum(String(row.action ?? '')) },
               {
                 key: 'target_id',
                 label: 'Workload',
@@ -187,6 +246,8 @@ export function ReconciliationPage() {
   const client = useQueryClient()
   const [filter, setFilter] = useState<(typeof RECON_FILTERS)[number]['id']>('unresolved')
   const [search, setSearch] = useState('')
+  const [reconcileError, setReconcileError] = useState<{ id: string; message: string } | null>(null)
+  const [reconcilingId, setReconcilingId] = useState<string | null>(null)
   const query = useQuery({
     queryKey: ['dispatch-attempts'],
     queryFn: () => qre<unknown>('/dispatch-attempts'),
@@ -197,7 +258,18 @@ export function ReconciliationPage() {
         method: 'POST',
         body: JSON.stringify({ outcome, reason: outcome }),
       }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ['dispatch-attempts'] }),
+    onMutate: ({ id }) => {
+      setReconcilingId(id)
+      setReconcileError(null)
+    },
+    onSuccess: () => {
+      setReconcilingId(null)
+      void client.invalidateQueries({ queryKey: ['dispatch-attempts'] })
+    },
+    onError: (err, { id }) => {
+      setReconcilingId(null)
+      setReconcileError({ id, message: formatApiError(err) })
+    },
   })
   const allRows = asList(query.data)
   const unresolvedCount = allRows.filter(needsReconcile).length
@@ -218,17 +290,43 @@ export function ReconciliationPage() {
   }
   return (
     <Page
-      eyebrow="Operations"
+      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: 'Reconciliation' }]}
       title="Reconciliation"
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
       updatedAt={query.dataUpdatedAt}
     >
-      <div className="grid gap-3 sm:grid-cols-3">
-        <MetricTile label="Needs reconcile" value={unresolvedCount} hint="Authorized or unresolved" tone={unresolvedCount ? 'critical' : 'neutral'} />
-        <MetricTile label="Confirmed" value={confirmedCount} hint="External outcome confirmed" tone="success" />
-        <MetricTile label="Failed" value={failedCount} hint="Recorded failures" tone="warning" />
-      </div>
-      <Card>
+      <RecordWorkspace
+        tabs={[
+          { id: 'work', label: 'Attempts', count: rows.length },
+        ]}
+        activeTab="work"
+        onTabChange={() => undefined}
+        nextAction={{
+          title: unresolvedCount ? `${unresolvedCount} need reconcile` : 'Backlog clear',
+          body: 'Compare provider job observations against authorized dispatch attempts before closing.',
+          primary: { to: '/qrp/jobs', label: 'Provider jobs' },
+          secondary: { to: '/qrp/approvals', label: 'Review queue' },
+        }}
+        related={[
+          { to: '/qrp/dispatch', label: 'Dispatch ICD', hint: 'Contract reference' },
+          { to: '/qrp/jobs?tab=queues', label: 'Queue depth', hint: 'Telemetry' },
+          { to: '/qrp/audit', label: 'Audit', hint: 'Decision trail' },
+        ]}
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <MetricTile label="Needs reconcile" value={unresolvedCount} hint="Authorized or unresolved" tone={unresolvedCount ? 'critical' : 'neutral'} />
+          <MetricTile label="Confirmed" value={confirmedCount} hint="External outcome confirmed" tone="success" />
+          <MetricTile label="Failed" value={failedCount} hint="Recorded failures" tone="warning" />
+        </div>
+        {reconcileError ? (
+          <Notice tone="critical">
+            Reconcile failed for <CopyableId value={reconcileError.id} keep={10} />: {reconcileError.message}
+            <button type="button" className="btn-ghost ms-2 text-sm" onClick={() => setReconcileError(null)}>
+              Dismiss
+            </button>
+          </Notice>
+        ) : null}
+        <Card>
         <FilterBar
           options={RECON_FILTERS}
           value={filter}
@@ -308,14 +406,14 @@ export function ReconciliationPage() {
                           key={outcome}
                           type="button"
                           className="text-sm font-medium text-primary hover:underline"
-                          disabled={reconcile.isPending}
+                          disabled={reconcilingId === String(row.attempt_id)}
                           onClick={() => {
                             if (window.confirm(`Mark attempt as ${outcome}?`)) {
                               reconcile.mutate({ id: String(row.attempt_id), outcome })
                             }
                           }}
                         >
-                          {outcome}
+                          {reconcilingId === String(row.attempt_id) ? '…' : outcome}
                         </button>
                       ))}
                     </span>
@@ -326,8 +424,8 @@ export function ReconciliationPage() {
             ]}
           />
         </QueryBody>
-        {reconcile.error && <p className="mt-3 text-sm text-critical">{message(reconcile.error)}</p>}
       </Card>
+      </RecordWorkspace>
     </Page>
   )
 }
@@ -350,6 +448,7 @@ function defaultLocalWindow() {
 export function SchedulingPage() {
   const client = useQueryClient()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const query = useQuery({
     queryKey: ['reservations'],
     queryFn: () => qre<unknown>('/reservations'),
@@ -365,9 +464,27 @@ export function SchedulingPage() {
     retry: false,
   })
   const [form, setForm] = useState({ resource_ref: '', project_id: '', purpose: '', ...defaultLocalWindow() })
+  const [formError, setFormError] = useState('')
+  const prefillFromDay = (dateStr: string) => {
+    const start = `${dateStr}T10:00`
+    const end = `${dateStr}T12:00`
+    setForm((prev) => ({ ...prev, window_start: start, window_end: end }))
+  }
+  useEffect(() => {
+    const pid = searchParams.get('project_id')?.trim()
+    const date = searchParams.get('date')?.trim()
+    if (pid) setForm((prev) => ({ ...prev, project_id: pid }))
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) prefillFromDay(date)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- prefill only when URL query changes
+  }, [searchParams])
   const create = useMutation({
-    mutationFn: () =>
-      qre<Row>('/reservations', {
+    mutationFn: () => {
+      const startMs = new Date(form.window_start).getTime()
+      const endMs = new Date(form.window_end).getTime()
+      if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+        throw new Error('Window end must be after window start.')
+      }
+      return qre<Row>('/reservations', {
         method: 'POST',
         body: JSON.stringify({
           resource_ref: form.resource_ref,
@@ -376,23 +493,20 @@ export function SchedulingPage() {
           window_end: new Date(form.window_end).toISOString(),
           purpose: form.purpose,
         }),
-      }),
-    onSuccess: (row) => {
+      })
+    },
+    onSuccess: () => {
+      setFormError('')
+      const pid = form.project_id || searchParams.get('project_id') || ''
       setForm({ resource_ref: '', project_id: '', purpose: '', ...defaultLocalWindow() })
       void client.invalidateQueries({ queryKey: ['reservations'] })
-      if (row.reservation_id) navigate('/qrp/reservations')
+      navigate(scopedReservationsPath(pid))
     },
   })
   const holds = asList(query.data)
-  const prefillFromDay = (dateStr: string) => {
-    // Local midday → mid+2h window so new hold lands on the clicked calendar day.
-    const start = `${dateStr}T10:00`
-    const end = `${dateStr}T12:00`
-    setForm((prev) => ({ ...prev, window_start: start, window_end: end }))
-  }
   return (
     <Page
-      eyebrow="Governance · Allocation"
+      crumbs={[{ label: 'Compute', to: '/qrp/reservations' }, { label: 'Request hold' }]}
       title="Request reservation window"
       description="Plan a governance hold. Calendar shows existing holds (not provider availability). Hold ≠ booking · Hold ≠ dispatch."
       actions={
@@ -410,7 +524,10 @@ export function SchedulingPage() {
             className="grid gap-3 sm:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault()
-              create.mutate()
+              setFormError('')
+              create.mutate(undefined, {
+                onError: (err) => setFormError(message(err)),
+              })
             }}
           >
             <label className="text-sm sm:col-span-2">
@@ -458,7 +575,9 @@ export function SchedulingPage() {
               <button type="submit" className={buttonClass} disabled={create.isPending}>
                 {create.isPending ? 'Submitting…' : 'Request window'}
               </button>
-              {create.error && <p className="mt-2 text-sm text-critical">{message(create.error)}</p>}
+              {(formError || create.error) && (
+                <p className="mt-2 text-sm text-critical">{formError || message(create.error)}</p>
+              )}
             </div>
           </form>
         </Card>
@@ -876,7 +995,11 @@ export function ProjectDetailPage() {
 
   return (
     <Page
-      eyebrow="Workspace · Projects"
+      crumbs={[
+        { label: 'Work', to: '/qrp' },
+        { label: 'Projects', to: '/qrp/projects' },
+        { label: projectName },
+      ]}
       title={projectName}
       description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
       actions={
@@ -944,18 +1067,17 @@ export function ProjectDetailPage() {
               primary: locked || archived
                 ? { label: 'Open Requests', onClick: () => setTab('requests') }
                 : { label: 'Create request', onClick: () => setTab('requests') },
-              secondary: { to: '/qrp/approvals', label: 'Review Queue' },
+              secondary: { to: scopedApprovalsPath(projectId), label: 'Review Queue' },
             }}
             related={[
-              { to: '/qrp/approvals', label: 'Review Queue', hint: `${openApprovals} open here` },
-              { to: '/qrp/reservations', label: 'All holds', hint: `${reservationRows.length} on project` },
+              { to: scopedApprovalsPath(projectId), label: 'Review Queue', hint: `${openApprovals} open here` },
+              { to: scopedReservationsPath(projectId), label: 'Holds', hint: `${reservationRows.length} on project` },
               { to: '/qrp/scheduling', label: 'Schedule hold', hint: 'Guided window request' },
-              { to: '/qrp/quotas', label: 'Quotas', hint: quota.isError ? 'Unavailable' : 'Institution ledger' },
+              { to: scopedQuotasPath(projectId), label: 'Quotas', hint: quota.isError ? 'Unavailable' : 'Project ledger' },
               { to: '/qrp/metering', label: 'Metering', hint: 'Usage samples' },
               { to: '/qrp/inventory', label: 'Catalogue', hint: 'Eligible resources' },
               { to: '/qrp/reconciliation', label: 'Dispatch', hint: 'Attempts / reconcile' },
-              { to: '/qrp/audit', label: 'Audit', hint: 'Decision trail' },
-              { to: '/qrp/evidence', label: 'Evidence', hint: 'Snapshots' },
+              { to: scopedAuditPath(projectId), label: 'Audit', hint: 'Filtered sample' },
             ]}
           >
             {tab === 'overview' && (
@@ -1855,7 +1977,7 @@ export function AlertDetailPage() {
   )
 }
 
-export function PoolsPage() {
+export function PoolsPage({ embedded = false }: { embedded?: boolean }) {
   const client = useQueryClient()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -1889,17 +2011,14 @@ export function PoolsPage() {
   })
   const memberTotal = all.reduce((sum, row) => sum + (Number(row.member_count) || 0), 0)
   const emptyPools = all.filter((row) => Number(row.member_count || 0) === 0).length
-  return (
-    <Page
-      crumbs={[{ label: 'Catalogue', to: '/qrp/inventory' }, { label: 'Pools' }]}
-      title="Resource pools"
-      actions={
-        <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
-          New pool
-        </button>
-      }
-      updatedAt={query.dataUpdatedAt}
-    >
+  const headerAction = (
+    <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
+      New pool
+    </button>
+  )
+  const body = (
+    <>
+      {!embedded ? null : <div className="mb-3 flex justify-end">{headerAction}</div>}
       <Modal open={createOpen} title="New pool" onClose={() => setCreateOpen(false)}>
         <form
           className="flex flex-col gap-3"
@@ -1968,6 +2087,17 @@ export function PoolsPage() {
           />
         </QueryBody>
       </Card>
+    </>
+  )
+  if (embedded) return body
+  return (
+    <Page
+      crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Pools' }]}
+      title="Resource pools"
+      actions={headerAction}
+      updatedAt={query.dataUpdatedAt}
+    >
+      {body}
     </Page>
   )
 }
@@ -1980,6 +2110,13 @@ function stageIndex(stage: string) {
 
 export function ProviderDetailPage() {
   const { providerId = '' } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const tab = tabParam === 'manifest' || tabParam === 'status' ? tabParam : 'overview'
+  const setTab = (id: string) => {
+    if (id === 'overview') setSearchParams({}, { replace: true })
+    else setSearchParams({ tab: id }, { replace: true })
+  }
   const client = useQueryClient()
   const query = useQuery({
     queryKey: ['providers'],
@@ -2010,7 +2147,11 @@ export function ProviderDetailPage() {
   })
   return (
     <Page
-      eyebrow="Resources"
+      crumbs={[
+        { label: 'Resources', to: '/qrp/providers' },
+        { label: 'Providers', to: '/qrp/providers' },
+        { label: String(row?.provider_name || shortId(providerId, 12)) },
+      ]}
       title={String(row?.provider_name || providerId)}
       description="Publish a capability manifest, then set the provider active or suspended."
       steps={[
@@ -2027,46 +2168,87 @@ export function ProviderDetailPage() {
     >
       <QueryBody query={query}>
         {row && (
-          <>
-            <Card className="space-y-2 text-sm">
-              <StatusBadge tone={stateTone(String(row.status || 'active'))} label={stateLabel(String(row.status || 'active'))} />
-              <p>Stage {text(integration, 'stage')}</p>
-              <p>Operations {(integration.operations as string[] | undefined)?.join(', ') || '—'}</p>
-              <div className="flex gap-2">
-                {['active', 'suspended'].map((status) => (
-                  <button key={status} type="button" className={buttonClass} disabled={move.isPending} onClick={() => move.mutate(status)}>
-                    {stateLabel(status)}
-                  </button>
-                ))}
-              </div>
-              {move.error && <p className="text-critical">{message(move.error)}</p>}
-            </Card>
-            <Card>
-              <form
-                className="grid gap-3"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  save.mutate()
-                }}
-              >
-                <label className="text-sm">
-                  Operations
-                  <input className={fieldClass} value={operations} onChange={(event) => setOperations(event.target.value)} />
-                </label>
-                <label className="text-sm">
-                  Execution classes
-                  <input className={fieldClass} value={classes} onChange={(event) => setClasses(event.target.value)} />
-                </label>
-                <div>
-                  <button type="submit" className={buttonClass} disabled={save.isPending}>
-                    Publish manifest
-                  </button>
-                  {save.isSuccess && <p className="mt-2 text-sm text-success-text">Manifest saved.</p>}
-                  {save.error && <p className="mt-2 text-sm text-critical">{message(save.error)}</p>}
+          <RecordWorkspace
+            tabs={[
+              { id: 'overview', label: 'Overview' },
+              { id: 'manifest', label: 'Manifest' },
+              { id: 'status', label: 'Status' },
+            ]}
+            activeTab={tab}
+            onTabChange={setTab}
+            nextAction={{
+              title: String(integration.stage || 'I1') === 'I5' ? 'Integration complete' : 'Advance onboarding',
+              body:
+                String(integration.manifest_registered) === 'true' || integration.manifest_registered === true
+                  ? 'Manifest on file. Activate when collector evidence is acceptable.'
+                  : 'Publish manifest operations and execution classes before activating.',
+              primary: { label: 'Publish manifest', onClick: () => setTab('manifest') },
+              secondary: { to: '/qrp/connectors', label: 'Connectors board' },
+            }}
+            related={[
+              { to: '/qrp/inventory', label: 'Inventory', hint: 'Assets on this provider' },
+              { to: '/qrp/connectors', label: 'Connectors', hint: text(integration, 'stage') },
+              { to: '/qrp/jobs', label: 'Provider jobs', hint: 'Execution sample' },
+            ]}
+          >
+            {tab === 'overview' && (
+              <Card className="space-y-2 text-sm">
+                <StatusBadge tone={stateTone(String(row.status || 'active'))} label={stateLabel(String(row.status || 'active'))} />
+                <p>
+                  Stage <span className="font-medium">{text(integration, 'stage')}</span>
+                </p>
+                <p>
+                  Manifest {(integration.manifest_registered ? 'registered' : 'not registered') as string}
+                </p>
+                <p>
+                  Collector {text(integration, 'collector_last_status') || 'not reported'}
+                </p>
+                <CopyableId value={providerId} keep={16} />
+              </Card>
+            )}
+            {tab === 'manifest' && (
+              <Card>
+                <form
+                  className="grid gap-3"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    save.mutate()
+                  }}
+                >
+                  <label className="text-sm">
+                    Operations (comma-separated)
+                    <input className={fieldClass} value={operations} onChange={(event) => setOperations(event.target.value)} />
+                  </label>
+                  <label className="text-sm">
+                    Execution classes (comma-separated)
+                    <input className={fieldClass} value={classes} onChange={(event) => setClasses(event.target.value)} />
+                  </label>
+                  <p className="text-xs text-muted-foreground">Current: {(integration.operations as string[] | undefined)?.join(', ') || '—'}</p>
+                  <div>
+                    <button type="submit" className={buttonClass} disabled={save.isPending}>
+                      {save.isPending ? 'Saving…' : 'Publish manifest'}
+                    </button>
+                    {save.isSuccess && <p className="mt-2 text-sm text-success-text">Manifest saved.</p>}
+                    {save.error && <p className="mt-2 text-sm text-critical">{message(save.error)}</p>}
+                  </div>
+                </form>
+              </Card>
+            )}
+            {tab === 'status' && (
+              <Card className="space-y-3 text-sm">
+                <PanelHeader title="Catalogue status" />
+                <p>Operations {(integration.operations as string[] | undefined)?.join(', ') || '—'}</p>
+                <div className="flex flex-wrap gap-2">
+                  {['active', 'suspended'].map((status) => (
+                    <button key={status} type="button" className={buttonClass} disabled={move.isPending} onClick={() => move.mutate(status)}>
+                      Set {stateLabel(status)}
+                    </button>
+                  ))}
                 </div>
-              </form>
-            </Card>
-          </>
+                {move.error && <p className="text-critical">{message(move.error)}</p>}
+              </Card>
+            )}
+          </RecordWorkspace>
         )}
         {!row && !query.isLoading && <Notice tone="warning">This provider is not in the catalogue.</Notice>}
       </QueryBody>
@@ -2146,7 +2328,7 @@ export function PoolDetailPage() {
   )
 }
 
-export function ConnectorsPage() {
+export function ConnectorsPage({ embedded = false }: { embedded?: boolean }) {
   const [stage, setStage] = useState('all')
   const [search, setSearch] = useState('')
   const query = useQuery({
@@ -2188,13 +2370,8 @@ export function ConnectorsPage() {
       fill: CHART_COLORS[i % CHART_COLORS.length],
     }))
   }, [all])
-  return (
-    <Page
-      eyebrow="Resources"
-      title="Connectors"
-      description="Integration stage is evidence on file. I5 is not claimed until a reconciled dispatch exists. No live connection test endpoint."
-      updatedAt={query.dataUpdatedAt}
-    >
+  const body = (
+    <>
       <KpiStrip>
         <MetricTile label="Connectors" value={query.isError ? '—' : all.length} hint="Mirrors providers" />
         <MetricTile label="Collector OK" value={query.isError ? '—' : collectorOk} hint="Last status" tone="success" />
@@ -2307,6 +2484,17 @@ export function ConnectorsPage() {
           />
         </Card>
       </QueryBody>
+    </>
+  )
+  if (embedded) return body
+  return (
+    <Page
+      crumbs={[{ label: 'Resources', to: '/qrp/providers' }, { label: 'Connectors' }]}
+      title="Connectors"
+      description="Integration stage is evidence on file. I5 is not claimed until a reconciled dispatch exists. No live connection test endpoint."
+      updatedAt={query.dataUpdatedAt}
+    >
+      {body}
     </Page>
   )
 }
@@ -3400,6 +3588,8 @@ const JOB_STATUS_FILTERS = [
 ] as const
 
 export function JobsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'queues' ? 'queues' : 'jobs'
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<(typeof JOB_STATUS_FILTERS)[number]['id']>('all')
   const query = useQuery({
@@ -3444,13 +3634,8 @@ export function JobsPage() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 8)
   }, [all])
-  return (
-    <Page
-      eyebrow="Operations"
-      title="Provider jobs"
-      description="Provider execution records (TeleScope job catalogue). Not QRP governance approval state — use Approvals for that."
-      updatedAt={query.dataUpdatedAt}
-    >
+  const jobsBody = (
+    <>
       <KpiStrip>
         <MetricTile label="Listed" value={query.isError ? '—' : all.length} hint="Sample limit 50" />
         <MetricTile label="Queued" value={query.isError ? '—' : queued} hint="Provider-reported" />
@@ -3553,6 +3738,46 @@ export function JobsPage() {
           />
         </QueryBody>
       </Card>
+    </>
+  )
+  return (
+    <Page
+      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: tab === 'queues' ? 'Queues' : 'Jobs' }]}
+      title={tab === 'queues' ? 'Queue depth' : 'Provider jobs'}
+      description={
+        tab === 'queues'
+          ? 'Telemetry-backed pending counts per backend. Not governance approval state.'
+          : 'Provider execution records (TeleScope job catalogue). Not QRP governance approval state — use Approvals for that.'
+      }
+      updatedAt={query.dataUpdatedAt}
+    >
+      <RecordWorkspace
+        tabs={[
+          { id: 'jobs', label: 'Jobs', count: query.isError ? undefined : all.length },
+          { id: 'queues', label: 'Queues' },
+        ]}
+        activeTab={tab}
+        onTabChange={(id) => {
+          if (id === 'jobs') setSearchParams({}, { replace: true })
+          else setSearchParams({ tab: id }, { replace: true })
+        }}
+        nextAction={{
+          title: tab === 'queues' ? 'Jobs need backends' : 'Governance vs provider jobs',
+          body:
+            tab === 'queues'
+              ? 'Queue depth comes from telemetry samples. Approvals and dispatch reconcile live in governance workflows.'
+              : 'These rows are provider-reported execution. Submit and approve workloads before expecting aligned dispatch.',
+          primary: { to: '/qrp/approvals', label: 'Review queue' },
+          secondary: { to: '/qrp/reconciliation', label: 'Reconciliation' },
+        }}
+        related={[
+          { to: '/qrp/centre', label: 'Operations centre', hint: 'Fleet + queue snapshot' },
+          { to: '/qrp/inventory', label: 'Inventory', hint: 'Backends & assets' },
+          { to: '/qrp/reconciliation', label: 'Dispatch reconcile', hint: 'Unresolved attempts' },
+        ]}
+      >
+        {tab === 'queues' ? <QueuesPage embedded /> : jobsBody}
+      </RecordWorkspace>
     </Page>
   )
 }
@@ -3567,7 +3792,11 @@ export function JobDetailPage() {
   const status = String(query.data?.status || '')
   return (
     <Page
-      eyebrow="Operations · Provider job"
+      crumbs={[
+        { label: 'Compute', to: '/qrp/jobs' },
+        { label: 'Jobs', to: '/qrp/jobs' },
+        { label: shortId(jobId, 12) },
+      ]}
       title={status ? stateLabel(status) : 'Provider job'}
       description={`Provider execution ${shortId(jobId, 14)}. Does not resubmit. Not a governance approval record.`}
       actions={
@@ -3673,7 +3902,7 @@ export function CentrePage() {
   }, [queues.data])
   return (
     <Page
-      eyebrow="Operations"
+      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Operations' }]}
       title="Operations Centre"
       description="Fleet posture, collector health, queue depth, and open exceptions. Not a TeleScope live console."
       actions={
@@ -3689,36 +3918,27 @@ export function CentrePage() {
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
+        <MetricTile compact label="Approval queue" value={summary.isError ? '—' : summary.data?.queue} tone="primary" />
         <MetricTile
-          label="Approval queue"
-          value={summary.isError ? '—' : summary.data?.queue}
-          hint={summary.isError ? 'Summary unavailable' : 'Waiting on policy'}
-          tone="primary"
-        />
-        <MetricTile
+          compact
           label="Reconcile backlog"
           value={attempts.isError ? '—' : unresolved}
-          hint={attempts.isError ? 'Attempts unavailable' : 'Authorized or unresolved'}
           tone={unresolved > 0 ? 'critical' : 'neutral'}
         />
+        <MetricTile compact label="Pending jobs" value={queues.isError ? '—' : pendingTotal} tone={pendingTotal > 0 ? 'warning' : 'neutral'} />
         <MetricTile
-          label="Pending jobs"
-          value={queues.isError ? '—' : pendingTotal}
-          hint="Sum of queue samples"
-          tone={pendingTotal > 0 ? 'warning' : 'neutral'}
-        />
-        <MetricTile
+          compact
           label="Active alerts"
           value={query.isError ? '—' : ops.active_alerts}
-          hint="Fleet alerts"
           tone={Number(ops.active_alerts || 0) > 0 ? 'warning' : 'neutral'}
         />
         <MetricTile
+          compact
           label="Open incidents"
           value={query.isError ? '—' : ops.open_incidents}
-          hint="Tracked cases"
           tone={Number(ops.open_incidents || 0) > 0 ? 'critical' : 'neutral'}
-        /></KpiStrip>
+        />
+      </KpiStrip>
       <QueryBody query={query}>
         <div className="grid gap-4 xl:grid-cols-3">
           <ChartPanel title="Fleet reachability" empty={fleetChart.length === 0}>
@@ -3960,7 +4180,7 @@ export function CentrePage() {
   )
 }
 
-export function BackendsPage() {
+export function BackendsPage({ embedded = false }: { embedded?: boolean }) {
   const [search, setSearch] = useState('')
   const [provider, setProvider] = useState('all')
   const query = useQuery({
@@ -3993,13 +4213,8 @@ export function BackendsPage() {
   const online = all.filter((row) => String(row.operational_status || '').toUpperCase() === 'ONLINE').length
   const qubitTotal = all.reduce((sum, row) => sum + (Number(row.qubit_count) || 0), 0)
   const pendingTotal = asList(queues.data).reduce((sum, row) => sum + (Number(row.pending_jobs) || 0), 0)
-  return (
-    <Page
-      eyebrow="Operations"
-      title="Backends"
-      description="Catalogue QPUs. Operational status is provider/catalogue state — not QRP governance eligibility or live dispatch claim."
-      updatedAt={query.dataUpdatedAt}
-    >
+  const body = (
+    <>
       <KpiStrip>
         <MetricTile label="Catalogue" value={query.isError ? '—' : all.length} hint={`${providers.length} providers`} />
         <MetricTile label="Online" value={query.isError ? '—' : online} hint="Catalogue ONLINE" tone="success" />
@@ -4089,6 +4304,17 @@ export function BackendsPage() {
           />
         </QueryBody>
       </Card>
+    </>
+  )
+  if (embedded) return body
+  return (
+    <Page
+      crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Backends' }]}
+      title="Backends"
+      description="Catalogue QPUs. Operational status is provider/catalogue state — not QRP governance eligibility or live dispatch claim."
+      updatedAt={query.dataUpdatedAt}
+    >
+      {body}
     </Page>
   )
 }
@@ -4286,7 +4512,7 @@ export function formatQueueWait(row: Record<string, unknown>) {
   return `${Math.round(n)} s (est.)`
 }
 
-export function QueuesPage() {
+export function QueuesPage({ embedded = false }: { embedded?: boolean }) {
   const [condition, setCondition] = useState('all')
   const [search, setSearch] = useState('')
   const query = useQuery({
@@ -4342,13 +4568,8 @@ export function QueuesPage() {
       fill: CHART_COLORS[i % CHART_COLORS.length],
     }))
   }, [query.data])
-  return (
-    <Page
-      eyebrow="Operations"
-      title="Queues"
-      description="Pending jobs and queue condition from latest telemetry per backend."
-      updatedAt={query.dataUpdatedAt}
-    >
+  const body = (
+    <>
       <KpiStrip>
         <MetricTile label="Backends sampled" value={query.isError ? '—' : all.length} hint="Latest telemetry row each" />
         <MetricTile label="Pending jobs" value={query.isError ? '—' : pendingTotal} hint={`${withPending} backends with work`} tone={pendingTotal ? 'warning' : 'neutral'} />
@@ -4512,6 +4733,17 @@ export function QueuesPage() {
           />
         </QueryBody>
       </Card>
+    </>
+  )
+  if (embedded) return body
+  return (
+    <Page
+      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: 'Queues' }]}
+      title="Queues"
+      description="Pending jobs and queue condition from latest telemetry per backend."
+      updatedAt={query.dataUpdatedAt}
+    >
+      {body}
     </Page>
   )
 }
@@ -4646,7 +4878,12 @@ export function EvidencePage() {
 export function SettingsPage() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const session = user ? { username: user.principal_id, role: user.roles?.[0] ?? 'User' } : null
+  const session = user
+    ? {
+        username: formatPrincipalId(user.principal_id, user.roles?.[0]),
+        role: formatRole(user.roles?.[0]),
+      }
+    : null
   const boundary = useQuery({
     queryKey: ['institution-boundary'],
     queryFn: () => qre<Row>('/governance/institution-boundary'),
@@ -4690,19 +4927,21 @@ export function SettingsPage() {
       <AccountSecurity />
       <Card className="space-y-2 text-sm">
         <PanelHeader title="Institution" />
-        {boundary.data ? (
-          <>
-            <p>
-              Tenant <CopyableId value={String(boundary.data.active_tenant_id || '')} keep={20} />
-            </p>
-            <p>
-              Site {text(fed, 'local_site_name')} · peers {String(fed.peer_sites_reporting ?? '—')}/
-              {String(fed.peer_sites_configured ?? '—')}
-            </p>
-          </>
-        ) : (
-          <p className="text-muted-foreground">{boundary.isError ? message(boundary.error) : 'Loading…'}</p>
-        )}
+        <QueryBody query={boundary} compactLoading notReportedTitle="Institution boundary not reported">
+          {boundary.data ? (
+            <>
+              <p>
+                Tenant <CopyableId value={String(boundary.data.active_tenant_id || '')} keep={20} />
+              </p>
+              <p>
+                Site {text(fed, 'local_site_name')} · peers {String(fed.peer_sites_reporting ?? '—')}/
+                {String(fed.peer_sites_configured ?? '—')}
+              </p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">No institution boundary payload in this environment.</p>
+          )}
+        </QueryBody>
       </Card>
       <Card className="space-y-3">
         <PanelHeader title="Health" />
@@ -4711,14 +4950,11 @@ export function SettingsPage() {
       <Card className="space-y-2 text-sm">
         <PanelHeader title="Records" />
         <p className="flex flex-wrap gap-3">
-          <Link className="font-medium text-primary hover:underline" to="/qrp/users">
-            Users & Roles
+          <Link className="font-medium text-primary hover:underline" to="/qrp/admin/users">
+            Users & roles
           </Link>
           <Link className="font-medium text-primary hover:underline" to="/qrp/audit">
-            Audit
-          </Link>
-          <Link className="font-medium text-primary hover:underline" to="/qrp/evidence">
-            Evidence
+            Audit trail
           </Link>
         </p>
       </Card>

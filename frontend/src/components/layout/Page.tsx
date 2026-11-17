@@ -55,11 +55,15 @@ export function MetricTile({
   value,
   hint,
   tone = 'neutral',
+  compact = false,
+  className,
 }: {
   label: string
   value: unknown
   hint?: string
   tone?: 'neutral' | 'primary' | 'success' | 'warning' | 'critical'
+  compact?: boolean
+  className?: string
 }) {
   const toneClass =
     tone === 'primary'
@@ -72,12 +76,21 @@ export function MetricTile({
             ? 'border-critical/25 bg-gradient-to-br from-critical-soft/70 to-card'
             : ''
   return (
-    <Card className={cn('relative overflow-hidden py-4', toneClass)}>
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+    <Card
+      className={cn(
+        'metric-tile relative overflow-hidden',
+        compact ? 'max-h-[4.75rem] py-2.5' : 'py-4',
+        toneClass,
+        className,
+      )}
+    >
+      <p className={cn('font-semibold tracking-[0.12em] text-muted-foreground uppercase', compact ? 'text-[10px]' : 'text-[11px]')}>
+        {label}
+      </p>
+      <p className={cn('font-semibold tracking-tight tabular-nums', compact ? 'mt-0.5 text-xl leading-none' : 'mt-2 text-3xl')}>
         {value == null || value === '' ? '—' : String(value)}
       </p>
-      {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+      {hint && !compact ? <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p> : null}
     </Card>
   )
 }

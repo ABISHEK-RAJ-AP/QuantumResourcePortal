@@ -17,6 +17,14 @@ import {
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { useAuth } from '@/auth/hooks'
+import { OverviewDashboardGrid } from '@/components/dashboard/OverviewDashboardGrid'
+import { DataState } from '@/components/data/DataState'
+import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
+import { formatApiError } from '@/lib/apiMessage'
+import { formatDateTime, formatEnum, formatPrincipalId, formatRole } from '@/lib/display'
+import { demoActionsAllowed } from '@/lib/demo'
+import { policyDisplayName, policyVersion, stagePermission } from '@/lib/qreFields'
+import { scopedApprovalsPath } from '@/lib/projectScope'
 import { cn } from '@/lib/utils'
 import { CopyableId } from '@/components/data/CopyableId'
 import { ChartPanel } from '@/components/data/ChartPanel'
@@ -26,10 +34,10 @@ import { StatusBadge } from '@/components/status/StatusBadge'
 import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
+import { BackendsPage, PoolsPage } from '@/pages/workspace/continue'
 import {
   Card,
   EmptyState,
-  LoadingLine,
   MetricTile,
   Notice,
   Page,
@@ -56,7 +64,7 @@ function overviewFocus(role: string) {
 type Row = Record<string, unknown>
 
 export function message(error: unknown) {
-  return error instanceof Error ? error.message : 'Request failed'
+  return formatApiError(error)
 }
 
 function useRows(key: string, path: string) {
@@ -71,102 +79,53 @@ export function shortId(value: string, keep = 8) {
   return value.length > keep + 1 ? `${value.slice(0, keep)}…` : value
 }
 
-type TableColumn = {
-  key: string
-  label: string
-  render?: (row: Row) => ReactNode
-  /** Client-side sort by raw field value when true. */
-  sortable?: boolean
-}
+export type TableColumn = DataTableColumn<Row>
 
-function compareRows(a: Row, b: Row, key: string) {
-  const av = a[key]
-  const bv = b[key]
-  if (av == null && bv == null) return 0
-  if (av == null) return 1
-  if (bv == null) return -1
-  if (typeof av === 'number' && typeof bv === 'number') return av - bv
-  return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' })
-}
-
-export function Table({
-  columns,
-  rows,
-  emptyTitle = 'Nothing here yet',
-  emptyBody = 'Records appear when the linked service returns data for this tenant.',
-}: {
-  columns: TableColumn[]
-  rows: Row[]
-  emptyTitle?: string
-  emptyBody?: ReactNode
-}) {
-  const [sortKey, setSortKey] = useState<string | null>(null)
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-  if (rows.length === 0) {
-    return <EmptyState title={emptyTitle} body={emptyBody} />
-  }
-  const sorted =
-    sortKey == null
-      ? rows
-      : [...rows].sort((a, b) => {
-          const cmp = compareRows(a, b, sortKey)
-          return sortDir === 'asc' ? cmp : -cmp
-        })
-  return (
-    <div className="overflow-x-auto">
-      <table className="data-table w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
-            {columns.map((col) => (
-              <th key={col.key} className="px-3 py-2.5 font-semibold first:ps-0 last:pe-0">
-                {col.sortable ? (
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 hover:text-foreground"
-                    onClick={() => {
-                      if (sortKey === col.key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-                      else {
-                        setSortKey(col.key)
-                        setSortDir('asc')
-                      }
-                    }}
-                  >
-                    {col.label}
-                    {sortKey === col.key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-                  </button>
-                ) : (
-                  col.label
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((row, index) => (
-            <tr key={String(row.workload_id || row.asset_id || row.id || index)} className="border-b border-border/70 last:border-0">
-              {columns.map((col) => (
-                <td key={col.key} className="px-3 py-2.5 align-middle first:ps-0 last:pe-0">
-                  {col.render ? col.render(row) : text(row, col.key)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+/** Re-export for legacy imports from this module. */
+export function Table(
+  props: Parameters<typeof DataTable<Row>>[0],
+) {
+  return <DataTable {...props} />
 }
 
 export function QueryBody({
   query,
   children,
+  empty,
+  emptyTitle,
+  emptyBody,
+  compactLoading,
+  notReportedTitle,
 }: {
-  query: { isPending: boolean; error: unknown; data?: unknown }
+  query: {
+    isPending: boolean
+    error: unknown
+    data?: unknown
+    refetch?: () => Promise<unknown>
+  }
   children: ReactNode
+  empty?: boolean
+  emptyTitle?: string
+  emptyBody?: ReactNode
+  compactLoading?: boolean
+  notReportedTitle?: string
 }) {
-  if (query.isPending) return <LoadingLine />
-  if (query.error) return <Notice>{message(query.error)}</Notice>
-  return children
+  const onRetry =
+    query.error && typeof query.refetch === 'function' ? () => void query.refetch!() : undefined
+  return (
+    <DataState
+      pending={query.isPending}
+      error={query.error ?? undefined}
+      onRetry={onRetry}
+      empty={empty}
+      emptyTitle={emptyTitle}
+      emptyBody={emptyBody}
+      compactLoading={compactLoading}
+      notReportedTitle={notReportedTitle}
+    >
+      {children}
+    </DataState>
+  )
 }
 
 const APPROVAL_PATH: WorkflowStep[] = [
@@ -187,6 +146,11 @@ export function OverviewPage() {
   const centre = useQuery({
     queryKey: ['operations-centre'],
     queryFn: () => qre<Row>('/operations/centre'),
+    retry: false,
+  })
+  const queues = useQuery({
+    queryKey: ['queues-overview-home'],
+    queryFn: () => qre<unknown>('/queues'),
     retry: false,
   })
   const ledger = useQuery({
@@ -228,6 +192,7 @@ export function OverviewPage() {
   const myRows = myApprovals.data ?? []
   const openIncidents = Number(ops.open_incidents || 0)
   const queueCount = Number(summary.data?.queue ?? 0)
+  const pendingJobs = asList(queues.data).reduce((sum, row) => sum + (Number(row.pending_jobs) || 0), 0)
   const used = Number(ledger.data?.used_shots ?? 0)
   const remaining = Number(ledger.data?.remaining_shots ?? 0)
   const cap = Number(ledger.data?.daily_shots_cap ?? 0)
@@ -274,49 +239,26 @@ export function OverviewPage() {
 
   return (
     <Page
-      crumbs={[{ label: 'Command', to: '/qrp' }, { label: 'Overview' }]}
-      title="Overview"
-      description={`${user?.roles?.[0] || 'Operator'} · ${user?.principal_id || '—'}`}
+      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Home' }]}
+      title="Home"
+      description={`${formatRole(user?.roles?.[0])} · ${formatPrincipalId(user?.principal_id, user?.roles?.[0])}`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
-      <Card>
-        <PanelHeader title="Pipeline" />
-        <div className="grid gap-2 sm:grid-cols-5">
-          {pipeline.map((step) => (
-            <Link
-              key={step.label}
-              to={step.to}
-              className={cn(
-                'rounded-lg border px-3 py-2.5 hover:bg-accent',
-                step.hot ? 'border-warning/40 bg-warning-soft/30' : 'border-border',
-                focus.primaryTo === step.to ? 'ring-1 ring-primary/40' : '',
-              )}
-            >
-              <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{step.label}</span>
-              <span className="text-2xl font-semibold tabular-nums">{step.value}</span>
-            </Link>
-          ))}
-        </div>
-      </Card>
-
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/approvals">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Needs review</span>
-          <span className="text-2xl font-semibold tabular-nums">{summary.isError ? '—' : queueCount}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/approvals?filter=mine">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">My requests</span>
-          <span className="text-2xl font-semibold tabular-nums">{myApprovals.isError ? '—' : myRows.length}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/reconciliation">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Unresolved dispatch</span>
-          <span className="text-2xl font-semibold tabular-nums">{attempts.isError ? '—' : unresolvedAttempts}</span>
-        </Link>
-        <Link className="rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-accent" to="/qrp/incidents">
-          <span className="block text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Open incidents</span>
-          <span className="text-2xl font-semibold tabular-nums">{centre.isError ? '—' : openIncidents}</span>
-        </Link>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Drag widgets to rearrange. Touch: press and hold, then drag. Keyboard: focus a widget, hold Alt, arrow keys.
+      </p>
+      <OverviewDashboardGrid
+        lens={focus.kind}
+        queueCount={queueCount}
+        summaryError={summary.isError}
+        myCount={myApprovals.isError ? 0 : myRows.length}
+        unresolvedAttempts={attempts.isError ? 0 : unresolvedAttempts}
+        openIncidents={centre.isError ? 0 : openIncidents}
+        pendingJobs={queues.isError ? 0 : pendingJobs}
+        pipeline={pipeline}
+        recentRows={recent.data ?? []}
+        activityRows={activityRows}
+      />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartPanel
@@ -554,16 +496,20 @@ const APPROVAL_FILTERS = [
   { id: 'withdrawn', label: 'Withdrawn' },
 ] as const
 
-function approvalsPath(filter: string) {
-  if (filter === 'queue') return '/approvals'
-  if (filter === 'mine') return '/approvals?scope=mine'
-  return `/approvals?state=${encodeURIComponent(filter)}`
+function approvalsPath(filter: string, projectId?: string) {
+  const params = new URLSearchParams()
+  if (projectId) params.set('project_id', projectId)
+  if (filter === 'mine') params.set('scope', 'mine')
+  else if (filter !== 'queue') params.set('state', filter)
+  const q = params.toString()
+  return q ? `/approvals?${q}` : '/approvals'
 }
 
 export function ApprovalsPage() {
   const client = useQueryClient()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const projectId = searchParams.get('project_id')?.trim() || ''
   const filterParam = searchParams.get('filter')
   const initialFilter = APPROVAL_FILTERS.some((f) => f.id === filterParam)
     ? (filterParam as (typeof APPROVAL_FILTERS)[number]['id'])
@@ -572,16 +518,23 @@ export function ApprovalsPage() {
   const [search, setSearch] = useState('')
   const setApprovalFilter = (id: (typeof APPROVAL_FILTERS)[number]['id']) => {
     setFilter(id)
-    if (id === 'queue') setSearchParams({}, { replace: true })
-    else setSearchParams({ filter: id }, { replace: true })
+    const params = new URLSearchParams()
+    if (projectId) params.set('project_id', projectId)
+    if (id !== 'queue') params.set('filter', id)
+    setSearchParams(params, { replace: true })
+  }
+  const clearProjectFilter = () => {
+    const params = new URLSearchParams()
+    if (filter !== 'queue') params.set('filter', filter)
+    setSearchParams(params, { replace: true })
   }
   const summary = useQuery({
     queryKey: ['governance-summary'],
     queryFn: () => qre<Row>('/governance/summary'),
   })
   const query = useQuery({
-    queryKey: ['approvals', filter],
-    queryFn: async () => asList(await qre<unknown>(approvalsPath(filter))),
+    queryKey: ['approvals', filter, projectId],
+    queryFn: async () => asList(await qre<unknown>(approvalsPath(filter, projectId || undefined))),
   })
   const seed = useMutation({
     mutationFn: async () => {
@@ -639,14 +592,33 @@ export function ApprovalsPage() {
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
             Open {shortId(String(nextRow.workload_id), 8)}
           </Link>
-        ) : (
+        ) : demoActionsAllowed ? (
           <button type="button" className="btn-secondary" disabled={seed.isPending} onClick={() => seed.mutate()}>
             {seed.isPending ? 'Submitting…' : 'Seed review'}
           </button>
+        ) : (
+          <Link className="btn-secondary" to="/qrp/projects">
+            New project
+          </Link>
         )
       }
       updatedAt={query.dataUpdatedAt || summary.dataUpdatedAt}
     >
+      {projectId ? (
+        <Notice tone="warning">
+          <span className="font-medium text-foreground">Project filter active</span>
+          <p className="mt-1">
+            Showing requests for{' '}
+            <CopyableId value={projectId} keep={12} />{' '}
+            <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectId}`}>
+              Open project hub
+            </Link>
+            <button type="button" className="btn-ghost ms-2 text-sm" onClick={clearProjectFilter}>
+              Clear filter
+            </button>
+          </p>
+        </Notice>
+      ) : null}
       <KpiStrip className="xl:grid-cols-5">
         <button type="button" className="text-start" onClick={() => setApprovalFilter('queue')}>
           <MetricTile label="Needs review" value={summary.data?.queue} tone="primary" />
@@ -707,10 +679,14 @@ export function ApprovalsPage() {
                   <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
                     Clear search
                   </button>
-                ) : (
+                ) : demoActionsAllowed ? (
                   <button type="button" className="btn-primary" disabled={seed.isPending} onClick={() => seed.mutate()}>
                     {seed.isPending ? 'Submitting…' : 'Start demo review'}
                   </button>
+                ) : (
+                  <Link className="btn-primary" to="/qrp/projects">
+                    Create a project
+                  </Link>
                 )
               }
             />
@@ -1224,6 +1200,9 @@ const INVENTORY_LIFE = [
 ] as const
 
 export function InventoryPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab =
+    searchParams.get('tab') === 'pools' ? 'pools' : searchParams.get('tab') === 'backends' ? 'backends' : 'catalogue'
   const [exec, setExec] = useState<(typeof INVENTORY_EXEC)[number]['id']>('all')
   const [life, setLife] = useState<(typeof INVENTORY_LIFE)[number]['id']>('all')
   const [search, setSearch] = useState('')
@@ -1274,22 +1253,8 @@ export function InventoryPage() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
   }, [all])
-  return (
-    <Page
-      crumbs={[{ label: 'Catalogue', to: '/qrp/inventory' }, { label: 'Inventory' }]}
-      title="Inventory"
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/inventory/new">
-            Register asset
-          </Link>
-          <Link className="btn-secondary" to="/qrp/inventory/import">
-            Import
-          </Link>
-        </span>
-      }
-      updatedAt={allQuery.dataUpdatedAt || query.dataUpdatedAt}
-    >
+  const catalogueBody = (
+    <>
       <KpiStrip>
         <MetricTile label="Registered" value={allQuery.isError ? '—' : all.length} hint="Unfiltered catalogue" />
         <MetricTile label="Active" value={allQuery.isError ? '—' : active} hint="Lifecycle = active" tone="success" />
@@ -1403,6 +1368,56 @@ export function InventoryPage() {
           />
         </QueryBody>
       </Card>
+    </>
+  )
+  return (
+    <Page
+      crumbs={[
+        { label: 'Resources', to: '/qrp/inventory' },
+        { label: tab === 'pools' ? 'Pools' : tab === 'backends' ? 'Backends' : 'Catalogue' },
+      ]}
+      title={tab === 'pools' ? 'Resource pools' : tab === 'backends' ? 'Backends' : 'Inventory catalogue'}
+      actions={
+        tab === 'catalogue' ? (
+          <span className="flex flex-wrap gap-2">
+            <Link className="btn-primary" to="/qrp/inventory/new">
+              Register asset
+            </Link>
+            <Link className="btn-secondary" to="/qrp/inventory/import">
+              Import
+            </Link>
+          </span>
+        ) : null
+      }
+      updatedAt={allQuery.dataUpdatedAt || query.dataUpdatedAt}
+    >
+      <RecordWorkspace
+        tabs={[
+          { id: 'catalogue', label: 'Catalogue', count: allQuery.isError ? undefined : all.length },
+          { id: 'pools', label: 'Pools' },
+          { id: 'backends', label: 'Backends' },
+        ]}
+        activeTab={tab}
+        onTabChange={(id) => {
+          if (id === 'catalogue') setSearchParams({}, { replace: true })
+          else setSearchParams({ tab: id }, { replace: true })
+        }}
+        nextAction={{
+          title: 'Register before dispatch',
+          body: 'Catalogue assets, optional pools for grouping, backends for provider telemetry — governance still gates dispatch.',
+          primary: { to: '/qrp/inventory/new', label: 'Register asset' },
+          secondary: { to: '/qrp/providers', label: 'Providers' },
+        }}
+        related={[
+          { to: '/qrp/connectors', label: 'Connectors', hint: 'Integration stage' },
+          { to: '/qrp/jobs', label: 'Jobs & queues', hint: 'Execution + depth' },
+          { to: '/qrp/reconciliation', label: 'Reconcile', hint: 'Dispatch outcomes' },
+        ]}
+      >
+        {tab === 'catalogue' ? catalogueBody : null}
+        {tab === 'pools' ? <PoolsPage embedded /> : null}
+        {tab === 'backends' ? <BackendsPage embedded /> : null}
+      </RecordWorkspace>
     </Page>
   )
 }
@@ -1443,10 +1458,13 @@ export function ProvidersPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Resources"
+      crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Providers' }]}
       title="Providers"
       actions={
         <span className="flex flex-wrap gap-2">
+          <Link className="btn-secondary" to="/qrp/connectors">
+            Connectors
+          </Link>
           <Link className="btn-secondary" to="/qrp/providers/onboarding">
             Onboarding board
           </Link>
@@ -1466,7 +1484,7 @@ export function ProvidersPage() {
           empty={stageChart.length === 0}
           action={
             <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/connectors">
-              I1–I5 legend
+              I1–I5 stages
             </Link>
           }
         >
@@ -1495,7 +1513,7 @@ export function ProvidersPage() {
             <li>Activate / suspend from provider detail — catalogue status ≠ dispatch claim.</li>
           </ol>
           <Link className="font-medium text-primary hover:underline" to="/qrp/connectors">
-            Open connectors →
+            Open connectors board →
           </Link>
         </Card>
       </div>
@@ -1633,7 +1651,7 @@ export function ProjectsPage() {
   }, [approvals.data])
   return (
     <Page
-      crumbs={[{ label: 'Review', to: '/qrp/approvals' }, { label: 'Projects' }]}
+      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Projects' }]}
       title="Projects"
       actions={
         <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
@@ -1758,9 +1776,16 @@ export function ProjectsPage() {
                 {
                   key: 'requests',
                   label: 'Requests',
-                  render: (row) => (
-                    <span className="tabular-nums">{requestByProject.get(String(row.project_id || '')) ?? (approvals.isError ? '—' : 0)}</span>
-                  ),
+                  render: (row) => {
+                    const pid = String(row.project_id || '')
+                    const n = requestByProject.get(pid) ?? (approvals.isError ? null : 0)
+                    if (!pid || n == null) return <span className="tabular-nums">{n ?? '—'}</span>
+                    return (
+                      <Link className="tabular-nums font-medium text-primary hover:underline" to={scopedApprovalsPath(pid)}>
+                        {n}
+                      </Link>
+                    )
+                  },
                 },
                 {
                   key: 'status',
@@ -1849,7 +1874,7 @@ export function PoliciesPage() {
             </div>
             <div>
               <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Version</dt>
-              <dd className="mt-1 font-medium">{text(query.data ?? {}, 'version')}</dd>
+              <dd className="mt-1 font-medium">{policyVersion(query.data as Row | undefined)}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Stages</dt>
@@ -1857,7 +1882,7 @@ export function PoliciesPage() {
             </div>
             <div>
               <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Name</dt>
-              <dd className="mt-1 font-medium">{text(query.data ?? {}, 'name')}</dd>
+              <dd className="mt-1 font-medium">{policyDisplayName(query.data as Row | undefined)}</dd>
             </div>
           </dl>
           {stages.length > 0 && (
@@ -1885,7 +1910,7 @@ export function PoliciesPage() {
             columns={[
               { key: 'id', label: 'Stage' },
               { key: 'label', label: 'Label' },
-              { key: 'required_permission', label: 'Permission' },
+              { key: 'required_permission', label: 'Permission', render: (row) => stagePermission(row) },
             ]}
           />
         </Card>
@@ -1902,10 +1927,16 @@ const QUOTA_WINDOWS = [
 ] as const
 
 export function QuotasPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const projectId = searchParams.get('project_id')?.trim() || ''
   const [windowId, setWindowId] = useState<(typeof QUOTA_WINDOWS)[number]['id']>('today')
   const query = useQuery({
-    queryKey: ['quota-ledger', windowId],
-    queryFn: () => qre<Row>(`/quotas/ledger?window=${encodeURIComponent(windowId)}`),
+    queryKey: ['quota-ledger', windowId, projectId],
+    queryFn: () => {
+      const params = new URLSearchParams({ window: windowId })
+      if (projectId) params.set('project_id', projectId)
+      return qre<Row>(`/quotas/ledger?${params}`)
+    },
   })
   const data = query.data ?? {}
   const projects = asList(data.by_project)
@@ -1916,12 +1947,28 @@ export function QuotasPage() {
   const barPct =
     Number.isFinite(cap) && cap > 0 && Number.isFinite(used) ? Math.min(100, Math.round((used / cap) * 100)) : null
   const nearWarn = barPct != null && Number.isFinite(warnAt) && barPct >= warnAt
+  const entryCount = Number(data.entry_count ?? entries.length)
+  const usageWithoutLedger = Number.isFinite(used) && used > 0 && entryCount === 0
+  const clearProject = () => {
+    setSearchParams({}, { replace: true })
+  }
   return (
     <Page
-      eyebrow="Governance"
+      crumbs={[{ label: 'Govern', to: '/qrp/policies' }, { label: 'Quotas' }]}
       title="Quotas"
       updatedAt={query.dataUpdatedAt}
     >
+      {projectId ? (
+        <Notice tone="warning">
+          Ledger scoped to project <CopyableId value={projectId} keep={12} />{' '}
+          <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectId}`}>
+            Project hub
+          </Link>
+          <button type="button" className="btn-ghost ms-2 text-sm" onClick={clearProject}>
+            Institution-wide
+          </button>
+        </Notice>
+      ) : null}
       <FilterBar
         options={QUOTA_WINDOWS}
         value={windowId}
@@ -1929,6 +1976,15 @@ export function QuotasPage() {
         defaultId="today"
       />
       <QueryBody query={query}>
+        {usageWithoutLedger ? (
+          <Notice tone="warning">
+            <p className="font-medium text-foreground">Usage total does not match the ledger sample</p>
+            <p className="mt-1">
+              Reported used shots are {String(data.used_shots)} but no job entries appear in this window. The rollup may come
+              from metering while the ledger slice is empty or the governance API is only partially connected.
+            </p>
+          </Notice>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricTile label="Cap" value={data.daily_shots_cap} hint="Institution shot budget" />
           <MetricTile label="Used" value={data.used_shots} hint="Completed jobs in window" tone="warning" />
@@ -2081,12 +2137,23 @@ const RESERVATION_FILTERS = [
 
 export function ReservationsPage() {
   const client = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const projectId = searchParams.get('project_id')?.trim() || ''
   const [filter, setFilter] = useState<(typeof RESERVATION_FILTERS)[number]['id']>('all')
   const [view, setView] = useState<'list' | 'calendar'>('calendar')
+  const [conflictsOnly, setConflictsOnly] = useState(() => searchParams.get('conflicts') === '1')
   const [search, setSearch] = useState('')
-  const path = filter === 'all' ? '/reservations' : `/reservations?state=${encodeURIComponent(filter)}`
+  const [transitionError, setTransitionError] = useState<{ id: string; message: string } | null>(null)
+  const [movingId, setMovingId] = useState<string | null>(null)
+  const path = useMemo(() => {
+    const params = new URLSearchParams()
+    if (filter !== 'all') params.set('state', filter)
+    if (projectId) params.set('project_id', projectId)
+    const q = params.toString()
+    return q ? `/reservations?${q}` : '/reservations'
+  }, [filter, projectId])
   const query = useQuery({
-    queryKey: ['reservations', filter],
+    queryKey: ['reservations', filter, projectId],
     queryFn: () => qre<{ items?: Row[]; transitions?: Record<string, string[]>; conflict_count?: number }>(path),
   })
   const move = useMutation({
@@ -2095,7 +2162,18 @@ export function ReservationsPage() {
         method: 'POST',
         body: JSON.stringify({ state }),
       }),
-    onSuccess: () => void client.invalidateQueries({ queryKey: ['reservations'] }),
+    onMutate: ({ id }) => {
+      setMovingId(id)
+      setTransitionError(null)
+    },
+    onSuccess: () => {
+      setMovingId(null)
+      void client.invalidateQueries({ queryKey: ['reservations'] })
+    },
+    onError: (err, { id }) => {
+      setMovingId(null)
+      setTransitionError({ id, message: formatApiError(err) })
+    },
   })
   const transitions = query.data?.transitions ?? {}
   const allRows = asList(query.data)
@@ -2104,7 +2182,7 @@ export function ReservationsPage() {
       ? query.data.conflict_count
       : allRows.filter((r) => r.has_conflict).length
   const q = search.trim().toLowerCase()
-  const rows = q
+  const searched = q
     ? allRows.filter((row) =>
         ['reservation_id', 'resource_ref', 'purpose', 'project_id', 'state', 'created_by'].some((key) =>
           String(row[key] ?? '')
@@ -2113,10 +2191,30 @@ export function ReservationsPage() {
         ),
       )
     : allRows
+  const rows = conflictsOnly ? searched.filter((row) => Boolean(row.has_conflict)) : searched
   const countFor = (state: string) => allRows.filter((r) => String(r.state) === state).length
+  const clearProject = () => setSearchParams({}, { replace: true })
+  const scheduleDayHref = (dateStr: string) => {
+    const params = new URLSearchParams({ date: dateStr })
+    if (projectId) params.set('project_id', projectId)
+    return `/qrp/scheduling?${params}`
+  }
+  const showConflictsOnly = () => {
+    setConflictsOnly(true)
+    setView('list')
+    const params = new URLSearchParams(searchParams)
+    params.set('conflicts', '1')
+    setSearchParams(params, { replace: true })
+  }
+  const clearConflictsFilter = () => {
+    setConflictsOnly(false)
+    const params = new URLSearchParams(searchParams)
+    params.delete('conflicts')
+    setSearchParams(params, { replace: true })
+  }
   return (
     <Page
-      eyebrow="Governance · Allocation"
+      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: 'Reservations' }]}
       title="Reservations"
       actions={
         <span className="flex flex-wrap gap-2">
@@ -2128,6 +2226,17 @@ export function ReservationsPage() {
       }
       updatedAt={query.dataUpdatedAt}
     >
+      {projectId ? (
+        <Notice tone="warning">
+          Holds for project <CopyableId value={projectId} keep={12} />{' '}
+          <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectId}`}>
+            Project hub
+          </Link>
+          <button type="button" className="btn-ghost ms-2 text-sm" onClick={clearProject}>
+            All projects
+          </button>
+        </Notice>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <MetricTile label="Requested" value={countFor('requested')} hint="Awaiting activate" tone="warning" />
         <MetricTile label="Active" value={countFor('active')} hint="Hold in force" tone="success" />
@@ -2136,8 +2245,30 @@ export function ReservationsPage() {
         <MetricTile label="Conflicts" value={conflictCount} hint="Overlapping holds" tone={conflictCount ? 'critical' : 'neutral'} />
       </div>
       {conflictCount > 0 && (
-        <Notice tone="warning">{conflictCount} overlapping reservation(s) flagged. Overlaps are not auto-cancelled.</Notice>
+        <Notice tone="warning">
+          <p>
+            {conflictCount} overlapping reservation(s) flagged. Overlaps are not auto-cancelled — resolve by releasing or
+            cancelling one hold, or adjust windows.
+          </p>
+          {!conflictsOnly ? (
+            <button type="button" className="btn-secondary mt-2 text-sm" onClick={showConflictsOnly}>
+              Show overlapping holds
+            </button>
+          ) : (
+            <button type="button" className="btn-ghost mt-2 text-sm" onClick={clearConflictsFilter}>
+              Show all holds
+            </button>
+          )}
+        </Notice>
       )}
+      {transitionError ? (
+        <Notice tone="critical">
+          Could not move hold <CopyableId value={transitionError.id} keep={10} />: {transitionError.message}
+          <button type="button" className="btn-ghost ms-2 text-sm" onClick={() => setTransitionError(null)}>
+            Dismiss
+          </button>
+        </Notice>
+      ) : null}
       <Card>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <FilterBar
@@ -2166,7 +2297,7 @@ export function ReservationsPage() {
         </div>
         <QueryBody query={query}>
           {view === 'calendar' ? (
-            <ReservationCalendar rows={rows} />
+            <ReservationCalendar rows={rows} scheduleDayHref={scheduleDayHref} />
           ) : (
             <Table
               rows={rows}
@@ -2191,8 +2322,18 @@ export function ReservationsPage() {
                       '—'
                     ),
                 },
-                { key: 'window_start', label: 'Start', sortable: true },
-                { key: 'window_end', label: 'End', sortable: true },
+                {
+                  key: 'window_start',
+                  label: 'Start',
+                  sortable: true,
+                  render: (row) => formatDateTime(row.window_start),
+                },
+                {
+                  key: 'window_end',
+                  label: 'End',
+                  sortable: true,
+                  render: (row) => formatDateTime(row.window_end),
+                },
                 {
                   key: 'state',
                   label: 'State',
@@ -2215,13 +2356,14 @@ export function ReservationsPage() {
                           key={state}
                           type="button"
                           className="btn-ghost"
+                          disabled={movingId === String(row.reservation_id)}
                           onClick={() => {
-                            if (window.confirm(`Move reservation to ${state}?`)) {
+                            if (window.confirm(`Move reservation to ${stateLabel(state)}?`)) {
                               move.mutate({ id: String(row.reservation_id), state })
                             }
                           }}
                         >
-                          {stateLabel(state)}
+                          {movingId === String(row.reservation_id) ? '…' : stateLabel(state)}
                         </button>
                       ))}
                     </span>
@@ -2231,7 +2373,6 @@ export function ReservationsPage() {
             />
           )}
         </QueryBody>
-        {move.error && <p className="mt-3 text-sm text-critical">{message(move.error)}</p>}
       </Card>
     </Page>
   )
@@ -2273,7 +2414,7 @@ export function MeteringPage() {
   }, [query.data])
   return (
     <Page
-      eyebrow="Governance"
+      crumbs={[{ label: 'Govern', to: '/qrp/policies' }, { label: 'Metering' }]}
       title="Metering"
       actions={
         <span className="flex flex-wrap items-center gap-2">
@@ -2361,6 +2502,8 @@ export function MeteringPage() {
 }
 
 export function AuditPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const projectScope = searchParams.get('project_id')?.trim() || ''
   const [search, setSearch] = useState('')
   const [prefix, setPrefix] = useState('all')
   const prefixOptions = [
@@ -2391,6 +2534,13 @@ export function AuditPage() {
   })
   const all = query.data ?? []
   const rows = all.filter((row) => {
+    if (projectScope) {
+      const tid = String(row.target_id ?? '')
+      const pid = String(row.project_id ?? '')
+      const matchesProject =
+        tid === projectScope || pid === projectScope || tid.includes(projectScope) || pid.includes(projectScope)
+      if (!matchesProject) return false
+    }
     const q = search.trim().toLowerCase()
     if (!q) return true
     return ['actor', 'action', 'target_id', 'target_type', 'role'].some((key) =>
@@ -2412,9 +2562,10 @@ export function AuditPage() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 8)
   }, [all])
+  const clearProjectScope = () => setSearchParams({}, { replace: true })
   return (
     <Page
-      eyebrow="Records"
+      crumbs={[{ label: 'Govern', to: '/qrp/audit' }, { label: 'Audit trail' }]}
       title="Audit Trail"
       actions={
         <span className="flex flex-wrap gap-2">
@@ -2426,8 +2577,19 @@ export function AuditPage() {
       updatedAt={query.dataUpdatedAt}
     >
       {exportCsv.error && <Notice>{message(exportCsv.error)}</Notice>}
+      {projectScope ? (
+        <Notice tone="warning">
+          Client filter on sample for project <CopyableId value={projectScope} keep={12} /> — export is still tenant-wide.{' '}
+          <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectScope}`}>
+            Project hub
+          </Link>
+          <button type="button" className="btn-ghost ms-2 text-sm" onClick={clearProjectScope}>
+            Clear
+          </button>
+        </Notice>
+      ) : null}
       <KpiStrip>
-        <MetricTile label="Events (sample)" value={query.isError ? '—' : all.length} hint="Limit 100 / filter" />
+        <MetricTile label="Events (sample)" value={query.isError ? '—' : (projectScope ? rows.length : all.length)} hint="Limit 100 / filter" />
         <MetricTile label="Distinct actors" value={query.isError ? '—' : actors} hint="In current sample" />
         <MetricTile label="Action families" value={query.isError ? '—' : actionChart.length} hint="Prefix before '.'" />
         <MetricTile label="Filter" value={prefix === 'all' ? 'all' : `${prefix}*`} hint="action_prefix" />
@@ -2465,12 +2627,12 @@ export function AuditPage() {
               {
                 key: 'timestamp',
                 label: 'When',
-                render: (row) => <span className="font-mono text-[11px]">{text(row, 'timestamp')}</span>,
+                render: (row) => <span className="text-sm tabular-nums">{formatDateTime(row.timestamp)}</span>,
               },
               { key: 'actor', label: 'Actor' },
-              { key: 'role', label: 'Role' },
-              { key: 'action', label: 'Action' },
-              { key: 'target_type', label: 'Type' },
+              { key: 'role', label: 'Role', render: (row) => formatRole(String(row.role ?? '')) },
+              { key: 'action', label: 'Action', render: (row) => formatEnum(String(row.action ?? '')) },
+              { key: 'target_type', label: 'Type', render: (row) => formatEnum(String(row.target_type ?? '')) },
               {
                 key: 'target_id',
                 label: 'Target',

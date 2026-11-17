@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 
 import { useAuth } from '@/auth/hooks'
+import { formatPrincipalId, formatRole } from '@/lib/display'
 import { Card, PanelHeader } from '@/components/layout/Page'
 
 /** Password/MFA/session flows ship on the QRP identity API in later slices. */
@@ -12,7 +13,11 @@ export function AccountSecurity() {
       {user ? (
         <>
           <p>
-            Signed in as <span className="font-medium">{user.roles.join(', ') || 'member'}</span>
+            Signed in as{' '}
+            <span className="font-medium">
+              {formatPrincipalId(user.principal_id, user.roles[0])}
+              {user.roles.length ? ` · ${user.roles.map((r) => formatRole(r)).join(', ')}` : ''}
+            </span>
           </p>
           <p className="text-muted-foreground">
             Profile and RBAC admin use the QRP backend. Password reset and MFA enrolment are not on this API yet.
@@ -22,10 +27,7 @@ export function AccountSecurity() {
               Profile
             </Link>
             <Link className="font-medium text-primary hover:underline" to="/qrp/admin/users">
-              Users
-            </Link>
-            <Link className="font-medium text-primary hover:underline" to="/qrp/admin/roles">
-              Roles
+              Users & roles
             </Link>
           </p>
         </>

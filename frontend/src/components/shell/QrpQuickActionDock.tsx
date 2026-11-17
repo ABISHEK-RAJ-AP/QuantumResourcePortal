@@ -17,6 +17,8 @@ import { asList, qre } from '@/api/qre'
 import { useAuth } from '@/auth/hooks'
 import { cn } from '@/lib/utils'
 
+import { demoActionsAllowed } from '@/lib/demo'
+
 type DockAction = {
   id: string
   label: string
@@ -137,7 +139,7 @@ export function QrpQuickActionDock() {
         icon: <Zap className="size-5" strokeWidth={2} />,
       },
     ]
-    if (isAdmin) {
+    if (isAdmin && demoActionsAllowed) {
       list.push({
         id: 'demo',
         label: seed.isPending ? 'Loading demo…' : 'Load demo',

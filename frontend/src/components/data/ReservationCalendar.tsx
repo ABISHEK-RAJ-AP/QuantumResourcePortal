@@ -92,12 +92,15 @@ export function ReservationCalendar({
   className,
   title = 'Hold calendar',
   onDaySelect,
+  scheduleDayHref,
 }: {
   rows: ReservationCalRow[]
   className?: string
   title?: string
   /** Fires when a day is selected — Scheduling can prefill the window. */
   onDaySelect?: (dateStr: string, dayRows: ReservationCalRow[]) => void
+  /** When set, shows a CTA to open the scheduling form for the selected day. */
+  scheduleDayHref?: (dateStr: string) => string
 }) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
@@ -243,6 +246,14 @@ export function ReservationCalendar({
             })}
           </ul>
         )}
+        {selectedDate && scheduleDayHref ? (
+          <Link
+            to={scheduleDayHref(selectedDate)}
+            className="btn-secondary mt-3 inline-flex w-full justify-center text-sm"
+          >
+            Request hold on this day
+          </Link>
+        ) : null}
       </aside>
     </div>
   )

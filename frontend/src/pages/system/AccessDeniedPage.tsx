@@ -22,7 +22,7 @@ export function AccessDeniedPage({ permission }: { permission?: string }) {
         </p>
       </div>
       <Link to="/qrp" className="btn-primary px-4 py-2 text-sm">
-        Back to Overview
+        Back to Home
       </Link>
     </div>
   )

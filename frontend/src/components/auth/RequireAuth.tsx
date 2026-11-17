@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 
+import { LoadingLine } from '@/components/layout/Page'
 import { useAuth } from '@/auth/hooks'
 
 /** Gate the workspace: wait for the session check, then require an authenticated user (RBAC-6). */
@@ -9,8 +10,9 @@ export function RequireAuth() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
-        Checking your session…
+      <div className="shell-canvas px-6 py-8" aria-busy="true">
+        <LoadingLine rows={2} />
+        <p className="mt-3 text-center text-sm text-muted-foreground">Checking your session…</p>
       </div>
     )
   }
