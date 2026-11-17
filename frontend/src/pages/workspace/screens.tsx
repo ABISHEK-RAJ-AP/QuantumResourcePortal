@@ -236,7 +236,6 @@ export function OverviewPage() {
         id: 'approvals',
         label: 'In queue',
         value: summary.isError ? '—' : queueCount,
-        hint: 'Approvals',
         to: '/qrp/approvals',
         tone: queueCount > 0 ? 'warning' : 'neutral',
       },
@@ -314,13 +313,7 @@ export function OverviewPage() {
     <Page
       crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Home' }]}
       title="Home"
-      description={formatRole(user?.roles?.[0])}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
-      actions={
-        <InfoTip label="Layout help">
-          Drag tiles below. Alt+arrow keys when focused. Touch: press and hold, then drag.
-        </InfoTip>
-      }
     >
       <OverviewKpiScroll items={kpiRail} />
       <OverviewDashboardGrid

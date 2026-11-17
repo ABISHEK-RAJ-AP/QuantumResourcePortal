@@ -187,7 +187,12 @@ function ShellInner() {
     alerts: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.active_alerts ?? 0),
     incidents: opsCentre.isError ? undefined : Number(opsCentre.data?.operations?.open_incidents ?? 0),
   }
-  const displayName = user?.username || 'Operator'
+  const roleLabel = user?.role ?? 'Operator'
+  const displayName =
+    authUser?.principal_id && authUser.principal_id.length <= 20 && !/^usr_[a-z0-9]+$/i.test(authUser.principal_id)
+      ? authUser.principal_id
+      : roleLabel
+  const showRoleSubline = roleLabel.toLowerCase() !== displayName.toLowerCase()
 
   useEffect(() => {
     if (queue.isSuccess) {
@@ -330,7 +335,9 @@ function ShellInner() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{displayName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{user?.role ?? 'Operator'}</p>
+                    {showRoleSubline ? (
+                      <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+                    ) : null}
                   </div>
                 </div>
                 <button
@@ -356,9 +363,9 @@ function ShellInner() {
               ) : chrome.eyebrow ? (
                 <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
-              <h1 className="text-2xl font-semibold tracking-tight text-balance">{chrome.title || 'Workspace'}</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-2xl">{chrome.title || 'Workspace'}</h1>
               {chrome.description ? (
-                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{chrome.description}</p>
+                <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">{chrome.description}</p>
               ) : null}
             </div>
             <div className="flex min-w-0 max-w-full shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:items-center">

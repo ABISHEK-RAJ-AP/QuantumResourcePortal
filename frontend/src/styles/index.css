@@ -947,35 +947,81 @@ html:not(.dark) .cyber-matrix-spot {
   width: 0;
 }
 
-.kpi-rail,
-.overview-kpi-scroll {
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.kpi-rail {
   width: 100%;
   overflow: hidden;
   padding-block: 2px 4px;
   margin-bottom: 0.125rem;
 }
 
-.kpi-rail__track,
-.overview-kpi-scroll__track {
-  display: grid;
+/* Home KPI carousel — 4 tiles per page */
+.overview-kpi-carousel {
   width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.overview-kpi-carousel__viewport {
+  position: relative;
+  min-height: 7.25rem;
+}
+
+.overview-kpi-carousel__page {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  align-items: stretch;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.45s ease;
 }
 
-@media (max-width: 1280px) {
-  .kpi-rail__track,
-  .overview-kpi-scroll__track {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.overview-kpi-carousel__page.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
 }
 
-@media (max-width: 640px) {
-  .kpi-rail__track,
-  .overview-kpi-scroll__track {
+@media (max-width: 720px) {
+  .overview-kpi-carousel__page {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.overview-kpi-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.overview-kpi-carousel__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  border: none;
+  padding: 0;
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.overview-kpi-carousel__dot.is-active {
+  background: var(--primary);
+  transform: scale(1.15);
 }
 
 /* Workspace pages: auto-fit count from children */
@@ -1064,7 +1110,11 @@ html:not(.dark) .cyber-matrix-spot {
 /* Home overview — Govern-style widget chrome (Q-TeleScope parity) */
 .overview-dashboard-grid {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.overview-dashboard-grid [data-slot='widget-grid'] {
+  min-height: 28rem;
 }
 
 .overview-widget {

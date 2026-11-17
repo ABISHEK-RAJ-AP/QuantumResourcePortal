@@ -160,7 +160,6 @@ const Widget = memo(function Widget({
       data-widget-id={item.id}
       tabIndex={editable ? 0 : undefined}
       aria-label={item.label ?? `${SIZE_LABELS[item.size]} widget`}
-      aria-describedby={editable ? hintId : undefined}
       aria-posinset={position}
       aria-setsize={count}
       layout="position"
@@ -429,11 +428,6 @@ export default function DraggableWidgetGrid({
   return (
     <MotionConfig reducedMotion="user">
       <div className={`relative w-full ${className}`} style={{ '--widget-radius': `${radius}px` }}>
-        {editable ? (
-          <p id={hintId} className="sr-only">
-            Drag to rearrange. On touch screens, press and hold first. With a keyboard, hold Alt and use arrow keys.
-          </p>
-        ) : null}
         <div
           ref={grid}
           role="list"

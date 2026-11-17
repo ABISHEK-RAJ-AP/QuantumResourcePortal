@@ -1,6 +1,6 @@
 import type { WidgetItem } from '@/components/ui/draggable-widget-grid-layout'
 
-const STORAGE_PREFIX = 'qrp-overview-widgets-v3'
+const STORAGE_PREFIX = 'qrp-overview-widgets-v4'
 
 export const DEFAULT_OVERVIEW_WIDGETS: WidgetItem[] = [
   { id: 'stages', size: 'wide', label: 'Request stages' },
@@ -10,6 +10,8 @@ export const DEFAULT_OVERVIEW_WIDGETS: WidgetItem[] = [
   { id: 'dispatch', size: 'wide', label: 'Dispatch exceptions' },
   { id: 'decisions', size: 'wide', label: 'Recent decisions' },
 ]
+
+const VALID_WIDGET_IDS = new Set(DEFAULT_OVERVIEW_WIDGETS.map((w) => w.id))
 
 export function readWidgetLayout(lens: string): WidgetItem[] | null {
   try {
@@ -36,11 +38,12 @@ export function mergeSavedOrder(defaults: WidgetItem[], saved: WidgetItem[] | nu
   const byId = new Map(defaults.map((d) => [d.id, d]))
   const ordered: WidgetItem[] = []
   for (const s of saved) {
+    if (!s?.id || !VALID_WIDGET_IDS.has(s.id)) continue
     const base = byId.get(s.id)
     if (!base) continue
     ordered.push({ ...base, size: s.size || base.size })
     byId.delete(s.id)
   }
   for (const rest of byId.values()) ordered.push(rest)
-  return ordered
+  return ordered.length > 0 ? ordered : defaults
 }
