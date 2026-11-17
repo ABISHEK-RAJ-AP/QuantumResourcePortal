@@ -8,8 +8,8 @@ const BASE = '/api/v1'
 
 export interface Me {
   authenticated: boolean
-  principal_id: string
-  tenant_id: string
+  principal_id: string | null
+  tenant_id: string | null
   roles: string[]
   permissions: string[]
 }
@@ -77,17 +77,39 @@ export interface EffectivePermissions {
 
 // ---- session / identity -------------------------------------------------------------------------
 
+/** Soft session probe (always HTTP 200). Prefer this for AuthProvider mount. */
+export async function getSession(): Promise<Me> {
+  return apiGet<Me>(`${BASE}/auth/session`)
+}
+
+/** Hard /me — 401 when signed out (protected routes / tests). */
 export const getMe = () => apiGet<Me>(`${BASE}/me`)
 export const getNavigation = () => apiGet<{ items: NavItem[] }>(`${BASE}/me/navigation`)
 export const getMyGrants = () =>
   apiGet<{ permissions: string[]; grants: Grant[] }>(`${BASE}/me/permissions`)
 export const getCsrf = () => apiGet<{ csrf_token: string }>(`${BASE}/auth/csrf`)
 
-export async function login(username: string, password: string) {
-  const res = await apiRequest<{ status: string; principal: Me; csrf_token: string }>(
-    `${BASE}/auth/login`,
-    { method: 'POST', json: { username, password } },
-  )
+export type LoginResult = {
+  status: string
+  principal?: Me
+  csrf_token?: string
+  challenge_id?: string
+}
+
+export async function login(
+  username: string,
+  password: string,
+  captcha?: { captcha_id: string; captcha_code: string },
+): Promise<LoginResult> {
+  const body: Record<string, string> = { username, password }
+  if (captcha?.captcha_id && captcha.captcha_code) {
+    body.captcha_id = captcha.captcha_id
+    body.captcha_code = captcha.captcha_code
+  }
+  const res = await apiRequest<LoginResult>(`${BASE}/auth/login`, {
+    method: 'POST',
+    json: body,
+  })
   return res.data
 }
 

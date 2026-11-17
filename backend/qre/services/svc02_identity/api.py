@@ -14,11 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from qre.core import authz
 from qre.core.context import TenantContext
 from qre.core.deps import db_session, get_ctx, require_permission
+from qre.services.svc02_identity import captcha as captcha_svc
 from qre.services.svc02_identity.service import (
     AuthInvalidCredentials,
     LoginSuccess,
     login_local,
     logout,
+    resolve_context,
 )
 
 router = APIRouter(tags=["identity"])
@@ -63,6 +65,21 @@ def _set_session_cookie(request: Request, response: Response, sid: str) -> None:
     )
 
 
+@router.get("/auth/captcha")
+async def auth_captcha(request: Request) -> dict:
+    settings = request.app.state.settings
+    if not settings.captcha_enabled:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="CAPTCHA is not enabled on this deployment.")
+    challenge = captcha_svc.new_challenge()
+    return {
+        "captcha_id": challenge.captcha_id,
+        "captcha_image": challenge.captcha_image,
+        "expires_in_seconds": challenge.expires_in_seconds,
+    }
+
+
 @router.post("/auth/login", response_model=LoginOut)
 async def auth_login(
     body: LoginIn, request: Request, response: Response,
@@ -70,6 +87,8 @@ async def auth_login(
 ) -> LoginOut:
     settings = request.app.state.settings
     corr = request.scope.get("state", {}).get("correlation_id", "-")
+    if settings.captcha_enabled:
+        captcha_svc.verify(body.captcha_id, body.captcha_code)
     try:
         result: LoginSuccess = await login_local(
             session, settings, username=body.username, password=body.password,
@@ -105,11 +124,7 @@ async def auth_logout(
     return {"status": "SIGNED_OUT"}
 
 
-@router.get("/me")
-async def me(
-    ctx: TenantContext = Depends(get_ctx),
-    session: AsyncSession = Depends(db_session),
-) -> dict:
+async def _me_payload(session: AsyncSession, ctx: TenantContext) -> dict:
     from sqlalchemy import text
 
     roles = (
@@ -129,6 +144,48 @@ async def me(
         "roles": list(roles),
         "permissions": sorted(ctx.permissions()),
     }
+
+
+@router.get("/auth/session")
+async def auth_session(
+    request: Request,
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    """SPA session probe — always 200 so anonymous pages do not log 401 noise."""
+    settings = request.app.state.settings
+    sid = request.cookies.get(settings.session_cookie_name)
+    if not sid:
+        return {
+            "authenticated": False,
+            "principal_id": None,
+            "principal_type": None,
+            "tenant_id": None,
+            "roles": [],
+            "permissions": [],
+        }
+    corr = request.scope.get("state", {}).get("correlation_id", "-")
+    try:
+        ctx, _csrf = await resolve_context(
+            session, settings, sid=sid, correlation_id=corr,
+        )
+    except Exception:
+        return {
+            "authenticated": False,
+            "principal_id": None,
+            "principal_type": None,
+            "tenant_id": None,
+            "roles": [],
+            "permissions": [],
+        }
+    return await _me_payload(session, ctx)
+
+
+@router.get("/me")
+async def me(
+    ctx: TenantContext = Depends(get_ctx),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    return await _me_payload(session, ctx)
 
 
 @router.get("/auth/csrf")

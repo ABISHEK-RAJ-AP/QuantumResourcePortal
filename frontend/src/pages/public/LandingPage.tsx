@@ -12,10 +12,13 @@ import {
 } from 'lucide-react'
 
 import { PublicShell } from '@/components/marketing/PublicShell'
-import { CubeWaveHero } from '@/components/ui/cube-wave-hero'
-import { HoverGrid } from '@/components/ui/hover-grid'
+import { GridPulse } from '@/components/ui/grid-pulse'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { cn } from '@/lib/utils'
+
+/** Halo so lit cells stay clear of copy. */
+const guard =
+  '[text-shadow:0_0_6px_var(--color-background),0_0_14px_var(--color-background),0_0_30px_var(--color-background)]'
 
 const CAPABILITIES = [
   {
@@ -58,7 +61,7 @@ const FAQ = [
   },
   {
     q: 'How do I start a demo review?',
-    a: 'Sign in as admin, open Approvals, and use Start demo review. That creates a submission and opens the stage trail.',
+    a: 'Sign in as admin (use the Demo accounts button on Sign in), open Approvals, and use Start demo review.',
   },
   {
     q: 'Is procurement included?',
@@ -73,230 +76,216 @@ export function LandingPage() {
 
   return (
     <PublicShell>
-      {/* Full-bleed hero — CubeWave edge-to-edge (Cert Studio), not boxed */}
-      <section
-        className={cn(
-          'relative isolate w-full min-h-[calc(100svh-7.5rem)] overflow-hidden',
-          dark ? 'bg-[#0b1220]' : 'bg-surface',
-        )}
-      >
-        <CubeWaveHero />
-        <div
-          className={cn(
-            'pointer-events-none absolute inset-0 z-[1]',
-            dark
-              ? 'bg-gradient-to-b from-[#0b1220]/25 via-transparent to-[#0b1220]'
-              : 'bg-gradient-to-b from-surface/30 via-transparent to-surface',
-          )}
-          aria-hidden
-        />
-        <div className="relative z-10 flex min-h-[calc(100svh-7.5rem)] flex-col items-center justify-center px-4 py-16 sm:px-8 lg:px-10">
+      {/* Landing only (between public header and footer): pointer trail across all sections */}
+      <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
+        <GridPulse className="z-0 opacity-90" />
+        <section className="relative z-10 flex min-h-[calc(100svh-7.5rem)] flex-col items-center justify-center px-4 py-16 sm:px-8 lg:px-10">
           <div
             className={cn(
-              'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-2xl border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
+              'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-[var(--radius)] border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
               dark
-                ? 'border-white/15 bg-[#0b1220]/75 shadow-2xl shadow-black/40'
-                : 'border-border/70 bg-white/75 shadow-raised',
+                ? 'border-border bg-background/80 shadow-card'
+                : 'border-border/70 bg-card/80 shadow-card',
             )}
           >
-            <p className={cn('mb-3 text-xs font-bold tracking-[0.2em] uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
+            <p data-grid-avoid className={cn('mb-2 text-sm text-muted-foreground', guard)}>
               Centre for Development of Advanced Computing
             </p>
-            <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            <h1
+              data-grid-avoid
+              className={cn(
+                'text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl',
+                guard,
+              )}
+            >
               Quantum Resource Portal
             </h1>
-            <p className={cn('mt-4 text-pretty text-base sm:text-lg', dark ? 'text-white/70' : 'text-muted-foreground')}>
-              Institution-wide governance for quantum workloads: approvals, capacity, operations, and evidence in one
-              place.
+            <p
+              data-grid-avoid
+              className={cn('mx-auto mt-4 max-w-prose text-pretty text-base text-muted-foreground sm:text-lg', guard)}
+            >
+              Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
             <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link to="/login" className="btn-primary w-full gap-2 px-6 py-3 text-base shadow-lg shadow-primary/25 sm:w-auto sm:min-w-[160px]">
+              <Link to="/login" className="btn-primary w-full gap-2 px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
                 Enter portal
                 <ArrowRight className="size-4" />
               </Link>
-              <Link
-                to="/register"
-                className={cn(
-                  'inline-flex w-full items-center justify-center rounded-xl border px-6 py-3 text-base font-semibold sm:w-auto sm:min-w-[160px]',
-                  dark ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-border bg-card hover:bg-accent',
-                )}
-              >
+              <Link to="/register" className="btn-secondary w-full px-6 py-3 text-base sm:w-auto sm:min-w-[160px]">
                 Request access
               </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      <main className="relative z-20 mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
-        <section id="capabilities" className="scroll-mt-28">
-          <div
-            className={cn(
-              'flex flex-col justify-between gap-6 border-b pb-4 md:flex-row md:items-end',
-              dark ? 'border-white/10' : 'border-border',
-            )}
-          >
-            <div>
-              <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
-                Core governance
-              </span>
-              <h2 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Control beyond a single monitoring app</h2>
-            </div>
-            <p className={cn('max-w-md text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>
-              Approvals, capacity, fleet posture, and evidence for the active tenant — aligned to G1–G3.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {CAPABILITIES.map((item) => {
-              const Icon = item.icon
-              return (
-                <article
-                  key={item.title}
-                  className={cn(
-                    'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                    dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card shadow-card',
-                  )}
-                >
-                  <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={36} />
-                  <div className="relative z-[1]">
-                    <span
-                      className={cn(
-                        'inline-flex size-11 items-center justify-center rounded-xl',
-                        dark ? 'bg-white/10 text-cyan-200' : 'bg-accent text-accent-foreground',
-                      )}
-                    >
-                      <Icon className="size-5" />
-                    </span>
-                    <h3 className="mt-4 text-lg font-bold">{item.title}</h3>
-                    <p className={cn('mt-2 text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{item.body}</p>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
         </section>
 
-        <section id="modules" className="scroll-mt-28">
-          <div className="mx-auto max-w-3xl space-y-2 text-center">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
-              Workspace modules
-            </span>
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">End-to-end resource governance</h2>
-            <p className={cn('text-base', dark ? 'text-white/60' : 'text-muted-foreground')}>
-              Demo-ready surfaces for operators — no charter-only clutter in the primary nav.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {MODULES.map((item) => {
-              const Icon = item.icon
-              return (
-                <article
-                  key={item.title}
+        <main className="relative z-10 mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
+          <section id="capabilities" className="scroll-mt-28">
+            <div className="flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
+              <div>
+                <h2
+                  data-grid-avoid
                   className={cn(
-                    'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                    dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card shadow-card',
+                    'text-3xl font-semibold tracking-tight text-foreground sm:text-4xl',
+                    guard,
                   )}
                 >
-                  <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={40} />
-                  <div className="relative z-[1] flex items-start gap-3">
-                    <Icon className={cn('mt-0.5 size-5 shrink-0', dark ? 'text-cyan-300' : 'text-primary')} />
-                    <div>
-                      <h3 className="text-base font-bold">{item.title}</h3>
-                      <p className={cn('mt-1.5 text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{item.body}</p>
-                    </div>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </section>
-
-        <section
-          id="workflow"
-          className={cn(
-            'scroll-mt-28 rounded-3xl border p-8 sm:p-12',
-            dark ? 'border-white/10 bg-white/[0.03]' : 'border-border bg-card/80',
-          )}
-        >
-          <div className="max-w-2xl">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>
-              Lifecycle
-            </span>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-tight">Operational workflow</h2>
-            <p className={cn('mt-2 text-sm', dark ? 'text-white/60' : 'text-muted-foreground')}>
-              From submission to reconcile — only real stage trails, not decorative chrome.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {WORKFLOW.map((step) => (
-              <div
-                key={step.n}
-                className={cn(
-                  'feature-card group relative overflow-hidden rounded-2xl border p-6',
-                  dark ? 'border-white/10 bg-[#0b1220]/60' : 'border-border bg-background',
-                )}
-              >
-                <HoverGrid className="opacity-0 transition-opacity duration-300 group-hover:opacity-100" density={32} />
-                <div className="relative z-[1]">
-                  <span className={cn('font-mono text-base font-extrabold', dark ? 'text-cyan-300' : 'text-primary')}>{step.n}</span>
-                  <h3 className="mt-3 text-lg font-bold">{step.title}</h3>
-                  <p className={cn('mt-2 text-xs leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>{step.body}</p>
-                </div>
+                  Approvals, capacity, and evidence in one workspace
+                </h2>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="faq" className="scroll-mt-28 mx-auto max-w-3xl">
-          <div className="space-y-2 text-center">
-            <span className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-cyan-300' : 'text-info-text')}>FAQ</span>
-            <h2 className="text-3xl font-extrabold tracking-tight">Frequently asked questions</h2>
-          </div>
-          <div className={cn('mt-10 divide-y border-y', dark ? 'divide-white/10 border-white/10' : 'divide-border border-border')}>
-            {FAQ.map((item, idx) => {
-              const open = openFaq === idx
-              return (
-                <div key={item.q}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-4 py-6 text-left text-base font-bold"
-                    onClick={() => setOpenFaq(open ? -1 : idx)}
-                    aria-expanded={open}
-                  >
-                    <span>{item.q}</span>
-                    <ChevronDown className={cn('size-5 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180 text-primary')} />
-                  </button>
-                  {open && <p className={cn('pb-6 text-sm leading-relaxed', dark ? 'text-white/65' : 'text-muted-foreground')}>{item.a}</p>}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        <section
-          className={cn(
-            'rounded-3xl border p-10 text-center sm:p-14',
-            dark
-              ? 'border-primary/30 bg-gradient-to-r from-primary/15 via-transparent to-info/10'
-              : 'border-primary/25 bg-gradient-to-r from-accent via-card to-info-soft/40',
-          )}
-        >
-          <div className="mx-auto max-w-2xl space-y-4">
-            <h2 className="text-3xl font-extrabold tracking-tight">Ready to govern quantum resources?</h2>
-            <p className={cn('text-base', dark ? 'text-white/70' : 'text-muted-foreground')}>
-              Sign in with the demo admin account, open Approvals, and walk the real stage trail.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 pt-2">
-              <Link to="/login" className="btn-primary gap-2 px-6 py-3 text-base">
-                Sign in <ArrowRight className="size-4" />
-              </Link>
-              <Link to="/register" className="btn-secondary px-6 py-3 text-base">
-                Create account
-              </Link>
+              <p data-grid-avoid className={cn('max-w-md text-sm leading-relaxed text-muted-foreground', guard)}>
+                Approvals, capacity, fleet posture, and evidence for the active tenant — aligned to G1–G3.
+              </p>
             </div>
-          </div>
-        </section>
-      </main>
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {CAPABILITIES.map((item) => {
+                const Icon = item.icon
+                return (
+                  <article
+                    key={item.title}
+                    className={cn(
+                      'relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card',
+                    )}
+                  >
+                    <span className="inline-flex size-10 items-center justify-center rounded-[var(--radius-inner)] bg-accent text-accent-foreground">
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <h3 data-grid-avoid className={cn('mt-4 text-lg font-semibold text-foreground', guard)}>
+                      {item.title}
+                    </h3>
+                    <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
+                      {item.body}
+                    </p>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+
+          <section id="modules" className="scroll-mt-28">
+            <div className="mx-auto max-w-3xl space-y-2 text-center">
+              <h2
+                data-grid-avoid
+                className={cn('text-3xl font-semibold tracking-tight text-foreground sm:text-4xl', guard)}
+              >
+                Operator modules for the live fleet
+              </h2>
+              <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
+                Surfaces operators use day to day — not charter-only placeholders.
+              </p>
+            </div>
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {MODULES.map((item) => {
+                const Icon = item.icon
+                return (
+                  <article
+                    key={item.title}
+                    className="relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card"
+                  >
+                    <div className="relative z-[1] flex items-start gap-3">
+                      <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+                      <div>
+                        <h3 data-grid-avoid className={cn('text-base font-semibold text-foreground', guard)}>
+                          {item.title}
+                        </h3>
+                        <p data-grid-avoid className={cn('mt-1.5 text-sm leading-relaxed text-muted-foreground', guard)}>
+                          {item.body}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+
+          <section
+            id="workflow"
+            className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-8 shadow-card sm:p-12"
+          >
+            <div className="max-w-2xl">
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                From submit to reconcile
+              </h2>
+              <p data-grid-avoid className={cn('mt-2 text-sm text-muted-foreground', guard)}>
+                Real stage trail — submission, review, dispatch, evidence.
+              </p>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {WORKFLOW.map((step) => (
+                <div
+                  key={step.n}
+                  className="relative overflow-hidden rounded-[var(--radius-inner)] border border-border bg-surface p-6"
+                >
+                  <span className="text-base font-semibold tabular-nums text-primary">{step.n}</span>
+                  <h3 data-grid-avoid className={cn('mt-3 text-lg font-semibold text-foreground', guard)}>
+                    {step.title}
+                  </h3>
+                  <p data-grid-avoid className={cn('mt-2 text-xs leading-relaxed text-muted-foreground', guard)}>
+                    {step.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="faq" className="scroll-mt-28 mx-auto max-w-3xl">
+            <div className="space-y-2 text-center">
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                Common questions
+              </h2>
+            </div>
+            <div className="mt-10 divide-y divide-border border-y border-border">
+              {FAQ.map((item, idx) => {
+                const open = openFaq === idx
+                return (
+                  <div key={item.q}>
+                    <button
+                      type="button"
+                      className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      onClick={() => setOpenFaq(open ? -1 : idx)}
+                      aria-expanded={open}
+                    >
+                      <span data-grid-avoid className={guard}>
+                        {item.q}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          'size-5 shrink-0 text-muted-foreground transition-transform',
+                          open && 'rotate-180 text-primary',
+                        )}
+                      />
+                    </button>
+                    {open && (
+                      <p data-grid-avoid className={cn('pb-6 text-sm leading-relaxed text-muted-foreground', guard)}>
+                        {item.a}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-[var(--radius)] border border-border bg-card p-10 text-center shadow-card sm:p-14">
+            <div className="mx-auto max-w-2xl space-y-4">
+              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+                Open the operator workspace
+              </h2>
+              <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
+                Sign in, open Approvals, and walk the live stage trail.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 pt-2">
+                <Link to="/login" className="btn-primary gap-2 px-6 py-3 text-base">
+                  Sign in <ArrowRight className="size-4" />
+                </Link>
+                <Link to="/register" className="btn-secondary px-6 py-3 text-base">
+                  Request access
+                </Link>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
     </PublicShell>
   )
 }

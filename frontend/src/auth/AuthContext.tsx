@@ -1,7 +1,7 @@
 /**
  * Authentication + authorisation context (RBAC-6).
  *
- * On mount it calls GET /me before rendering protected data (LLD §11.3) and fetches a fresh CSRF
+ * On mount it calls GET /auth/session before rendering protected data (LLD §11.3) and fetches a fresh CSRF
  * token (held in memory only, LLD §11.6). The permission set is the single source for UI gating —
  * but the backend is the real authority; hiding a control is UX only.
  */
@@ -15,7 +15,11 @@ export interface AuthState {
   user: rbac.Me | null
   permissions: Set<string>
   roles: Set<string>
-  login: (username: string, password: string) => Promise<void>
+  login: (
+    username: string,
+    password: string,
+    captcha?: { captcha_id: string; captcha_code: string },
+  ) => Promise<rbac.LoginResult>
   logout: () => Promise<void>
   refresh: () => Promise<void>
   hasPermission: (code: string) => boolean
@@ -31,9 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadSession = useCallback(async () => {
     try {
-      const me = await rbac.getMe()
+      const me = await rbac.getSession()
+      if (!me.authenticated) {
+        setUser(null)
+        setCsrfToken(null)
+        return
+      }
       setUser(me)
-      // Refresh the CSRF token so writes work after a reload (the token is not persisted).
       try {
         const { csrf_token } = await rbac.getCsrf()
         setCsrfToken(csrf_token)
@@ -63,11 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadSession])
 
-  const login = useCallback(async (username: string, password: string) => {
-    const result = await rbac.login(username, password)
-    setCsrfToken(result.csrf_token)
-    await loadSession()
-  }, [loadSession])
+  const login = useCallback(
+    async (
+      username: string,
+      password: string,
+      captcha?: { captcha_id: string; captcha_code: string },
+    ) => {
+      const result = await rbac.login(username, password, captcha)
+      if (result.status === 'MFA_REQUIRED' || result.status === 'MFA_CHALLENGE') {
+        return result
+      }
+      if (result.csrf_token) setCsrfToken(result.csrf_token)
+      await loadSession()
+      return result
+    },
+    [loadSession],
+  )
 
   const logout = useCallback(async () => {
     try {

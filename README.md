@@ -78,9 +78,8 @@ integrated TeleScope API on `:8000` start with the portal.
 ```bash
 git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
 cd QuantumResourcePortal
-# API is Q-TeleScope on :8000 (portal proxies /api)
-export TELESCOPE_ROOT=/path/to/QTelescope
-bash scripts/vm-setup.sh
+bash scripts/vm-pull-main.sh   # if you were on afk/* or diverged from main
+bash scripts/vm-setup.sh       # QRE API :8000, Vite :5176, CAPTCHA + demo login in lab
 ```
 
 Portal: http://\<host\>:5176/qrp

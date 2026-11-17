@@ -37,6 +37,7 @@ if [[ ! -x "$PY" ]]; then
 fi
 
 [[ -f "$ROOT/backend/.env" ]] || cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
+[[ -f "$ROOT/frontend/.env.local" ]] || cp "$ROOT/frontend/.env.example" "$ROOT/frontend/.env.local"
 log "Database migrate"
 make migrate || die "alembic failed — create Postgres database qre per README"
 
