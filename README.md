@@ -13,6 +13,10 @@ Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`do
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, TanStack Query, React Router |
 | Tests | pytest, Vitest + Testing Library, Playwright |
 
+## Notifications (operator inbox)
+
+Session bell + panel sync queue/approvals from governance APIs. See [`docs/NOTIFICATIONS.md`](docs/NOTIFICATIONS.md). Use `import { toast } from '@/lib/toast'` in workspace pages for operator feedback.
+
 ## Status
 
 **Phase 1 (foundation) is complete.** API health and readiness, problem+json errors, correlation ids, JSON logs, the Alembic baseline, the design tokens and the platform status page are in place.

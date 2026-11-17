@@ -211,6 +211,12 @@ function ShellInner() {
   }
   const displayName = user?.full_name || user?.username || 'Signed in'
 
+  useEffect(() => {
+    if (queue.isSuccess) {
+      window.dispatchEvent(new CustomEvent('qrp:data-refresh'))
+    }
+  }, [queue.dataUpdatedAt, queue.isSuccess])
+
   async function logout() {
     await authLogout()
     navigate('/login')

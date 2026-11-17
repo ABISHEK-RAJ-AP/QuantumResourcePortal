@@ -24,7 +24,7 @@ function reviewPath(workloadId: string) {
 
 /** Upsert server-driven notices; prune stale `govern:server:*` ids. */
 export async function syncGovernServerNotices(permissions: Set<string>) {
-  if (!can(permissions, 'approvals:read')) {
+  if (!can(permissions, 'approval:read')) {
     reconcileGovernServerNotices(new Set())
     return
   }
@@ -53,7 +53,7 @@ export async function syncGovernServerNotices(permissions: Set<string>) {
     /* offline */
   }
 
-  if (can(permissions, 'approvals:decide')) {
+  if (can(permissions, 'approval:decide')) {
     try {
       const pending = await qre<{ items?: ApprovalRow[] }>('/approvals?state=submitted_for_review')
       for (const row of (pending.items || []).slice(0, 12)) {

@@ -28,3 +28,10 @@ def test_chrome_wires_notification_stack():
     assert "NotificationHost" in chrome
     assert "NotificationBell" in chrome
     assert "GovernNotificationSync" in chrome
+
+
+def test_server_feed_uses_qrp_rbac_permissions():
+    feed = (FE / "lib/governServerFeed.ts").read_text(encoding="utf-8")
+    assert "approval:read" in feed
+    assert "approval:decide" in feed
+    assert "approvals:read" not in feed
