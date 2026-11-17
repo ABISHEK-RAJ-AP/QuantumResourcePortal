@@ -61,6 +61,50 @@ export const approvalDecisionSchema = z.object({
     }
   })
 
+export const assetRegisterSchema = z.object({
+  provider_id: nonEmpty('Provider id'),
+  native_asset_id: nonEmpty('Native asset id'),
+  asset_class: nonEmpty('Asset class').max(64, 'Asset class is too long'),
+  execution_class: z.enum(['simulated', 'hardware']),
+})
+
+export const assetImportSchema = z.object({
+  provider_id: nonEmpty('Provider id'),
+  csv: z
+    .string()
+    .trim()
+    .min(24, 'CSV must include a header row and at least one data row')
+    .refine((s) => s.includes('native_asset_id'), 'CSV must include a native_asset_id column header'),
+})
+
+export const poolCreateSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name is too long'),
+})
+
+export const projectMemberSchema = z.object({
+  username: z.string().trim().min(2, 'Username must be at least 2 characters').max(64, 'Username is too long'),
+  role: z.enum(['editor', 'viewer']),
+})
+
+export const workloadSubmitSchema = z.object({
+  purpose: z.string().trim().min(4, 'Purpose must be at least 4 characters').max(500, 'Purpose is too long'),
+  resource_hint: z.string().trim().max(200, 'Resource hint is too long').optional(),
+  notes: z.string().trim().max(2000, 'Notes are too long').optional(),
+})
+
+export const roleCreateSchema = z.object({
+  code: z.string().regex(/^[A-Z][A-Z0-9_]{2,31}$/, 'Code must be UPPER_SNAKE, 3–32 characters'),
+  name: z.string().trim().min(2, 'Display name is required').max(120, 'Name is too long'),
+  description: z.string().trim().max(500, 'Description is too long').optional(),
+  permission_codes: z.array(z.string()).min(1, 'Select at least one permission'),
+})
+
+export const roleEditSchema = roleCreateSchema.omit({ code: true })
+
+export const evidenceLabelSchema = z.object({
+  label: z.string().trim().max(120, 'Label is too long').optional(),
+})
+
 export const membershipGrantSchema = z
   .object({
     principal_id: nonEmpty('User'),

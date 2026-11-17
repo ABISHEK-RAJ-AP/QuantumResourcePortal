@@ -37,7 +37,15 @@ import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
 import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { parseForm } from '@/lib/validation/parseForm'
-import { reservationHoldSchema } from '@/lib/validation/schemas'
+import {
+  assetImportSchema,
+  assetRegisterSchema,
+  poolCreateSchema,
+  projectMemberSchema,
+  reservationHoldSchema,
+  evidenceLabelSchema,
+  workloadSubmitSchema,
+} from '@/lib/validation/schemas'
 import { GOVERNANCE_LIFECYCLE } from '@/lib/workflow/governance'
 import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
@@ -199,9 +207,15 @@ export function ApprovalHistoryPage() {
   })
   return (
     <Page
-      crumbs={[{ label: 'Work', to: '/qrp/approvals' }, { label: 'History' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/approvals' },
+        { label: 'Decision history' },
+      ]}
       title="Approval history"
       description="Append-only decisions. A later decision does not rewrite an earlier one."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={5}
+      workflowGuide
       actions={
         <Link to="/qrp/approvals" className="text-sm font-medium text-primary hover:underline">
           Queue
@@ -295,9 +309,16 @@ export function ReconciliationPage() {
   }
   return (
     <Page
-      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: 'Reconciliation' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/approvals' },
+        { label: 'Dispatch', to: '/qrp/dispatch' },
+        { label: 'Reconciliation' },
+      ]}
       title="Reconciliation"
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={4}
+      workflowGuide
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
@@ -755,19 +776,27 @@ export function RegisterAssetPage() {
     execution_class: 'simulated',
   })
   const [created, setCreated] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const save = useMutation({
-    mutationFn: () =>
+    mutationFn: (payload: typeof form) =>
       qre<Row>('/inventory/assets', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       }),
     onSuccess: (row) => setCreated(String(row.asset_id || 'created')),
   })
   return (
     <Page
+      crumbs={[
+        { label: 'Resources', to: '/qrp/inventory' },
+        { label: 'Register asset' },
+      ]}
       eyebrow="Resources"
       title="Register asset"
       description="One asset, one provider, one native id."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={3}
+      workflowGuide
       actions={
         <Link to="/qrp/inventory" className="btn-secondary">
           Inventory
@@ -777,30 +806,54 @@ export function RegisterAssetPage() {
       <Card>
         <form
           className="grid gap-3 sm:grid-cols-2"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault()
-            save.mutate()
+            setFieldErrors({})
+            const parsed = parseForm(assetRegisterSchema, form)
+            if (!parsed.ok) {
+              setFieldErrors(parsed.fieldErrors)
+              return
+            }
+            save.mutate(form)
           }}
         >
-          <label className="text-sm">
-            Provider id
-            <input required className={fieldClass} value={form.provider_id} onChange={(e) => setForm({ ...form, provider_id: e.target.value })} />
-          </label>
-          <label className="text-sm">
-            Native asset id
-            <input required className={fieldClass} value={form.native_asset_id} onChange={(e) => setForm({ ...form, native_asset_id: e.target.value })} />
-          </label>
-          <label className="text-sm">
-            Asset class
-            <input required className={fieldClass} value={form.asset_class} placeholder="QPU" onChange={(e) => setForm({ ...form, asset_class: e.target.value })} />
-          </label>
-          <label className="text-sm">
-            Execution
-            <select className={fieldClass} value={form.execution_class} onChange={(e) => setForm({ ...form, execution_class: e.target.value })}>
+          <FormField label="Provider id" htmlFor="asset-provider" error={fieldErrors.provider_id}>
+            <input
+              id="asset-provider"
+              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.provider_id)))}
+              value={form.provider_id}
+              onChange={(e) => setForm({ ...form, provider_id: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Native asset id" htmlFor="asset-native" error={fieldErrors.native_asset_id}>
+            <input
+              id="asset-native"
+              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.native_asset_id)))}
+              value={form.native_asset_id}
+              onChange={(e) => setForm({ ...form, native_asset_id: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Asset class" htmlFor="asset-class" error={fieldErrors.asset_class}>
+            <input
+              id="asset-class"
+              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.asset_class)))}
+              value={form.asset_class}
+              placeholder="QPU"
+              onChange={(e) => setForm({ ...form, asset_class: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Execution" htmlFor="asset-exec">
+            <select
+              id="asset-exec"
+              className={fieldClass}
+              value={form.execution_class}
+              onChange={(e) => setForm({ ...form, execution_class: e.target.value })}
+            >
               <option value="simulated">simulated</option>
               <option value="hardware">hardware</option>
             </select>
-          </label>
+          </FormField>
           <div>
             <button type="submit" className={buttonClass} disabled={save.isPending}>
               Register
@@ -827,8 +880,13 @@ export function ImportAssetsPage() {
     onSuccess: (body) => setResult(body),
   })
   const errors = Array.isArray(result?.errors) ? (result.errors as Row[]) : []
+  const [importFields, setImportFields] = useState<Record<string, string>>({})
   return (
     <Page
+      crumbs={[
+        { label: 'Resources', to: '/qrp/inventory' },
+        { label: 'Import assets' },
+      ]}
       eyebrow="Resources"
       title="Import assets"
       description="CSV columns: native_asset_id, asset_class, execution_class. A bad row commits nothing."
@@ -841,19 +899,35 @@ export function ImportAssetsPage() {
       <Card>
         <form
           className="grid gap-3"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault()
+            setImportFields({})
+            const parsed = parseForm(assetImportSchema, { provider_id: providerId, csv })
+            if (!parsed.ok) {
+              setImportFields(parsed.fieldErrors)
+              return
+            }
             run.mutate()
           }}
         >
-          <label className="text-sm">
-            Provider id
-            <input required className={fieldClass} value={providerId} onChange={(e) => setProviderId(e.target.value)} />
-          </label>
-          <label className="text-sm">
-            CSV
-            <textarea required rows={8} className={`${fieldClass} font-mono text-xs`} value={csv} onChange={(e) => setCsv(e.target.value)} />
-          </label>
+          <FormField label="Provider id" htmlFor="import-provider" error={importFields.provider_id}>
+            <input
+              id="import-provider"
+              className={cn(fieldClass, fieldErrorClass(Boolean(importFields.provider_id)))}
+              value={providerId}
+              onChange={(e) => setProviderId(e.target.value)}
+            />
+          </FormField>
+          <FormField label="CSV" htmlFor="import-csv" error={importFields.csv}>
+            <textarea
+              id="import-csv"
+              rows={8}
+              className={cn(fieldClass, 'font-mono text-xs', fieldErrorClass(Boolean(importFields.csv)))}
+              value={csv}
+              onChange={(e) => setCsv(e.target.value)}
+            />
+          </FormField>
           <div>
             <button type="submit" className={buttonClass} disabled={run.isPending}>
               Commit import
@@ -883,7 +957,8 @@ export function ImportAssetsPage() {
 function MemberForm({ projectId }: { projectId: string }) {
   const client = useQueryClient()
   const [username, setUsername] = useState('')
-  const [role, setRole] = useState('editor')
+  const [role, setRole] = useState<'editor' | 'viewer'>('editor')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const add = useMutation({
     mutationFn: () =>
       qre(`/projects/${encodeURIComponent(projectId)}/members`, {
@@ -897,17 +972,34 @@ function MemberForm({ projectId }: { projectId: string }) {
   })
   return (
     <form
-      className="flex flex-wrap gap-2"
+      className="flex flex-wrap items-end gap-2"
+      noValidate
       onSubmit={(event) => {
         event.preventDefault()
+        setFieldErrors({})
+        const parsed = parseForm(projectMemberSchema, { username, role })
+        if (!parsed.ok) {
+          setFieldErrors(parsed.fieldErrors)
+          return
+        }
         add.mutate()
       }}
     >
-      <input required className={fieldClass} value={username} placeholder="Username" onChange={(event) => setUsername(event.target.value)} />
-      <select className={fieldClass} value={role} onChange={(event) => setRole(event.target.value)}>
-        <option value="editor">editor</option>
-        <option value="viewer">viewer</option>
-      </select>
+      <FormField label="Username" htmlFor="member-user" error={fieldErrors.username}>
+        <input
+          id="member-user"
+          className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.username)))}
+          value={username}
+          placeholder="Directory username"
+          onChange={(event) => setUsername(event.target.value)}
+        />
+      </FormField>
+      <FormField label="Role" htmlFor="member-role">
+        <select id="member-role" className={fieldClass} value={role} onChange={(event) => setRole(event.target.value as 'editor' | 'viewer')}>
+          <option value="editor">editor</option>
+          <option value="viewer">viewer</option>
+        </select>
+      </FormField>
       <button type="submit" className={buttonClass} disabled={add.isPending}>
         Add member
       </button>
@@ -941,6 +1033,20 @@ export function ProjectDetailPage() {
   const [purpose, setPurpose] = useState('')
   const [notes, setNotes] = useState('')
   const [resourceHint, setResourceHint] = useState('')
+  const [submitFields, setSubmitFields] = useState<Record<string, string>>({})
+
+  const tabCrumb =
+    tab === 'members'
+      ? 'Members'
+      : tab === 'requests'
+        ? 'Requests'
+        : tab === 'reservations'
+          ? 'Holds'
+          : tab === 'usage'
+            ? 'Usage'
+            : tab === 'activity'
+              ? 'Activity'
+              : null
 
   const client = useQueryClient()
   const submit = useMutation({
@@ -1034,12 +1140,16 @@ export function ProjectDetailPage() {
   return (
     <Page
       crumbs={[
-        { label: 'Work', to: '/qrp' },
+        { label: 'Governance', to: '/qrp/projects' },
         { label: 'Projects', to: '/qrp/projects' },
-        { label: projectName },
+        { label: projectName, to: `/qrp/projects/${projectId}` },
+        ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={projectName}
       description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={0}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={projectId} keep={14} />
@@ -1329,34 +1439,54 @@ export function ProjectDetailPage() {
                   ) : (
                     <form
                       className="grid gap-3"
+                      noValidate
                       onSubmit={(event) => {
                         event.preventDefault()
+                        setSubmitFields({})
+                        const parsed = parseForm(workloadSubmitSchema, {
+                          purpose,
+                          resource_hint: resourceHint.trim() || undefined,
+                          notes: notes.trim() || undefined,
+                        })
+                        if (!parsed.ok) {
+                          setSubmitFields(parsed.fieldErrors)
+                          return
+                        }
                         submit.mutate()
                       }}
                     >
-                      <label className="text-sm">
-                        Purpose
+                      <FormField label="Purpose" htmlFor="wl-purpose" error={submitFields.purpose}>
                         <input
-                          required
-                          className={fieldClass}
+                          id="wl-purpose"
+                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.purpose)))}
                           value={purpose}
                           placeholder="Scientific / technical purpose for reviewers"
                           onChange={(e) => setPurpose(e.target.value)}
                         />
-                      </label>
-                      <label className="text-sm">
-                        Resource hint (optional)
+                      </FormField>
+                      <FormField
+                        label="Resource hint"
+                        htmlFor="wl-hint"
+                        error={submitFields.resource_hint}
+                        hint="Optional — not a booking"
+                      >
                         <input
-                          className={fieldClass}
+                          id="wl-hint"
+                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.resource_hint)))}
                           value={resourceHint}
-                          placeholder="e.g. simulator class or catalogue ref — not a booking"
+                          placeholder="e.g. simulator class or catalogue ref"
                           onChange={(e) => setResourceHint(e.target.value)}
                         />
-                      </label>
-                      <label className="text-sm">
-                        Notes for reviewers (optional)
-                        <textarea className={fieldClass} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
-                      </label>
+                      </FormField>
+                      <FormField label="Notes for reviewers" htmlFor="wl-notes" error={submitFields.notes} hint="Optional">
+                        <textarea
+                          id="wl-notes"
+                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.notes)))}
+                          rows={3}
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                        />
+                      </FormField>
                       <div className="flex flex-wrap gap-2">
                         <button type="submit" className={buttonClass} disabled={submit.isPending}>
                           {submit.isPending ? 'Submitting…' : 'Submit for review'}
@@ -2029,8 +2159,9 @@ export function PoolsPage({ embedded = false }: { embedded?: boolean }) {
     retry: false,
   })
   const [name, setName] = useState('')
+  const [poolFields, setPoolFields] = useState<Record<string, string>>({})
   const create = useMutation({
-    mutationFn: () => qre('/virtual-pools', { method: 'POST', body: JSON.stringify({ name }) }),
+    mutationFn: (poolName: string) => qre('/virtual-pools', { method: 'POST', body: JSON.stringify({ name: poolName }) }),
     onSuccess: () => {
       setName('')
       setCreateOpen(false)
@@ -2060,19 +2191,28 @@ export function PoolsPage({ embedded = false }: { embedded?: boolean }) {
       <Modal open={createOpen} title="New pool" onClose={() => setCreateOpen(false)}>
         <form
           className="flex flex-col gap-3"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault()
-            create.mutate()
+            setPoolFields({})
+            const parsed = parseForm(poolCreateSchema, { name })
+            if (!parsed.ok) {
+              setPoolFields(parsed.fieldErrors)
+              return
+            }
+            create.mutate(parsed.data.name)
           }}
         >
-          <input
-            required
-            className={fieldClass}
-            value={name}
-            placeholder="Pool name"
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
+          <FormField label="Pool name" htmlFor="pool-name" error={poolFields.name}>
+            <input
+              id="pool-name"
+              className={cn(fieldClass, fieldErrorClass(Boolean(poolFields.name)))}
+              value={name}
+              placeholder="Pool name"
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          </FormField>
           {create.error ? <p className="text-sm text-critical">{message(create.error)}</p> : null}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setCreateOpen(false)}>
@@ -2590,9 +2730,16 @@ export function DispatchPage() {
   })
   return (
     <Page
+      crumbs={[
+        { label: 'Governance', to: '/qrp/approvals' },
+        { label: 'Dispatch' },
+      ]}
       eyebrow="Operations"
       title="Dispatch & Jobs"
       description="Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs / reconcile. Approval ≠ provider submission."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={4}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reconciliation" className="btn-primary">
@@ -3940,9 +4087,15 @@ export function CentrePage() {
   }, [queues.data])
   return (
     <Page
-      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Operations' }]}
+      crumbs={[
+        { label: 'Operations', to: '/qrp/centre' },
+        { label: 'Operations centre' },
+      ]}
       title="Operations Centre"
-      description="Fleet posture, collector health, queue depth, and open exceptions. Not a TeleScope live console."
+      description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions — not a live provider console."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={4}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/approvals">
@@ -4790,6 +4943,7 @@ export function EvidencePage() {
   const client = useQueryClient()
   const [label, setLabel] = useState('')
   const [captureOpen, setCaptureOpen] = useState(false)
+  const [captureFields, setCaptureFields] = useState<Record<string, string>>({})
   const query = useQuery({
     queryKey: ['evidence'],
     queryFn: () => qre<unknown>('/evidence/snapshots'),
@@ -4820,8 +4974,15 @@ export function EvidencePage() {
     .at(-1)
   return (
     <Page
-      crumbs={[{ label: 'Records', to: '/qrp/audit' }, { label: 'Evidence' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/audit' },
+        { label: 'Evidence' },
+      ]}
       title="Evidence"
+      description="Point-in-time fleet snapshots for audit and compliance — distinct from the live audit event stream."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={5}
+      workflowGuide
       actions={
         <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
           Capture snapshot
@@ -4832,18 +4993,28 @@ export function EvidencePage() {
       <Modal open={captureOpen} title="Capture snapshot" onClose={() => setCaptureOpen(false)}>
         <form
           className="flex flex-col gap-3"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault()
+            setCaptureFields({})
+            const parsed = parseForm(evidenceLabelSchema, { label: label.trim() || undefined })
+            if (!parsed.ok) {
+              setCaptureFields(parsed.fieldErrors)
+              return
+            }
             capture.mutate()
           }}
         >
-          <input
-            className={fieldClass}
-            value={label}
-            placeholder="Label (optional)"
-            onChange={(event) => setLabel(event.target.value)}
-            autoFocus
-          />
+          <FormField label="Label" htmlFor="ev-label" error={captureFields.label} hint="Optional">
+            <input
+              id="ev-label"
+              className={cn(fieldClass, fieldErrorClass(Boolean(captureFields.label)))}
+              value={label}
+              placeholder="e.g. pre-maintenance fleet"
+              onChange={(event) => setLabel(event.target.value)}
+              autoFocus
+            />
+          </FormField>
           {capture.error ? <p className="text-sm text-critical">{message(capture.error)}</p> : null}
           <div className="flex justify-end gap-2">
             <button type="button" className="btn-ghost" onClick={() => setCaptureOpen(false)}>

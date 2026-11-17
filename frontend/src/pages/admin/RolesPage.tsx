@@ -27,6 +27,10 @@ export function RolesPage() {
 
   return (
     <Page
+      crumbs={[
+        { label: 'Admin', to: '/qrp/settings' },
+        { label: 'Roles' },
+      ]}
       eyebrow="Administration"
       title="Roles"
       description="System roles are fixed; create tenant roles from the permission catalogue."

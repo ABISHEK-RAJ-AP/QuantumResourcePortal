@@ -1303,6 +1303,10 @@ export function InventoryPage() {
         { label: tab === 'pools' ? 'Pools' : tab === 'backends' ? 'Backends' : 'Catalogue' },
       ]}
       title={tab === 'pools' ? 'Resource pools' : tab === 'backends' ? 'Backends' : 'Inventory catalogue'}
+      description="Register assets and backends before scheduling governance holds."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={3}
+      workflowGuide
       actions={
         tab === 'catalogue' ? (
           <span className="flex flex-wrap gap-2">
@@ -1384,8 +1388,15 @@ export function ProvidersPage() {
   }, [all])
   return (
     <Page
-      crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Providers' }]}
+      crumbs={[
+        { label: 'Resources', to: '/qrp/providers' },
+        { label: 'Providers' },
+      ]}
       title="Providers"
+      description="Provider manifests and integration stage — upstream of inventory and connectors."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={3}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-secondary" to="/qrp/connectors">
@@ -1578,8 +1589,15 @@ export function ProjectsPage() {
   }, [approvals.data])
   return (
     <Page
-      crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Projects' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/projects' },
+        { label: 'Projects' },
+      ]}
       title="Projects"
+      description="Create projects, submit workloads, and track open reviews per owner."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={0}
+      workflowGuide
       actions={
         <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
           New project
@@ -1796,8 +1814,15 @@ export function PoliciesPage() {
   const counts = (summary.data?.counts as Row | undefined) ?? {}
   return (
     <Page
-      crumbs={[{ label: 'Govern', to: '/qrp/policies' }, { label: 'Policies' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/policies' },
+        { label: 'Policies' },
+      ]}
       title="Policies"
+      description="Published approval stages, permissions, and policy version tied to the review queue."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={1}
+      workflowGuide
       actions={
         <Link className="btn-primary" to="/qrp/approvals">
           Review queue
@@ -1902,8 +1927,15 @@ export function QuotasPage() {
   }
   return (
     <Page
-      crumbs={[{ label: 'Govern', to: '/qrp/policies' }, { label: 'Quotas' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/policies' },
+        { label: 'Quotas' },
+      ]}
       title="Quotas"
+      description="Daily shot ledger and headroom — evaluated before approve on each workload."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={2}
+      workflowGuide
       updatedAt={query.dataUpdatedAt}
     >
       {projectId ? (
@@ -2162,8 +2194,15 @@ export function ReservationsPage() {
   }
   return (
     <Page
-      crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: 'Reservations' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/reservations' },
+        { label: 'Reservation calendar' },
+      ]}
       title="Reservations"
+      description="Governance holds on assets — calendar view; overlaps may need manual resolution."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={3}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/scheduling" className="btn-primary">
@@ -2362,8 +2401,15 @@ export function MeteringPage() {
   }, [query.data])
   return (
     <Page
-      crumbs={[{ label: 'Govern', to: '/qrp/policies' }, { label: 'Metering' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/audit' },
+        { label: 'Metering' },
+      ]}
       title="Metering"
+      description="Connector rollups and usage samples — complements quota ledger and audit exports."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={5}
+      workflowGuide
       actions={
         <span className="flex flex-wrap items-center gap-2">
           
@@ -2513,8 +2559,15 @@ export function AuditPage() {
   const clearProjectScope = () => setSearchParams({}, { replace: true })
   return (
     <Page
-      crumbs={[{ label: 'Govern', to: '/qrp/audit' }, { label: 'Audit trail' }]}
+      crumbs={[
+        { label: 'Governance', to: '/qrp/audit' },
+        { label: 'Audit trail' },
+      ]}
       title="Audit Trail"
+      description="Append-only events for approvals, inventory, quotas, dispatch, and admin actions."
+      steps={GOVERNANCE_LIFECYCLE}
+      stepIndex={5}
+      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>

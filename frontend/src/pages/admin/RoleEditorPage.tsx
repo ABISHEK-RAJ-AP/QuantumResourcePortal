@@ -8,7 +8,12 @@ import { useNavigate, useParams } from 'react-router'
 
 import { ApiError } from '@/api/client'
 import * as rbac from '@/api/rbac'
+import { FieldAlert } from '@/components/auth/FormAlerts'
+import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import { Card, Notice, Page } from '@/components/layout/Page'
+import { parseForm } from '@/lib/validation/parseForm'
+import { roleCreateSchema, roleEditSchema } from '@/lib/validation/schemas'
+import { cn } from '@/lib/utils'
 
 const SCOPES = ['TENANT', 'PROJECT', 'PROVIDER'] as const
 
@@ -31,6 +36,7 @@ export function RoleEditorPage() {
   const [scope, setScope] = useState<(typeof SCOPES)[number]>('PROJECT')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [initialised, setInitialised] = useState(false)
 
   // Seed form state once the role loads (edit mode).
@@ -90,10 +96,31 @@ export function RoleEditorPage() {
     onError: (e) => setError(e instanceof ApiError ? e.detail : 'Could not save role'),
   })
 
-  const canSave = isNew ? /^[A-Z][A-Z0-9_]{2,31}$/.test(code) && name.trim().length > 0 : name.trim().length > 0
+  function trySave() {
+    setError('')
+    setFieldErrors({})
+    const payload = {
+      code,
+      name,
+      description,
+      permission_codes: [...selected],
+    }
+    const parsed = isNew ? parseForm(roleCreateSchema, payload) : parseForm(roleEditSchema, payload)
+    if (!parsed.ok) {
+      setFieldErrors(parsed.fieldErrors)
+      if (parsed.formError) setError(parsed.formError)
+      return
+    }
+    save.mutate()
+  }
 
   return (
     <Page
+      crumbs={[
+        { label: 'Admin', to: '/qrp/settings' },
+        { label: 'Roles', to: '/qrp/admin/roles' },
+        { label: isNew ? 'New role' : readOnly ? 'View role' : 'Edit role' },
+      ]}
       eyebrow="Administration"
       title={isNew ? 'New role' : readOnly ? 'Role (system)' : 'Edit role'}
       description="Choose a scope and the permissions this role grants, grouped by module."
@@ -105,16 +132,16 @@ export function RoleEditorPage() {
 
       <Card className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium">
-            Code
+          <FormField label="Code" htmlFor="role-code" error={fieldErrors.code}>
             <input
-              className="field-input font-mono"
+              id="role-code"
+              className={cn('field-input font-mono', fieldErrorClass(Boolean(fieldErrors.code)))}
               value={isNew ? code : (role.data?.code ?? '')}
               disabled={!isNew}
               placeholder="LAB_LEAD"
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
-          </label>
+          </FormField>
           <label className="block text-sm font-medium">
             Scope
             <select
@@ -130,19 +157,24 @@ export function RoleEditorPage() {
               ))}
             </select>
           </label>
-          <label className="block text-sm font-medium">
-            Name
-            <input className="field-input" value={name} disabled={readOnly} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <label className="block text-sm font-medium">
-            Description
+          <FormField label="Name" htmlFor="role-name" error={fieldErrors.name}>
             <input
-              className="field-input"
+              id="role-name"
+              className={cn('field-input', fieldErrorClass(Boolean(fieldErrors.name)))}
+              value={name}
+              disabled={readOnly}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormField>
+          <FormField label="Description" htmlFor="role-desc" error={fieldErrors.description}>
+            <input
+              id="role-desc"
+              className={cn('field-input', fieldErrorClass(Boolean(fieldErrors.description)))}
               value={description}
               disabled={readOnly}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </label>
+          </FormField>
         </div>
       </Card>
 
@@ -151,6 +183,7 @@ export function RoleEditorPage() {
           <h2 className="text-base font-semibold">Permissions</h2>
           <span className="text-sm text-muted-foreground">{selected.size} selected</span>
         </div>
+        <FieldAlert message={fieldErrors.permission_codes} />
         {permissions.isLoading ? (
           <p className="text-sm text-muted-foreground">Loading permissions…</p>
         ) : (
@@ -203,8 +236,8 @@ export function RoleEditorPage() {
           <button
             type="button"
             className="btn-primary px-4 py-2 text-sm"
-            disabled={!canSave || save.isPending}
-            onClick={() => save.mutate()}
+            disabled={save.isPending}
+            onClick={trySave}
           >
             {save.isPending ? 'Saving…' : isNew ? 'Create role' : 'Save changes'}
           </button>
