@@ -21,7 +21,7 @@ export function ForgotPasswordPage() {
               dark ? 'border-white/15 bg-black/75 text-white' : 'border-border bg-card/95 text-foreground',
             )}
           >
-            <BrandHeader dark={dark} />
+            <MotionlessBrand dark={dark} />
             <h2 className="text-xl font-semibold tracking-tight">Password reset</h2>
             <p className={cn('mt-2 text-sm', dark ? 'text-white/55' : 'text-muted-foreground')}>
               QRP uses its own identity service. Self-service email reset is not enabled in this build. Contact a
@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
   )
 }
 
-function motionless-brand({ dark }: { dark: boolean }) {
+function MotionlessBrand({ dark }: { dark: boolean }) {
   return (
     <div className="mb-6 flex items-center gap-3">
       <LogoMark className={cn('h-9 w-auto', dark && 'brightness-0 invert')} />

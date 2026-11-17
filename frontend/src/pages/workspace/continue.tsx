@@ -496,12 +496,19 @@ export function SlaPage() {
 export function NotificationsPage() {
   return (
     <Page
-      eyebrow="Not in operational scope"
+      eyebrow="Workspace"
       title="Notifications"
-      description="Persistent notification delivery and preference centre are not implemented."
+      description="Session inbox in the header bell — toasts, review queue, and approval items synced from governance APIs."
       actions={
         <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/audit">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => window.dispatchEvent(new CustomEvent('govern:open-notices'))}
+          >
+            Open notification panel
+          </button>
+          <Link className="btn-secondary" to="/qrp/audit">
             Audit log
           </Link>
           <Link className="btn-secondary" to="/qrp/approvals/history">
@@ -510,7 +517,10 @@ export function NotificationsPage() {
         </span>
       }
     >
-      </Page>
+      <Notice tone="info">
+        Delivery preferences and email/webhook channels are configured server-side. This page opens the same inbox as the top bar bell.
+      </Notice>
+    </Page>
   )
 }
 

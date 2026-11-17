@@ -29,6 +29,9 @@ import { DataFreshness } from '@/components/data/DataFreshness'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
+import { GovernNotificationSync } from '@/components/notifications/GovernNotificationSync'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { NotificationHost } from '@/components/notifications/NotificationHost'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -379,6 +382,7 @@ function ShellInner() {
             <div className="flex min-w-0 max-w-full shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <DataFreshness updatedAt={chrome.updatedAt} />
               <div className="flex flex-wrap items-center justify-end gap-2">
+                <NotificationBell />
                 <WorkspaceLayoutControls />
                 <button
                   type="button"
@@ -413,6 +417,8 @@ function ShellInner() {
           <Outlet />
         </div>
       </div>
+      <NotificationHost />
+      <GovernNotificationSync />
       <QrpQuickActionDock />
     </div>
   )
