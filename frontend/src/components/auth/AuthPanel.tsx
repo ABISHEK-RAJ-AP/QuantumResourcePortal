@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { LogoMark } from '@/components/brand/LogoMark'
+import { AuthFridgeVisual } from '@/components/marketing/AuthFridgeVisual'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import CyberMatrixHero from '@/components/ui/cyber-matrix-hero'
 
@@ -31,10 +32,9 @@ export function AuthPanel({
                   <p className="text-sm text-white/70">Quantum Resource Portal</p>
                 </div>
               </div>
-              <div
-                className="qrp-auth-hero-tile relative min-h-[220px] flex-1 overflow-hidden rounded-xl border border-white/10"
-                aria-hidden
-              />
+              <div className="relative min-h-[260px] flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#070b14]">
+                <AuthFridgeVisual />
+              </div>
               <div className="mt-auto space-y-2">
                 <h2 className="text-lg font-semibold leading-snug tracking-tight sm:text-xl">
                   Governance-first quantum resource operations

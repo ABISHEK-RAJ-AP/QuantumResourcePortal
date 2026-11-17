@@ -61,6 +61,12 @@ export function CaptchaField({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (available || !showWhenDisabled) return
+    const id = window.setInterval(() => void refresh(), 8000)
+    return () => window.clearInterval(id)
+  }, [available, showWhenDisabled])
+
   if (!available && !showWhenDisabled) return null
 
   return (
@@ -91,9 +97,13 @@ export function CaptchaField({
               draggable={false}
             />
           ) : (
-            <span className="px-3 text-center text-sm text-muted-foreground">
-              Server captcha off — set QRE_CAPTCHA_ENABLED on API
-            </span>
+            <button
+              type="button"
+              className="px-3 text-center text-sm font-medium text-primary hover:underline"
+              onClick={() => void refresh()}
+            >
+              Load verification image
+            </button>
           )}
         </div>
         <input

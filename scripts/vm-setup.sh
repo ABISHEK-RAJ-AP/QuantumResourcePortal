@@ -38,6 +38,18 @@ fi
 
 [[ -f "$ROOT/backend/.env" ]] || cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
 [[ -f "$ROOT/frontend/.env.local" ]] || cp "$ROOT/frontend/.env.example" "$ROOT/frontend/.env.local"
+if [[ -f "$ROOT/backend/.env" ]] && ! grep -q '^QRE_CAPTCHA_ENABLED=true' "$ROOT/backend/.env" 2>/dev/null; then
+  if grep -q '^QRE_CAPTCHA_ENABLED=' "$ROOT/backend/.env"; then
+    sed -i 's/^QRE_CAPTCHA_ENABLED=.*/QRE_CAPTCHA_ENABLED=true/' "$ROOT/backend/.env"
+  else
+    echo 'QRE_CAPTCHA_ENABLED=true' >>"$ROOT/backend/.env"
+  fi
+  if [[ -f "$ROOT/logs/api.pid" ]]; then
+    kill "$(cat "$ROOT/logs/api.pid")" 2>/dev/null || true
+    rm -f "$ROOT/logs/api.pid"
+    log "Restarting API so captcha picks up QRE_CAPTCHA_ENABLED=true"
+  fi
+fi
 log "Database migrate"
 make migrate || die "alembic failed — create Postgres database qre per README"
 

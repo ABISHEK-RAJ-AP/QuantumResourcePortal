@@ -26,7 +26,7 @@ export function validateCaptchaBeforeSubmit(
   captchaCode: string,
 ): string | null {
   if (!enabled) return null
-  if (!active) return 'Image verification is required but the server challenge is unavailable.'
+  if (!active) return 'Image verification is not ready yet. Wait a moment or tap Load verification image.'
   if (!captchaCode.trim()) return 'Enter the characters shown in the image.'
   return null
 }
