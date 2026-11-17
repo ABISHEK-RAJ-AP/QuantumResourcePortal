@@ -32,7 +32,7 @@ export function Page({
   useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt })
 
   return (
-    <div className="flex w-full max-w-none flex-col gap-4">
+    <div className="flex w-full max-w-none flex-col gap-5">
       {actions ? <div className="-mt-1 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null}
       {steps && steps.length > 0 ? (
         <section className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">

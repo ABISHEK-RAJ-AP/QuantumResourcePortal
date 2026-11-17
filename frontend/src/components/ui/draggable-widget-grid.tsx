@@ -429,19 +429,11 @@ export default function DraggableWidgetGrid({
   return (
     <MotionConfig reducedMotion="user">
       <div className={`relative w-full ${className}`} style={{ '--widget-radius': `${radius}px` }}>
-        {editable && (
+        {editable ? (
           <p id={hintId} className="sr-only">
             Drag to rearrange. On touch screens, press and hold first. With a keyboard, hold Alt and use arrow keys.
           </p>
-        )}
-        <p className="govern-muted govern-widget-grid-hint" aria-hidden="true">
-          {editable ? (
-            <>
-              <span className="govern-widget-grid-hint--fine">Drag widgets to set your layout.</span>
-              <span className="govern-widget-grid-hint--coarse">Press and hold, then drag to rearrange.</span>
-            </>
-          ) : null}
-        </p>
+        ) : null}
         <div
           ref={grid}
           role="list"

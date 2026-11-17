@@ -11,7 +11,7 @@ export function KpiStrip({ children, className }: { children: ReactNode; classNa
     <div
       className={cn(
         'grid w-full gap-2 sm:gap-3',
-        'grid-cols-[repeat(auto-fit,minmax(10.75rem,1fr))]',
+        'grid-cols-[repeat(auto-fit,minmax(12.5rem,1fr))]',
         prefs.kpiLayout === 'dense' && '[&_.metric-tile]:py-2.5',
         className,
       )}

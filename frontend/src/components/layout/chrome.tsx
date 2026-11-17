@@ -393,7 +393,7 @@ function ShellInner() {
         </header>
         <div
           id="page-content"
-          className="shell-canvas min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-6 pb-24"
+          className="shell-canvas min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 pb-24"
           data-density={prefs.density}
           data-chart-size={prefs.chartSize}
           data-kpi={prefs.kpiLayout}

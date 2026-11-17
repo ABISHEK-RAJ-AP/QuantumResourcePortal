@@ -229,258 +229,49 @@ export function OverviewPage() {
   const fleetTotal = Number(fleet.total ?? 0)
   const fleetOffline = Math.max(fleetTotal - fleetOnline, 0)
 
-  const pipeline = [
-    { label: 'Review', to: '/qrp/approvals', value: summary.isError ? '—' : queueCount, hot: queueCount > 0 },
-    { label: 'Hold', to: '/qrp/scheduling', value: '→', hot: false },
-    { label: 'Dispatch', to: '/qrp/jobs', value: attempts.isError ? '—' : unresolvedAttempts, hot: unresolvedAttempts > 0 },
-    { label: 'Incidents', to: '/qrp/incidents', value: centre.isError ? '—' : openIncidents, hot: openIncidents > 0 },
-    { label: 'Audit', to: '/qrp/audit', value: '→', hot: false },
-  ]
-
   return (
     <Page
       crumbs={[{ label: 'Work', to: '/qrp' }, { label: 'Home' }]}
       title="Home"
       description={`${formatRole(user?.roles?.[0])} · ${formatPrincipalId(user?.principal_id, user?.roles?.[0])}`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
+      actions={
+        <InfoTip label="Layout help">
+          Drag tiles to rearrange. Keyboard: focus a tile, hold Alt, use arrow keys. Touch: press and hold, then drag.
+        </InfoTip>
+      }
     >
-      <p className="text-sm text-muted-foreground">
-        Drag widgets to rearrange. Touch: press and hold, then drag. Keyboard: focus a widget, hold Alt, arrow keys.
-      </p>
       <OverviewDashboardGrid
         lens={focus.kind}
         queueCount={queueCount}
         summaryError={summary.isError}
+        summaryPending={summary.isPending}
+        lifecycleChart={lifecycleChart}
         myCount={myApprovals.isError ? 0 : myRows.length}
         unresolvedAttempts={attempts.isError ? 0 : unresolvedAttempts}
         openIncidents={centre.isError ? 0 : openIncidents}
         pendingJobs={queues.isError ? 0 : pendingJobs}
-        pipeline={pipeline}
+        centreError={centre.isError}
+        fleetOnline={fleetOnline}
+        fleetTotal={fleetTotal}
+        fleetOffline={fleetOffline}
+        inventoryAssets={summary.data?.inventory_assets}
+        ledgerError={ledger.isError}
+        ledgerPending={ledger.isPending}
+        quotaChart={quotaChart}
+        used={used}
+        remaining={remaining}
+        cap={cap}
+        alertSummaryError={alertSummary.isError}
+        alertSummaryPending={alertSummary.isPending}
+        alertBackendChart={alertBackendChart}
+        activeAlerts={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active}
+        attemptsError={attempts.isError}
+        unresolvedRows={unresolvedRows}
         recentRows={recent.data ?? []}
         activityRows={activityRows}
+        activityError={activity.isError}
       />
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel
-          title="Request stages"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">
-              Queue
-            </Link>
-          }
-          empty={summary.isError || summary.isPending || lifecycleChart.every((d) => d.value === 0)}
-        >
-          {(h) =>
-            summary.isError ? (
-              <EmptyState title="Summary unavailable" body={message(summary.error)} />
-            ) : summary.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : lifecycleChart.every((d) => d.value === 0) ? (
-              <EmptyState title="No request volume" body="Submit from a project." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={lifecycleChart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                  <Tooltip />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {lifecycleChart.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          }
-        </ChartPanel>
-
-        <ChartPanel
-          title="Daily shot quota"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/quotas">
-              Ledger
-            </Link>
-          }
-          empty={ledger.isError || ledger.isPending || quotaChart.length === 0}
-        >
-          {(h) =>
-            ledger.isError ? (
-              <EmptyState title="Quota unavailable" body={message(ledger.error)} />
-            ) : ledger.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : quotaChart.length === 0 ? (
-              <EmptyState title="No quota sample" body="Ledger empty." />
-            ) : (
-              <div className="flex h-full flex-col">
-                <div className="min-h-0 flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={quotaChart} dataKey="value" nameKey="name" innerRadius={Math.max(36, h * 0.22)} outerRadius={Math.max(56, h * 0.34)} paddingAngle={2}>
-                        {quotaChart.map((d, i) => (
-                          <Cell key={d.name} fill={d.fill || CHART_COLORS[i]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="shrink-0 text-center text-sm tabular-nums">
-                  <span className="font-semibold">{used}</span> used · <span className="font-semibold">{remaining || cap - used}</span> left
-                  {cap ? ` / ${cap}` : ''} · UTC today
-                </p>
-              </div>
-            )
-          }
-        </ChartPanel>
-
-        <ChartPanel
-          title="Alerts by backend"
-          action={
-            <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/support">
-              Alerts
-            </Link>
-          }
-          empty={alertSummary.isError || alertSummary.isPending || alertBackendChart.length === 0}
-        >
-          {(h) =>
-            alertSummary.isError ? (
-              <EmptyState title="Alert rollup unavailable" body={message(alertSummary.error)} />
-            ) : alertSummary.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : alertBackendChart.length === 0 ? (
-              <EmptyState title="No active alerts" body="Fleet quiet." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={alertBackendChart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v) => [v, 'Active alerts']} labelFormatter={(_, p) => String((p?.[0]?.payload as { full?: string } | undefined)?.full || '')} />
-                  <Bar dataKey="value" fill="var(--chart-5)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          }
-        </ChartPanel>
-      </div>
-
-      <KpiStrip>
-        <MetricTile label="Fleet online" value={centre.isError ? '—' : `${fleetOnline}/${fleetTotal || '—'}`} hint={fleetOffline ? `${fleetOffline} offline` : 'Reachable'} tone="success" />
-        <MetricTile label="Assets" value={summary.isError ? '—' : summary.data?.inventory_assets} />
-        <MetricTile label="Active alerts" value={alertSummary.isError ? ops.active_alerts : alertSummary.data?.active} tone="warning" />
-        <MetricTile label="Open incidents" value={centre.isError ? '—' : openIncidents} tone={openIncidents ? 'critical' : 'neutral'} />
-      </KpiStrip>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <PanelHeader title="Queue" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/approvals">All</Link>} />
-          <QueryBody query={recent}>
-            <Table
-              rows={(recent.data ?? []).slice(0, 6)}
-              emptyTitle="Queue empty"
-              emptyBody="Nothing waiting on policy stages."
-              columns={[
-                {
-                  key: 'workload_id',
-                  label: 'Request',
-                  render: (row) => (
-                    <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
-                      {shortId(String(row.workload_id || ''), 12)}
-                    </Link>
-                  ),
-                },
-                {
-                  key: 'governance_state',
-                  label: 'State',
-                  render: (row) => (
-                    <StatusBadge tone={stateTone(String(row.governance_state || ''))} label={stateLabel(String(row.governance_state || 'unknown'))} />
-                  ),
-                },
-                { key: 'created_by', label: 'Requester' },
-              ]}
-            />
-          </QueryBody>
-        </Card>
-        <Card>
-          <PanelHeader title="Dispatch exceptions" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/reconciliation">All</Link>} />
-          {attempts.isError ? (
-            <Notice tone="warning">Dispatch attempts unavailable.</Notice>
-          ) : unresolvedRows.length === 0 ? (
-            <EmptyState title="Clear" body="No unresolved dispatch attempts." />
-          ) : (
-            <Table
-              rows={unresolvedRows.slice(0, 6)}
-              columns={[
-                {
-                  key: 'attempt_id',
-                  label: 'Attempt',
-                  render: (row) => (
-                    <Link className="font-medium text-primary hover:underline" to="/qrp/reconciliation">
-                      {shortId(String(row.attempt_id || ''), 12)}
-                    </Link>
-                  ),
-                },
-                {
-                  key: 'dispatch_state',
-                  label: 'State',
-                  render: (row) => (
-                    <StatusBadge tone={stateTone(String(row.dispatch_state || ''))} label={stateLabel(String(row.dispatch_state || 'open'))} />
-                  ),
-                },
-                {
-                  key: 'workload_id',
-                  label: 'Request',
-                  render: (row) =>
-                    row.workload_id ? (
-                      <Link className="hover:underline" to={`/qrp/approvals/${row.workload_id}`}>
-                        {shortId(String(row.workload_id), 10)}
-                      </Link>
-                    ) : (
-                      '—'
-                    ),
-                },
-              ]}
-            />
-          )}
-        </Card>
-        <Card className="lg:col-span-2">
-          <PanelHeader title="Recent decisions" action={<Link className="text-xs font-medium text-primary hover:underline" to="/qrp/audit">Audit</Link>} />
-          {activity.isError ? (
-            <Notice tone="warning">Activity feed unavailable.</Notice>
-          ) : (
-            <Table
-              rows={activityRows.slice(0, 8)}
-              emptyTitle="No decisions yet"
-              emptyBody="Approve and reject events land here."
-              columns={[
-                {
-                  key: 'timestamp',
-                  label: 'When',
-                  render: (row) => {
-                    const t = new Date(String(row.timestamp || '')).getTime()
-                    if (!Number.isFinite(t)) return '—'
-                    const h = Math.round((Date.now() - t) / 3_600_000)
-                    return h < 48 ? `${h}h ago` : new Date(t).toLocaleDateString()
-                  },
-                },
-                { key: 'actor', label: 'Actor' },
-                { key: 'action', label: 'Action' },
-                {
-                  key: 'target_id',
-                  label: 'Request',
-                  render: (row) =>
-                    row.target_id ? (
-                      <Link className="font-medium text-primary hover:underline" to={`/qrp/approvals/${row.target_id}`}>
-                        {shortId(String(row.target_id), 10)}
-                      </Link>
-                    ) : (
-                      '—'
-                    ),
-                },
-              ]}
-            />
-          )}
-        </Card>
-      </div>
     </Page>
   )
 }
