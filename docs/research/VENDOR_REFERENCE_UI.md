@@ -4,17 +4,72 @@
 
 **QRP stack (this repo):** React 19 + Vite + TanStack Query · FastAPI + PostgreSQL + Redis · national-lab style RBAC (not multi-tenant SaaS marketing chrome).
 
+**QRP UI style (narrowing your question):** **Modern React/TypeScript ops console** (dense tables, KPI strips, breadcrumbs, contextual wizards) — not server-rendered Django admin skins. Use **both**: (a) **Docker stack** to run the integrated HPC tutorial end-to-end; (b) **shallow clones** under `vendor-references/` for grep/wireframe archaeology without forking PHP/Django into QRP.
+
 ---
 
-## Lifecycle → reference matrix
+## Summary mapping (workflow step → best OSS UI)
+
+| Step | Best open-source UI reference | Also useful |
+| --- | --- | --- |
+| 1. Project & quota request | **ColdFront** | CompanyOS (project-scoped RBAC) |
+| 2. Review, approval & quota check | **ColdFront** admin | **Kortix CompanyOS** change-request approvals |
+| 3. Time-window capacity reservation | **LibreBooking** calendar | **OpenStack Blazar** (+ Horizon patterns) |
+| 4. Multi-backend job dispatch | **Open OnDemand** | **CodeFlare** (K8s quota/queue), qBraid (quantum) |
+| 5. Metering, reconciliation & audit | **Open XDMoD** | **UBCCR HPC toolset**, Argo UI, QRP `/rbac/audit` |
+
+---
+
+## A. Integrated HPC & AI cluster governance (run together)
+
+Official **UBCCR HPC Toolset Tutorial** wires all three portals for local Docker study:
+
+| Role | Project | Clone path | Inspect for |
+| --- | --- | --- | --- |
+| Projects, approvals, quotas | [ColdFront](https://github.com/coldfront/coldfront) | `vendor-references/coldfront/` | PI projects, allocation requests, renewals, xdmod plugin hooks |
+| Job composer, queues, files | [Open OnDemand](https://github.com/OSC/ondemand) | `vendor-references/ondemand/` | Dashboard, job status, app launchers |
+| Metering, QoS, auditor reports | [Open XDMoD](https://github.com/ubccr/xdmod) | `vendor-references/xdmod/` | Charts, reconciliation vs scheduler logs |
+| **All-in-one Docker lab** | [hpc-toolset-tutorial](https://github.com/ubccr/hpc-toolset-tutorial) | `vendor-references/hpc-toolset-tutorial/` | Compose topology, how CF→OOD→XDMoD connect |
+
+**Run locally (after clone):** follow `vendor-references/hpc-toolset-tutorial/README.md` — requires Docker; use for **integration behaviour**, not as QRP dependency.
+
+**ColdFront ↔ XDMoD plugin:** `coldfront/plugins/xdmod/` in ColdFront clone — allocation vs usage reconciliation pattern.
+
+---
+
+## B. Cloud & AI platforms (approvals, quotas, routing)
+
+| Project | Repo | Clone | QRP screen to inform |
+| --- | --- | --- | --- |
+| **Kortix CompanyOS** | [kortix-ai/CompanyOS](https://github.com/kortix-ai/CompanyOS) | `vendor-references/companyos/` | Person-in-the-loop approvals, project secrets, provider routing budgets, immutable audit log (SaaS-like; contrast with QRP ops restraint) |
+| **CodeFlare** (MCAD / multi-cluster queue) | [project-codeflare/codeflare](https://github.com/project-codeflare/codeflare) | `vendor-references/codeflare/` | Priority queues, quota enforcement, multi-backend dispatch on Kubernetes |
+| **Google quota monitoring** | [google/quota-monitoring-solution](https://github.com/google/quota-monitoring-solution) | `vendor-references/quota-monitoring-solution/` | Threshold dashboards, alert wiring (patterns for `QuotasPage` / Home KPIs) |
+| **GovTech cstack quota** | [GovTechSG/cstack-quota-monitoring](https://github.com/GovTechSG/cstack-quota-monitoring) | `vendor-references/cstack-quota-monitoring/` | Project-level limits + utilization UI (government ops tone) |
+
+These complement HPC trio: stronger on **cloud quota UX** and **AI job routing**, weaker on national-lab grant cycles (ColdFront still wins step 1–2).
+
+---
+
+## C. Time-window reservations (calendar holds)
+
+| Project | Repo | Clone | QRP mapping |
+| --- | --- | --- | --- |
+| **LibreBooking** | [LibreBooking/librebooking](https://github.com/LibreBooking/librebooking) | `vendor-references/librebooking/` | Calendar holds, credits/quotas, approval workflows, waitlists — closest OSS **booking UI** to `ReservationCalendar` |
+| **OpenStack Blazar** | [openstack/blazar](https://github.com/openstack/blazar) | `vendor-references/blazar/` | Lease lifecycle, conflict checks, host-level leases (pair with Horizon screenshots in OpenStack docs) |
+
+QRP uses **Blazar semantics** in API design; **LibreBooking** is the better reference for **operator-friendly calendar UX**.
+
+---
+
+## Lifecycle → reference matrix (quantum + HPC combined)
 
 | QRP step | QRP routes / components | Primary OSS reference | What to steal (UI + API shape) |
 | --- | --- | --- | --- |
 | **Submit** — project + workload package | `ProjectsPage`, `ProjectCreateWizard`, `WorkloadSubmitWizard`, `ProjectDetailPage` | [ColdFront](https://github.com/coldfront/coldfront) | PI projects, allocation requests, collaborator membership, request metadata forms |
-| **Review / Authorise** — staged decisions | `ApprovalsPage`, `ApprovalDetailPage`, `WorkflowSteps` on detail | ColdFront admin / request views | Multi-step review queue, approver comments, eligibility checks |
-| **Quota** — ledger & evaluate | `QuotasPage`, approval quota panel | ColdFront allocations + [Open XDMoD](https://github.com/ubccr/xdmod) | Allocation limits, usage vs cap, project-scoped ledgers |
-| **Schedule hold** — capacity window | `ReservationsPage`, `SchedulingPage`, `ReservationCalendar` | [OpenStack Blazar](https://github.com/openstack/blazar), [FTQMP-Scheduler](https://github.com/team-QMP/FTQMP-Scheduler) | Lease timeline, conflict detection, lease state machine, QPU packing visualizer |
-| **Dispatch** — provider attempts | `DispatchPage`, `JobsPage`, `ReconciliationPage` | [Open OnDemand](https://github.com/OSC/ondemand), [qBraid](https://github.com/qbraid/qbraid) | Job composer, queue status, multi-backend picker, job state badges |
+| **Review / Authorise** — staged decisions | `ApprovalsPage`, `ApprovalDetailPage`, `WorkflowSteps` on detail | ColdFront admin, **CompanyOS** change requests | Multi-step review queue, approver comments, eligibility checks |
+| **Quota** — ledger & evaluate | `QuotasPage`, approval quota panel | ColdFront, XDMoD, **quota-monitoring-solution**, **cstack-quota-monitoring** | Allocation limits, usage vs cap, alerts |
+| **Schedule hold** — capacity window | `ReservationsPage`, `SchedulingPage`, `ReservationCalendar` | **LibreBooking**, Blazar, FTQMP-Scheduler | Calendar UX, lease timeline, conflicts, QPU viz |
+| **Dispatch** — provider attempts | `DispatchPage`, `JobsPage`, `ReconciliationPage` | OnDemand, **CodeFlare**, qBraid | Job composer, queue status, multi-backend picker |
 | **Reconcile** — reserved vs consumed | `ReconciliationPage`, `MeteringPage` | Open XDMoD, [Argo Workflows](https://github.com/argoproj/argo-workflows) UI patterns | Wall-time vs reserved time, shot accounting, workflow step outcomes |
 | **Evidence / Audit** | `AuditPage`, `/rbac/audit` API | Open XDMoD reports + QRP append-only `audit_log` | Immutable event stream, export, auditor dashboards |
 
@@ -37,21 +92,21 @@
 | Single request + stages | `ApprovalDetailPage` + contextual `WorkflowSteps` |
 | Decision + rationale | `approvalDecisionSchema`, audit write |
 
-### 3. Capacity reservation calendar (Blazar + FTQMP)
+### 3. Capacity reservation calendar (LibreBooking + Blazar + FTQMP)
 
 | Reference | QRP equivalent |
 | --- | --- |
-| Lease calendar | `ReservationCalendar`, `ReservationsPage` |
-| Conflict / transition | `reservationHoldSchema`, transition POST |
-| Spatial schedule viz | FTQMP layout ideas → future ops chart on `CentrePage` |
+| Calendar + credits + approval | LibreBooking → `ReservationCalendar`, `ReservationsPage` |
+| Lease API / conflicts | Blazar → transition POST, `reservationHoldSchema` |
+| Spatial schedule viz | FTQMP → future ops chart on `CentrePage` |
 
-### 4. Job dispatch & multi-backend (OnDemand + qBraid)
+### 4. Job dispatch & multi-backend (OnDemand + CodeFlare + qBraid)
 
 | Reference | QRP equivalent |
 | --- | --- |
-| Job composer / script panel | Project submit + future job detail |
-| Queue / HPC apps | `JobsPage`, `QueuesPage`, `BackendsPage` |
-| Provider connectors | `ProvidersPage`, `ConnectorsPage` |
+| Job composer / script panel | OnDemand → project submit + job detail |
+| Multi-cluster quota queue | CodeFlare → `JobsPage`, `QueuesPage` |
+| Quantum provider picker | qBraid → `ProvidersPage`, `ConnectorsPage` |
 
 ### 5. Metering, reconcile, audit (XDMoD + Argo)
 
@@ -70,7 +125,9 @@
 | Dense KPI strip + tables | ColdFront, XDMoD | `KpiStrip`, `DataTable`, `OverviewKpiScroll` |
 | Wizard / stepped forms | ColdFront allocation wizards | `ProjectCreateWizard`, `WorkloadSubmitWizard` |
 | Job status chips | OnDemand, qBraid lab | `StatusBadge`, jobs table columns |
-| Calendar / timeline holds | Blazar horizon UI (conceptual) | `ReservationCalendar` |
+| Calendar / timeline holds | LibreBooking, Blazar | `ReservationCalendar` |
+| Quota alert dashboards | Google quota solution, cstack | `QuotasPage`, Home KPIs |
+| SaaS-style approval inbox | CompanyOS | contrast only — QRP uses approvals queue |
 | Queue depth widgets | OnDemand dashboard | `CentrePage`, Home dashboard |
 | Append-only log table | XDMoD, Argo UI event streams | `AuditPage` |
 
@@ -98,12 +155,18 @@ See `vendor-references/README.md` for `git clone --depth 1` commands and disk no
 | `vendor-references/ftqmp-scheduler/` | team-QMP/FTQMP-Scheduler | Schedule visualization |
 | `vendor-references/blazar/` | openstack/blazar | Reservation / lease API |
 | `vendor-references/argo-workflows/` | argoproj/argo-workflows | Reconcile workflow UI metaphors |
+| `vendor-references/hpc-toolset-tutorial/` | ubccr/hpc-toolset-tutorial | Docker-integrated ColdFront + OOD + XDMoD |
+| `vendor-references/librebooking/` | LibreBooking/librebooking | Calendar reservation UI |
+| `vendor-references/companyos/` | kortix-ai/CompanyOS | Approvals, audit, provider budgets |
+| `vendor-references/codeflare/` | project-codeflare/codeflare | K8s job queue + quotas |
+| `vendor-references/quota-monitoring-solution/` | google/quota-monitoring-solution | Quota dashboards / alerts |
+| `vendor-references/cstack-quota-monitoring/` | GovTechSG/cstack-quota-monitoring | Gov quota UI patterns |
 
 Optional (not cloned by default — huge or niche):
 
-- [hpc-toolset-tutorial](https://github.com/ubccr/hpc-toolset-tutorial) — ColdFront + OnDemand + XDMoD integration walkthrough
+- [Awesome HPC](https://github.com/dstdev/awesome-hpc) — index of OnDemand and peers
 - [Quantify Scheduler](https://github.com/QuTech-Delft/quantify-scheduler) — pulse-level evidence
-- QCRAFT-style schedulers — search GitHub for active `QCRAFT` REST queue repos before adopting
+- QCRAFT-style schedulers — verify repo before adopt
 
 ---
 
@@ -141,3 +204,10 @@ Today only **identity/admin/RBAC audit** + **lab stubs** are mounted in QRP back
 - FTQMP-Scheduler: https://github.com/team-QMP/FTQMP-Scheduler  
 - Argo Workflows: https://github.com/argoproj/argo-workflows  
 - IonQ qBraid SDK docs: https://docs.ionq.com/sdks/qbraid  
+- HPC toolset tutorial: https://github.com/ubccr/hpc-toolset-tutorial  
+- LibreBooking: https://github.com/LibreBooking/librebooking  
+- CompanyOS: https://github.com/kortix-ai/CompanyOS  
+- CodeFlare: https://github.com/project-codeflare/codeflare  
+- Google quota monitoring: https://github.com/google/quota-monitoring-solution  
+- cstack quota monitoring: https://github.com/GovTechSG/cstack-quota-monitoring  
+- Awesome HPC: https://github.com/dstdev/awesome-hpc  

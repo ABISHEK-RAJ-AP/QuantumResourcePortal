@@ -25,7 +25,15 @@ clone https://github.com/qbraid/qbraid.git                 "$ROOT/qbraid"
 clone https://github.com/team-QMP/FTQMP-Scheduler.git      "$ROOT/ftqmp-scheduler"
 clone https://github.com/openstack/blazar.git              "$ROOT/blazar"
 clone https://github.com/argoproj/argo-workflows.git     "$ROOT/argo-workflows"
+clone https://github.com/ubccr/hpc-toolset-tutorial.git  "$ROOT/hpc-toolset-tutorial"
+clone https://github.com/LibreBooking/librebooking.git   "$ROOT/librebooking"
+clone https://github.com/kortix-ai/CompanyOS.git         "$ROOT/companyos"
+clone https://github.com/project-codeflare/codeflare.git "$ROOT/codeflare"
+clone https://github.com/google/quota-monitoring-solution.git "$ROOT/quota-monitoring-solution"
+clone https://github.com/GovTechSG/cstack-quota-monitoring.git "$ROOT/cstack-quota-monitoring"
 ```
+
+**Integrated lab:** After clone, `cd vendor-references/hpc-toolset-tutorial` and use Docker per upstream README (ColdFront + OnDemand + XDMoD together).
 
 ## Size warning
 
