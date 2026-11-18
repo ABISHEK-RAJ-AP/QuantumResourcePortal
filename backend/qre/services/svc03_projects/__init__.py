@@ -1,0 +1,1 @@
+"""SVC-03 projects — list, create, detail (minimal QRP slice)."""

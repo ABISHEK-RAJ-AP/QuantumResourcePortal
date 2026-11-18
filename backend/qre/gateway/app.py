@@ -30,6 +30,8 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     from qre.services.svc02_identity.admin_api import router as admin_router
     from qre.services.svc02_identity.api import ping_router
     from qre.services.svc02_identity.api import router as identity_router
+    from qre.services.svc03_projects.api import router as projects_router
+    from qre.services.svc06_approvals.api import router as approvals_router
     from qre.services.svc17_audit.api import router as audit_router
 
     router = APIRouter(prefix=API_PREFIX)
@@ -38,6 +40,8 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     router.include_router(admin_router)     # /admin/* roles, permissions, users, memberships
     router.include_router(authz_router)     # /authz/check (RBAC-5)
     router.include_router(audit_router)     # /rbac/audit read/export/verify (RBAC-8)
+    router.include_router(projects_router)  # /projects list/create/detail
+    router.include_router(approvals_router)  # workloads, approvals, /governance/summary
     if settings.is_lab:
         from qre.services.workspace_lab.api import router as workspace_lab_router
 
