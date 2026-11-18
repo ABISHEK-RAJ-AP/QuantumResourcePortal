@@ -79,6 +79,19 @@ curl http://127.0.0.1:8010/api/v1/operations/centre | jq
 
 Backend validation: `python -m qre seed-demo` prints counts; integrators can import `qre.seed.validate.validate_demo_seed`.
 
+## VM verification (Postgres + integration + e2e)
+
+```bash
+make setup && make migrate
+QRE_ENV=lab make seed-demo
+cd backend && QRE_ENV=lab .venv/bin/python -m pytest tests/integration/ -q
+make dev-vm   # or separate terminals: make dev-api && make dev-web
+cd frontend && npm run test:e2e:smoke
+npx playwright test e2e/module-detail.spec.ts
+```
+
+Login: bootstrap admin or `demo_operator` / `Demo-Strong-Pw-2026`. Backend topology on demo hardware backends fills on seed (`demo-%` backends without nodes).
+
 ## Disable demo in shared environments
 
 - Do not mount `qre.seed.api` (requires `QRE_ENV=lab`).

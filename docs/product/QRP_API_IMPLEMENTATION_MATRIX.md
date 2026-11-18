@@ -102,7 +102,7 @@ Reservations **`/reservations`** → **shipped** (svc07). Scheduling page reuses
 | `/evidence/snapshots` | Audit / evidence | evidence svc | CompanyOS |
 | ~~`/incidents`~~ | **shipped** svc15 | lifecycle POSTs |
 | `/alerts/*` | **shipped** svc15 | detail/ack (no auto incidents) |
-| `/governance/institution-boundary` | Policies | governance | read-only boundary |
+| ~~`/governance/institution-boundary`~~ | **shipped** svc09 | Settings / policies | single-site boundary |
 | `/users`, `/users/roles/*` | Legacy settings tabs | **retire** → use `/admin/*` | — |
 
 ---
@@ -113,9 +113,9 @@ Reservations **`/reservations`** → **shipped** (svc07). Scheduling page reuses
 | --- | --- | --- | --- |
 | `/qrp` | OverviewPage | summary, operations/centre, queues, ledger, dispatch, alerts | shipped |
 | `/qrp/projects` | ProjectsPage | `/projects` | shipped |
-| `/qrp/projects/:id` | ProjectDetailPage | project, **members**, approvals, reservations, ledger, activity | partial |
+| `/qrp/projects/:id` | ProjectDetailPage | project, **members**, approvals, reservations, ledger, activity | shipped |
 | `/qrp/approvals` | ApprovalsPage | `/approvals` | shipped |
-| `/qrp/approvals/:id` | ApprovalDetailPage | approval, quotas/evaluate, reservations | partial |
+| `/qrp/approvals/:id` | ApprovalDetailPage | approval, quotas/evaluate, reservations | shipped |
 | `/qrp/reservations` | ReservationsPage | `/reservations` | shipped |
 | `/qrp/scheduling` | SchedulingPage | `/reservations` | shipped (timeline UI only) |
 | `/qrp/inventory` | InventoryPage | `/inventory/assets` | shipped |
@@ -132,7 +132,7 @@ Reservations **`/reservations`** → **shipped** (svc07). Scheduling page reuses
 
 ## Implementation sequence (from matrix)
 
-1. ~~pools/connectors/incidents/backends~~ → **next:** evidence, institution-boundary, alert→incident grouping
+1. ~~pools/connectors/incidents/backends/institution-boundary~~ → **next:** evidence, alert→incident grouping
 2. **P1:** approval audit now writes `APPROVAL_*` to `audit_log`
 3. **P2:** `/users` legacy retire; connector live schedules
 

@@ -264,6 +264,7 @@ function needsReconcile(row: Row) {
 
 export function ReconciliationPage() {
   const client = useQueryClient()
+  const pollMs = useDemoOperationalPolling()
   const [filter, setFilter] = useState<(typeof RECON_FILTERS)[number]['id']>('unresolved')
   const [search, setSearch] = useState('')
   const [reconcileError, setReconcileError] = useState<{ id: string; message: string } | null>(null)
@@ -271,6 +272,7 @@ export function ReconciliationPage() {
   const query = useQuery({
     queryKey: ['dispatch-attempts'],
     queryFn: () => qre<unknown>('/dispatch-attempts'),
+    refetchInterval: pollMs,
   })
   const reconcile = useMutation({
     mutationFn: ({ id, outcome }: { id: string; outcome: string }) =>
@@ -4588,6 +4590,7 @@ export function BackendsPage({ embedded = false }: { embedded?: boolean }) {
 
 export function BackendDetailPage() {
   const { backendId = '' } = useParams()
+  const pollMs = useDemoOperationalPolling()
   const backend = useQuery({
     queryKey: ['backend', backendId],
     queryFn: () => qre<Row>(`/backends/${encodeURIComponent(backendId)}`),
@@ -4597,23 +4600,27 @@ export function BackendDetailPage() {
     queryKey: ['backend-status', backendId],
     queryFn: () => qre<Row>(`/backends/${encodeURIComponent(backendId)}/status`),
     enabled: !!backendId,
+    refetchInterval: pollMs,
   })
   const queue = useQuery({
     queryKey: ['backend-queue', backendId],
     queryFn: () => qre<Row>(`/queues/${encodeURIComponent(backendId)}`),
     enabled: !!backendId,
     retry: false,
+    refetchInterval: pollMs,
   })
   const topology = useQuery({
     queryKey: ['backend-topology', backendId],
     queryFn: () => qre<Row>(`/backends/${encodeURIComponent(backendId)}/topology`),
     enabled: !!backendId,
+    refetchInterval: pollMs,
   })
   const alerts = useQuery({
     queryKey: ['alerts-summary-backend', backendId],
     queryFn: () => qre<Row>('/alerts/summary'),
     enabled: !!backendId,
     retry: false,
+    refetchInterval: pollMs,
   })
   const nodes = Array.isArray(topology.data?.nodes) ? (topology.data.nodes as Row[]) : []
   const healthChart = useMemo(() => {

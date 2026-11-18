@@ -28,3 +28,11 @@ async def governance_activity(
     project_id: str | None = Query(None),
 ) -> dict:
     return await svc.governance_activity(session, ctx, limit=limit, project_id=project_id)
+
+
+@router.get("/governance/institution-boundary")
+async def institution_boundary(
+    ctx: TenantContext = Depends(require_permission("governance:read")),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    return await svc.institution_boundary(session, ctx)

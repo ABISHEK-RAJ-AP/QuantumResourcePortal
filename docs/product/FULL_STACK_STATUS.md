@@ -83,7 +83,7 @@ FastAPI mounts (`gateway/app.py`):
 
 ### Still missing or partial (UI may 404 / empty)
 
-`/governance/institution-boundary`, `/evidence/snapshots`, `/approvals/policy`, some connector live-ingest paths, and any route not listed in `QRP_API_IMPLEMENTATION_MATRIX.md`.
+`/evidence/snapshots`, `/approvals/policy`, some connector live-ingest paths, and any route not listed in `QRP_API_IMPLEMENTATION_MATRIX.md`.
 
 ---
 

@@ -53,3 +53,10 @@ async def test_centre_activity_metering(client, migrated_db):
     export = await client.get("/api/v1/meter-rollups/export?hours=24")
     assert export.status_code == 200
     assert "dimension" in export.text
+
+    boundary = await client.get("/api/v1/governance/institution-boundary")
+    assert boundary.status_code == 200, boundary.text
+    body = boundary.json()
+    assert body["tenant_code"] == "OPSTEST"
+    assert body["federation"]["mode"] == "single_site"
+    assert body["federation"]["peer_sites_reporting"] == 0

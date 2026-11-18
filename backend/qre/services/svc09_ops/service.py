@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from qre.core import authz
 from qre.core.context import ResourceRef, TenantContext
-from qre.core.errors import ValidationFailed
+from qre.core.errors import ResourceNotFound, ValidationFailed
 from qre.services.svc05_quotas.service import _shots_from_metadata
 
 
@@ -232,3 +232,35 @@ async def governance_activity(
     items = [i for i in items if i.get("timestamp")]
     items.sort(key=lambda x: str(x["timestamp"]), reverse=True)
     return {"items": items[:lim]}
+
+
+async def institution_boundary(session: AsyncSession, ctx: TenantContext) -> dict:
+    """Read-only tenant boundary for Settings / Policies (single-site lab default)."""
+    authz.get().require(ctx, "governance:read", ResourceRef.tenant(ctx.tenant_id))
+    row = (
+        await session.execute(
+            text(
+                """
+                SELECT tenant_id, code, name, settings
+                FROM tenant WHERE tenant_id = :t
+                """
+            ),
+            {"t": ctx.tenant_id},
+        )
+    ).mappings().first()
+    if not row:
+        raise ResourceNotFound()
+    settings = row.get("settings") if isinstance(row.get("settings"), dict) else {}
+    demo = bool(settings.get("demo_data"))
+    return {
+        "active_tenant_id": row["tenant_id"],
+        "tenant_code": row["code"],
+        "tenant_name": row["name"],
+        "demo_data": demo,
+        "federation": {
+            "local_site_name": row["name"],
+            "peer_sites_reporting": 0,
+            "peer_sites_configured": 0,
+            "mode": "single_site",
+        },
+    }

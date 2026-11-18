@@ -73,6 +73,52 @@ DEMO_USERS = [
 ]
 
 
+def _demo_topology_for_qubits(qubit_count: int) -> dict[str, Any]:
+    n = max(4, min(int(qubit_count or 8), 24))
+    nodes: list[dict[str, str]] = []
+    for i in range(n):
+        health = "healthy"
+        if i % 7 == 3:
+            health = "degraded"
+        elif i % 11 == 5:
+            health = "offline"
+        nodes.append({"id": f"q{i}", "health_status": health})
+    edges = [{"source": f"q{i}", "target": f"q{(i + 1) % n}"} for i in range(n)]
+    return {"nodes": nodes, "edges": edges}
+
+
+def _enrich_demo_backend_topologies(conn: Connection, tenant_id: str) -> int:
+    rows = conn.execute(
+        text(
+            """
+            SELECT backend_id, qubit_count, topology
+            FROM catalogue_backend
+            WHERE tenant_id = :t AND backend_id LIKE 'demo-%'
+            """
+        ),
+        {"t": tenant_id},
+    ).mappings().all()
+    updated = 0
+    for row in rows:
+        topo = row.get("topology") if isinstance(row.get("topology"), dict) else {}
+        nodes = topo.get("nodes") if isinstance(topo.get("nodes"), list) else []
+        if nodes:
+            continue
+        payload = _demo_topology_for_qubits(int(row.get("qubit_count") or 8))
+        conn.execute(
+            text(
+                """
+                UPDATE catalogue_backend
+                SET topology = CAST(:topo AS JSONB)
+                WHERE tenant_id = :t AND backend_id = :bid
+                """
+            ),
+            {"t": tenant_id, "bid": row["backend_id"], "topo": json.dumps(payload)},
+        )
+        updated += 1
+    return updated
+
+
 class SeedDemoError(Exception):
     pass
 
@@ -889,6 +935,7 @@ def seed_demo(
             correlation_id="demo-seed",
         )
 
+    _enrich_demo_backend_topologies(conn, tenant_id)
     _set_seed_marker(conn, tenant_id)
 
     try:
