@@ -1,5 +1,7 @@
 # QRP workspace UI catalog
 
+For API reachability, backend vs lab stubs, DB, auth, cache, and per-page data contracts see [`FULL_STACK_STATUS.md`](./FULL_STACK_STATUS.md).
+
 Operator console at `/qrp/*`. Breadcrumbs and shell header come from each page’s `Page` `crumbs` prop via `useSetPageChrome`. **Global six-step governance rail removed from list/hub pages**; lifecycle steps appear only in context (approval detail, asset/incident records, **New project** wizard).
 
 ## Shared chrome (authenticated shell)
