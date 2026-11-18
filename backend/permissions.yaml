@@ -272,6 +272,23 @@ roles:
       - incident:read
       - incident:manage
 
+  PROJECT_VIEWER:
+    name: "Project viewer"
+    assignable_scope: PROJECT
+    description: "Read-only access to a project hub (catalogue, workloads, holds). Cannot submit or reserve."
+    permissions:
+      - governance:read
+      - project:read
+      - asset:read
+      - pool:read
+      - provider:read
+      - backend:read
+      - policy:read
+      - quota:read
+      - workload:read
+      - reservation:read
+      - usage:read
+
   RESEARCHER:
     name: "Researcher / Standard User"
     assignable_scope: PROJECT

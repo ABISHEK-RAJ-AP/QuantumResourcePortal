@@ -6,6 +6,7 @@ Routers for each service are added here phase by phase under the ``/api/v1`` pre
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -31,8 +32,16 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     from qre.services.svc02_identity.api import ping_router
     from qre.services.svc02_identity.api import router as identity_router
     from qre.services.svc03_projects.api import router as projects_router
+    from qre.services.svc04_inventory.api import router as inventory_router
+    from qre.services.svc05_quotas.api import router as quotas_router
     from qre.services.svc06_approvals.api import router as approvals_router
+    from qre.services.svc07_scheduling.api import router as scheduling_router
+    from qre.services.svc08_dispatch.api import router as dispatch_router
+    from qre.services.svc09_ops.api import router as ops_router
+    from qre.services.svc14_metering.api import router as metering_router
+    from qre.services.svc15_alerts.api import router as alerts_router
     from qre.services.svc17_audit.api import router as audit_router
+    from qre.services.svc18_governance_audit.api import router as governance_audit_router
 
     router = APIRouter(prefix=API_PREFIX)
     router.include_router(identity_router)  # /auth/*, /me* (RBAC-4)
@@ -41,11 +50,23 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     router.include_router(authz_router)     # /authz/check (RBAC-5)
     router.include_router(audit_router)     # /rbac/audit read/export/verify (RBAC-8)
     router.include_router(projects_router)  # /projects list/create/detail
+    router.include_router(inventory_router)  # /inventory/assets
+    router.include_router(quotas_router)  # /quotas/ledger, /quotas/evaluate
     router.include_router(approvals_router)  # workloads, approvals, /governance/summary
+    router.include_router(scheduling_router)  # /reservations holds
+    router.include_router(dispatch_router)  # jobs, dispatch attempts, ICD
+    router.include_router(ops_router)  # operations centre, governance activity
+    router.include_router(metering_router)  # meter rollups
+    router.include_router(alerts_router)  # alerts + summary
+    router.include_router(governance_audit_router)  # /governance/audit-events
     if settings.is_lab:
+        from qre.seed.api import router as demo_seed_router
+        from qre.seed.simulation_api import router as demo_sim_router
         from qre.services.workspace_lab.api import router as workspace_lab_router
 
         router.include_router(workspace_lab_router)  # lab Home KPIs until module slices land
+        router.include_router(demo_seed_router)  # POST /admin/seed-demo (lab only)
+        router.include_router(demo_sim_router)  # demo simulation (lab only)
     return router
 
 
@@ -108,9 +129,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.db = Database(settings)
         log.info("api starting", extra={"env": settings.env.value, "version": APP_VERSION})
+        tick_task: asyncio.Task | None = None
+
+        async def _simulation_loop() -> None:
+            from qre.seed.simulation import tick_all_enabled_tenants
+
+            while True:
+                await asyncio.sleep(45)
+                try:
+                    async with app.state.db.sessionmaker() as session:
+                        await session.run_sync(tick_all_enabled_tenants)
+                        await session.commit()
+                except Exception:  # noqa: BLE001
+                    log.warning("demo simulation tick failed", exc_info=True)
+
+        if settings.is_lab:
+            tick_task = asyncio.create_task(_simulation_loop())
+
         try:
             yield
         finally:
+            if tick_task is not None:
+                tick_task.cancel()
+                try:
+                    await tick_task
+                except asyncio.CancelledError:
+                    pass
             await app.state.db.dispose()
             log.info("api stopped")
 

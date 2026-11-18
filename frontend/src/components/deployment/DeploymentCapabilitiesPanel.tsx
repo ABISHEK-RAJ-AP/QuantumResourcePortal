@@ -48,6 +48,10 @@ function panelFrom(data: AuthCapabilities) {
         {data.federation.oidc || data.federation.saml ? 'Configured' : 'Not configured'}
       </Row>
       <Row label="Procurement module">{yesNo(data.features.procurement_entitlements)}</Row>
+      {data.features.demo_seed != null ? <Row label="Demo seed (lab)">{yesNo(data.features.demo_seed)}</Row> : null}
+      {data.features.demo_simulation != null ? (
+        <Row label="Demo simulation (lab)">{yesNo(data.features.demo_simulation)}</Row>
+      ) : null}
       <Row label="Session store">{data.session.store ?? 'postgresql'}</Row>
       <Row label="Redis cache">{yesNo(data.cache?.connected ?? false)}</Row>
       <Row label="Cache backend">{data.cache?.backend ?? '—'}</Row>

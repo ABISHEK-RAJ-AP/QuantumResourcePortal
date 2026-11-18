@@ -66,7 +66,7 @@ fi
 API_UP=0
 UI_UP=0
 curl -sf -m 1 "http://127.0.0.1:${API_PORT}/readyz" >/dev/null 2>&1 && API_UP=1 || true
-curl -sf -m 1 -o /dev/null http://127.0.0.1:5176/ >/dev/null 2>&1 && UI_UP=1 || true
+curl -sf -m 1 -o /dev/null "http://127.0.0.1:${UI_PORT}/" >/dev/null 2>&1 && UI_UP=1 || true
 
 if [[ "$API_UP" -eq 0 ]]; then
   log "Opening terminal: QRP API :${API_PORT}"
@@ -80,7 +80,7 @@ if [[ "$UI_UP" -eq 0 ]]; then
 fi
 
 sleep 2
-command -v xdg-open >/dev/null && xdg-open "http://127.0.0.1:5176/qrp" >/dev/null 2>&1 || true
+command -v xdg-open >/dev/null && xdg-open "http://127.0.0.1:${UI_PORT}/qrp" >/dev/null 2>&1 || true
 log "  API    http://127.0.0.1:${API_PORT}  (docs /api/v1/docs)"
 log "  Portal http://127.0.0.1:${UI_PORT}/qrp"
 read -r -p "Launcher OK — Press Enter to close (servers keep running)… " _

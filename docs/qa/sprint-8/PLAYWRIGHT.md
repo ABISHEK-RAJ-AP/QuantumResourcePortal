@@ -2,7 +2,7 @@
 
 Prerequisites:
 
-1. Backend on port **8000** (`make dev-api` or VM stack).
+1. Backend on port **8010** (`make dev-api` or VM stack).
 2. Frontend dev server **5176** (Playwright starts it unless already running).
 3. Admin account matching `frontend/e2e/auth.ts` defaults or `E2E_ADMIN_USER` / `E2E_ADMIN_PW`.
 

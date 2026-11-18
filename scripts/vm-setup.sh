@@ -11,6 +11,9 @@ source "$ROOT/scripts/lib/vm-common.sh"
 vm_bootstrap_path
 mkdir -p "$ROOT/logs"
 
+vm_log "Ports — API :${API_PORT}  UI :${UI_PORT}  (Q-TeleScope may use :8000 / :5173 — QRP will not bind those)"
+vm_log "Proxy target — ${QRP_API_TARGET}"
+
 if command -v git >/dev/null; then
   if git rev-parse --verify origin/main >/dev/null 2>&1; then
     CUR="$(git branch --show-current 2>/dev/null || true)"
@@ -47,7 +50,7 @@ if vm_qrp_api_ok "$API_PORT"; then
   vm_log "QRP API already healthy on :${API_PORT}"
 else
   if curl -sf -m 1 "http://127.0.0.1:${API_PORT}/healthz" >/dev/null 2>&1; then
-    vm_log "Port ${API_PORT} is in use but is NOT QRP (likely Q-TeleScope or stale process) — replacing"
+    vm_log "Port ${API_PORT} responds to /healthz but is not QRP — freeing and restarting"
   fi
   vm_start_api "$ROOT" "$API_PORT"
 fi

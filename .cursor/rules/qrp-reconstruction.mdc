@@ -1,33 +1,39 @@
 ---
-description: QRP reference-driven reconstruction — study analysis docs before module work
+description: QRP reconstruction — spirit doc + shipped code only; no reference markdown in git
 globs:
   - frontend/**
   - backend/**
-  - docs/**
+  - docs/product/**
 ---
 
-# QRP reconstruction (post Phase 1)
+# QRP reconstruction
 
-Before implementing or refactoring a **workspace module**:
+## Read first (in git)
 
-1. Read `docs/reference-analysis/` — especially `QRP_IMPLEMENTATION_ROADMAP.md`, `REFERENCE_COMPONENT_CATALOG.md`, and module stubs under `docs/reference-analysis/repositories/`.
-2. Log progress in `docs/reference-analysis/IMPLEMENTATION_LOG.md` when a phase gate or production API slice lands.
+1. `docs/product/QRP_RECONSTRUCTION_SPIRIT.md` — mission, Phase 1–2 split, local-only rules
+2. `docs/product/QRP_API_IMPLEMENTATION_MATRIX.md` — route/API status (code truth)
+3. `docs/product/QRP_UI_RECONSTRUCTION_PLAN.md` — dependency order; no mass reskin
+4. `docs/product/QRP_END_TO_END_WORKFLOW.md` — lifecycle; separate approval stages
+5. `docs/product/FULL_STACK_STATUS.md` + `WORKSPACE_UI_CATALOG.md` + `QRP_DESIGN_SYSTEM.md`
+
+## Local only — do not add or commit
+
+- `vendor-references/**`
+- `docs/reference-analysis/**`
+- `docs/research/VENDOR_REFERENCE_UI.md`
+
+Use those paths on disk for research if present. Progress notes belong in a **local** `docs/reference-analysis/IMPLEMENTATION_LOG.md` or commit message — not new tracked research trees.
 
 ## Hard rules
 
 | Do | Do not |
 | --- | --- |
-| Pair frontend + backend for the module | Ship list/detail UI on lab-only or 404 paths without documenting gap |
-| Use `require_permission` + `get_ctx` on every new route | Unguarded FastAPI routes (startup assert will fail) |
-| Honest empty/error when API missing | Fake KPI counts or badge numbers |
-| Pattern-only from AGPL/GPL vendors | Copy vendor code into `frontend/src` or `backend/qre` |
-| Contextual `WorkflowSteps` on detail/wizard | Global governance step rail on list pages |
-
-## Design
-
-- `docs/product/QRP_DESIGN_SYSTEM.md` and `frontend/src/styles/index.css` tokens — no wholesale reskin without user approval.
-- `docs/product/QRP_REFERENCE_RECONSTRUCTION_MASTER.md` is the session-level mission prompt.
+| Vertical slice: API + migration + tests + `FULL_STACK_STATUS` | Cosmetic pass without backend |
+| `require_permission` + scoped checks in services | Unguarded routes |
+| Honest empty/error states | Fake KPIs or demo counts in production paths |
+| Pattern-only from AGPL/GPL vendors | Vendor code in product tree |
+| Contextual workflow on detail/wizard | Global governance rail on list hubs |
 
 ## Commits
 
-One module vertical slice per iteration when possible (API + tests + doc rows + minimal FE contract fixes).
+Product changes only: code, migrations, tests, `docs/product/*` (spirit, status, catalog, design). **Never** commit vendor clone analysis markdown.

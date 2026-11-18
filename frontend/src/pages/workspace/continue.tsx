@@ -16,6 +16,8 @@ import {
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { CopyableId } from '@/components/data/CopyableId'
 import { DeploymentCapabilitiesPanel } from '@/components/deployment/DeploymentCapabilitiesPanel'
+import { DemoEnvironmentPanel } from '@/components/shell/DemoEnvironmentPanel'
+import { useDemoOperationalPolling } from '@/hooks/useDemoOperationalPolling'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { ChartPanel } from '@/components/data/ChartPanel'
 import { FilterBar } from '@/components/data/FilterBar'
@@ -4011,24 +4013,29 @@ export function JobDetailPage() {
 }
 
 export function CentrePage() {
+  const pollMs = useDemoOperationalPolling()
   const query = useQuery({
     queryKey: ['operations-centre'],
     queryFn: () => qre<Row>('/operations/centre'),
+    refetchInterval: pollMs,
   })
   const summary = useQuery({
     queryKey: ['governance-summary'],
     queryFn: () => qre<Row>('/governance/summary'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const attempts = useQuery({
     queryKey: ['dispatch-attempts-centre'],
     queryFn: () => qre<unknown>('/dispatch-attempts'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const queues = useQuery({
     queryKey: ['queues-centre'],
     queryFn: () => qre<unknown>('/queues'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const fleet = (query.data?.fleet as Row | undefined) ?? {}
   const ops = (query.data?.operations as Row | undefined) ?? {}
@@ -5104,6 +5111,7 @@ export function SettingsPage() {
         )}
       </Card>
       <AccountSecurity />
+      <DemoEnvironmentPanel />
       <DeploymentCapabilitiesPanel compact />
       <Card className="space-y-2 text-sm">
         <PanelHeader title="Institution" />

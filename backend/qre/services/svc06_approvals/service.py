@@ -355,6 +355,17 @@ async def decide(
     )
     if new_state in TERMINAL_STATES:
         await _refresh_project_submission_lock(session, row["project_id"])
+    from qre.services.svc17_audit.service import write_audit_async
+
+    await write_audit_async(
+        session,
+        tenant_id=ctx.tenant_id,
+        action=f"APPROVAL_{decision.upper()}",
+        actor_id=ctx.principal_id,
+        target_type="workload",
+        target_id=workload_id,
+        detail={"stage_id": current.get("id"), "new_state": new_state},
+    )
     return await get_approval(session, ctx, workload_id)
 
 
@@ -449,10 +460,16 @@ async def governance_summary(session: AsyncSession, ctx: TenantContext) -> dict:
             counts[st] = int(row["n"])
     queue = sum(counts.get(s, 0) for s in OPEN_STATES)
     in_review = counts.get("in_review", 0)
+    asset_count = (
+        await session.execute(
+            text("SELECT count(*) FROM inventory_asset WHERE tenant_id = :t"),
+            {"t": ctx.tenant_id},
+        )
+    ).scalar()
     return {
         "queue": queue,
         "in_review": in_review,
-        "inventory_assets": 0,
+        "inventory_assets": int(asset_count or 0),
         "counts": {
             "submitted_for_review": counts.get("submitted_for_review", 0),
             "in_review": in_review,

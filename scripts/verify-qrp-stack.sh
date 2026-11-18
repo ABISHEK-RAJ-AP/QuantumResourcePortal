@@ -37,7 +37,7 @@ if grep -q '^QRE_REDIS_URL=redis://' "$ROOT/backend/.env" 2>/dev/null; then
 fi
 
 echo "=== QRP API direct :${API_PORT} ==="
-vm_qrp_api_ok "$API_PORT" || fail "Port ${API_PORT} is not the QRP gateway (wrong app or API down)"
+vm_qrp_api_ok "$API_PORT" || fail "Port ${API_PORT} is not the QRP gateway (wrong app or API down). Run: git pull && bash scripts/vm-setup.sh. If API_PORT was 8000 in your shell, unset API_PORT or use QRP_API_PORT=8010. tail -40 $ROOT/logs/api.log"
 curl_json "${API}/healthz" "healthz" >/dev/null
 curl_json "${API}/readyz" "readyz" >/dev/null
 curl_json "${API}/api/v1/auth/captcha" "auth/captcha" >/dev/null

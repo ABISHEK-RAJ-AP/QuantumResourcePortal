@@ -10,7 +10,12 @@ export type AuthCapabilities = {
   password_self_service: boolean
   self_registration: boolean
   federation: { oidc: boolean; saml: boolean; local_login: boolean }
-  features: { procurement_entitlements: boolean; row_level_security: boolean }
+  features: {
+    procurement_entitlements: boolean
+    row_level_security: boolean
+    demo_seed?: boolean
+    demo_simulation?: boolean
+  }
   session: {
     store: string
     idle_minutes: number

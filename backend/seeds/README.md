@@ -1,4 +1,7 @@
 # Demo data seeds
 
-Phase 3 adds `seed_demo.py`, which loads the DEMO tenant (LLD-separated, labelled DEMO DATA).
-It refuses to run when `QRE_ENV=production`.
+Implementation: `qre/seed/seed_demo.py` (CLI: `python -m qre seed-demo`).
+
+Loads interconnected `[DEMO]`-labelled rows for an existing tenant. Refuses when `QRE_ENV=production`.
+
+See `docs/development/QRP_DEMO_ENVIRONMENT.md`.

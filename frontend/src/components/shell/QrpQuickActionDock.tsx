@@ -69,7 +69,8 @@ export function QrpQuickActionDock() {
   const seed = useMutation({
     mutationFn: seedPortalDemo,
     onSuccess: (r) => {
-      setSeedMsg(`Demo: ${r.projects}p · ${r.approvals}r · ${r.reservations}h · ${r.assets}a`)
+      const src = r.source === 'backend' ? 'DB' : 'API'
+      setSeedMsg(`Demo (${src}): ${r.projects}p · ${r.approvals}w · ${r.reservations}r · ${r.members}u`)
       void client.invalidateQueries()
       setExpanded(false)
     },
@@ -140,7 +141,7 @@ export function QrpQuickActionDock() {
       list.push({
         id: 'demo',
         label: seed.isPending ? 'Loading demo…' : 'Load demo',
-        subtitle: 'Seed via APIs',
+        subtitle: 'PostgreSQL seed',
         onClick: () => seed.mutate(),
         icon: <Sparkles className="size-5" strokeWidth={2} />,
       })

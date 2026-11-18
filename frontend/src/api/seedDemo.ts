@@ -8,13 +8,45 @@ export type SeedDemoResult = {
   assets: number
   members: number
   errors: string[]
+  source?: 'backend' | 'client-fallback'
+}
+
+type BackendSeedPayload = {
+  created?: boolean
+  counts?: Record<string, number>
+  demo_users?: string[]
 }
 
 /**
- * Populate a demo workspace via real APIs so list pages look lived-in.
- * Idempotent-ish: creates new labeled demo rows each run; safe for local demos.
+ * Prefer backend PostgreSQL seed (interconnected demo). Falls back to legacy API chaining when
+ * the lab-only admin route is unavailable.
  */
 export async function seedPortalDemo(): Promise<SeedDemoResult> {
+  const errors: string[] = []
+  try {
+    const res = await qre<BackendSeedPayload>('/admin/seed-demo', {
+      method: 'POST',
+      body: JSON.stringify({ force: false }),
+    })
+    const counts = res.counts ?? {}
+    return {
+      projects: counts.projects ?? 0,
+      approvals: counts.workloads ?? 0,
+      reservations: counts.reservations ?? 0,
+      pools: 0,
+      assets: 0,
+      members: res.demo_users?.length ?? 0,
+      errors,
+      source: 'backend',
+    }
+  } catch (e) {
+    errors.push(e instanceof Error ? e.message : 'backend seed unavailable')
+  }
+  return { ...(await seedPortalDemoClient()), errors, source: 'client-fallback' }
+}
+
+/** Legacy per-API seed — supplements missing slices only when backend seed is blocked. */
+export async function seedPortalDemoClient(): Promise<SeedDemoResult> {
   const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ')
   const errors: string[] = []
   let projects = 0
@@ -27,9 +59,6 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
   const projectSpecs = [
     { name: `Demo Lab ${stamp}`, description: 'Materials simulation lab — seeded for UI walkthrough', project_type: 'quantum_circuit' },
     { name: `Demo Ops ${stamp}`, description: 'Operations rehearsal project', project_type: 'quantum_circuit' },
-    { name: `Demo Research ${stamp}`, description: 'Researcher request sandbox', project_type: 'quantum_circuit' },
-    { name: `Demo Calibration ${stamp}`, description: 'Backend calibration workloads', project_type: 'quantum_circuit' },
-    { name: `Demo Education ${stamp}`, description: 'Teaching / outreach queue', project_type: 'quantum_circuit' },
   ]
 
   const projectIds: string[] = []
@@ -59,11 +88,10 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
     }
   }
 
-  // Members on first projects so Members tab is not empty.
-  for (const projectId of projectIds.slice(0, 3)) {
+  for (const projectId of projectIds.slice(0, 2)) {
     for (const [username, role] of [
-      ['researcher', 'editor'],
-      ['reviewer', 'viewer'],
+      ['demo_researcher', 'editor'],
+      ['demo_pi', 'editor'],
     ] as const) {
       try {
         await qre(`/projects/${encodeURIComponent(projectId)}/members`, {
@@ -77,123 +105,21 @@ export async function seedPortalDemo(): Promise<SeedDemoResult> {
     }
   }
 
-  // Multiple reviews per project so Review Queue / Overview look populated.
   for (const projectId of projectIds) {
-    for (let n = 0; n < 3; n++) {
-      try {
-        const draft = await qre<Record<string, unknown>>('/workload-submissions', {
-          method: 'POST',
-          body: JSON.stringify({
-            project_id: projectId,
-            metadata: {
-              purpose: `Seeded demo request ${stamp} #${n + 1}`,
-              resource_hint: n % 2 === 0 ? 'simulator' : 'qpu-pool',
-            },
-          }),
-        })
-        await qre(`/workload-submissions/${encodeURIComponent(String(draft.submission_id))}/submit-for-review`, {
-          method: 'POST',
-        })
-        approvals += 1
-      } catch (e) {
-        errors.push(e instanceof Error ? e.message : 'approval seed failed')
-      }
-    }
-  }
-
-  let poolId = ''
-  try {
-    const pool = await qre<Record<string, unknown>>('/virtual-pools', {
-      method: 'POST',
-      body: JSON.stringify({ name: `Demo pool ${stamp}`, purpose: 'Seeded eligible resource group' }),
-    })
-    if (pool.pool_id) {
-      pools += 1
-      poolId = String(pool.pool_id)
-    }
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : 'pool create failed')
-  }
-
-  // Second pool for catalogue fullness
-  try {
-    const pool2 = await qre<Record<string, unknown>>('/virtual-pools', {
-      method: 'POST',
-      body: JSON.stringify({ name: `Demo simulators ${stamp}` }),
-    })
-    if (pool2.pool_id) pools += 1
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : 'pool2 create failed')
-  }
-
-  const now = Date.now()
-  const dayOffsets = [0, 1, 2, 3, 5, 8, 12]
-  for (let i = 0; i < dayOffsets.length; i++) {
     try {
-      const dayStart = new Date(now)
-      dayStart.setHours(10, 0, 0, 0)
-      dayStart.setDate(dayStart.getDate() + dayOffsets[i])
-      const dayEnd = new Date(dayStart.getTime() + 2 * 3600_000)
-      await qre('/reservations', {
+      const draft = await qre<Record<string, unknown>>('/workload-submissions', {
         method: 'POST',
         body: JSON.stringify({
-          resource_ref: `demo-backend-${(i % 4) + 1}`,
-          project_id: projectIds[i % Math.max(projectIds.length, 1)] || projectIds[0] || null,
-          window_start: dayStart.toISOString(),
-          window_end: dayEnd.toISOString(),
-          purpose: `Demo reservation hold ${stamp} #${i + 1}`,
+          project_id: projectId,
+          metadata: { purpose: `Seeded demo request ${stamp}`, shots: 100 },
         }),
       })
-      reservations += 1
-    } catch (e) {
-      errors.push(e instanceof Error ? e.message : 'reservation create failed')
-    }
-  }
-
-  const assetIds: string[] = []
-  for (const [cls, exec, provider] of [
-    ['QPU', 'hardware', 'cdac_quantum'],
-    ['Simulator', 'simulated', 'cdac_quantum'],
-    ['QPU', 'hardware', 'ibm_quantum'],
-    ['Simulator', 'simulated', 'rigetti_quantum'],
-    ['QPU', 'hardware', 'ionq'],
-    ['Simulator', 'simulated', 'cdac_quantum'],
-  ] as const) {
-    try {
-      const asset = await qre<Record<string, unknown>>('/inventory/assets', {
+      await qre(`/workload-submissions/${encodeURIComponent(String(draft.submission_id))}/submit-for-review`, {
         method: 'POST',
-        body: JSON.stringify({
-          asset_class: cls,
-          execution_class: exec,
-          provider_id: provider,
-          native_asset_id: `demo-${exec}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`,
-        }),
       })
-      assets += 1
-      if (asset.asset_id) assetIds.push(String(asset.asset_id))
+      approvals += 1
     } catch (e) {
-      errors.push(e instanceof Error ? e.message : 'asset create failed')
-    }
-  }
-
-  if (poolId && assetIds[0]) {
-    try {
-      await qre(`/virtual-pools/${encodeURIComponent(poolId)}/members`, {
-        method: 'POST',
-        body: JSON.stringify({ asset_id: assetIds[0] }),
-      })
-    } catch (e) {
-      errors.push(e instanceof Error ? e.message : 'pool member failed')
-    }
-  }
-  if (poolId && assetIds[1]) {
-    try {
-      await qre(`/virtual-pools/${encodeURIComponent(poolId)}/members`, {
-        method: 'POST',
-        body: JSON.stringify({ asset_id: assetIds[1] }),
-      })
-    } catch (e) {
-      errors.push(e instanceof Error ? e.message : 'pool member2 failed')
+      errors.push(e instanceof Error ? e.message : 'approval seed failed')
     }
   }
 

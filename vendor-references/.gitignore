@@ -1,5 +1,0 @@
-# Clones live here locally; never commit upstream trees.
-/*
-!.gitignore
-!README.md
-!clone-all.sh

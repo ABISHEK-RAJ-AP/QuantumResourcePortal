@@ -7,6 +7,7 @@ PY    := $(VENV)/bin/python
 QRP_API_PORT ?= 8010
 QRP_UI_PORT  ?= 5176
 QRP_API_TARGET ?= http://127.0.0.1:$(QRP_API_PORT)
+QRE_DEMO_TENANT_CODE ?= CDAC
 
 .PHONY: help setup setup-backend setup-frontend migrate dev-api dev-web test test-backend test-frontend test-e2e lint check
 
@@ -26,6 +27,9 @@ setup-frontend:  ## Install frontend dependencies from the lock file
 
 migrate:  ## Apply database migrations to the development database
 	cd backend && .venv/bin/alembic upgrade head
+
+seed-demo:  ## Load interconnected demo dataset (QRE_ENV=lab, existing tenant)
+	cd backend && QRE_ENV=lab .venv/bin/python -m qre seed-demo --tenant-code $(QRE_DEMO_TENANT_CODE)
 
 dev-api:  ## Run the FastAPI backend with auto-reload on :8010 (not Q-TeleScope :8000)
 	cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port $(QRP_API_PORT)

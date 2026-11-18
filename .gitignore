@@ -17,4 +17,11 @@ frontend/coverage/
 # Editors / OS
 .DS_Store
 *.swp
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+
+# Local reference research — clones + agent analysis (not for remote)
+vendor-references/
+docs/reference-analysis/
+docs/research/VENDOR_REFERENCE_UI.md

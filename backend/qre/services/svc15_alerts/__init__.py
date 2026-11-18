@@ -1,0 +1,1 @@
+"""Fleet alerts and summary (empty until detectors ingest)."""

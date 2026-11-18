@@ -5,10 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from qre.core.deps import db_session, require_permission
 from qre.core.context import TenantContext
+from qre.core.deps import db_session, get_ctx, require_permission
+from qre.services.svc03_projects import members as member_svc
 from qre.services.svc03_projects import service as svc
-from qre.services.svc03_projects.schemas import ProjectCreateIn
+from qre.services.svc03_projects.schemas import ProjectCreateIn, ProjectMemberIn
 
 router = APIRouter(tags=["projects"])
 
@@ -43,3 +44,24 @@ async def get_project(
     session: AsyncSession = Depends(db_session),
 ) -> dict:
     return await svc.get_project(session, ctx, project_id)
+
+
+@router.get("/projects/{project_id}/members")
+async def list_project_members(
+    project_id: str,
+    ctx: TenantContext = Depends(get_ctx),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    return await member_svc.list_project_members(session, ctx, project_id)
+
+
+@router.post("/projects/{project_id}/members", status_code=201)
+async def add_project_member(
+    project_id: str,
+    body: ProjectMemberIn,
+    ctx: TenantContext = Depends(get_ctx),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    return await member_svc.add_project_member(
+        session, ctx, project_id, username=body.username, role=body.role
+    )

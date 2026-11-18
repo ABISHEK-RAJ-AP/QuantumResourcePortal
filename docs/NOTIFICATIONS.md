@@ -29,7 +29,7 @@ bash scripts/vm-pull-main.sh
 # install + migrate + start API + UI (background)
 bash scripts/vm-setup.sh
 
-# or interactive launcher (separate terminals :8000 / :5176)
+# or interactive launcher (separate terminals :8010 / :5176)
 bash scripts/start-qrp.sh
 ```
 

@@ -1,0 +1,86 @@
+# QRP demo environment
+
+Load the portal with **interconnected demonstration data** stored in PostgreSQL. The UI reads the same APIs as production; charts and KPIs are derived from seeded rows.
+
+## Safety
+
+| Rule | Detail |
+| --- | --- |
+| Profile | Seed refuses when `QRE_ENV=production` |
+| Explicit action | Run `make seed-demo` or `POST /api/v1/admin/seed-demo` (PLATFORM_ADMIN, lab only) |
+| Idempotency | Re-run is a no-op when `demo_seed_version` matches; use `--force` to rebuild |
+| Reset | `python -m qre seed-demo --tenant-code CDAC --reset-only` removes `[DEMO]`-labelled rows only |
+| Credentials | Demo accounts use password `Demo-Strong-Pw-2026` — never reuse in production |
+
+## Prerequisites
+
+1. PostgreSQL running; `make migrate` applied through head.
+2. Tenant bootstrapped, e.g. `python -m qre bootstrap --tenant-code CDAC --admin-username admin` with `QRE_BOOTSTRAP_PASSWORD`.
+3. `QRE_ENV=lab` in `backend/.env`.
+
+## Seed command
+
+```bash
+cd ~/QuantumResourcePortal
+make migrate
+QRE_ENV=lab make seed-demo                    # default tenant CDAC
+# or
+cd backend && QRE_ENV=lab .venv/bin/python -m qre seed-demo --tenant-code CDAC --force
+```
+
+After seeding, start stack:
+
+```bash
+make dev-api    # :8010
+make dev-web    # :5176
+```
+
+## Demo accounts
+
+| Username | Role (illustrative) | Password |
+| --- | --- | --- |
+| `admin` (bootstrap) | PLATFORM_ADMIN | your bootstrap password |
+| `demo_researcher` | RESEARCHER on demo projects | `Demo-Strong-Pw-2026` |
+| `demo_pi` | PROJECT_OWNER on demo projects | `Demo-Strong-Pw-2026` |
+| `demo_operator` | OPERATOR (tenant) | `Demo-Strong-Pw-2026` |
+| `demo_auditor` | AUDITOR (tenant) | `Demo-Strong-Pw-2026` |
+
+All demo entities are prefixed `[DEMO]` or `DEMO-PRJ-*` / `demo-*` ids.
+
+## UI: Load demo
+
+Signed-in **PLATFORM_ADMIN** can use **Quick actions → Load demo**, which calls `POST /api/v1/admin/seed-demo`. If that route is blocked, the dock falls back to a thin legacy API chain.
+
+## Scenarios (navigate in UI)
+
+1. **Successful execution** — `DEMO-PRJ-0001` → approved workload → dispatch/job `demo-job-0001`
+2. **Approval pending** — workloads in `submitted_for_review` / `in_review`
+3. **Quota pressure** — tenant `daily_shots_cap` raised; ledger from approved workloads
+4. **Reservation conflict** — overlapping `[DEMO]` holds on same `resource_ref` (inspect Reservations)
+5. **Provider failure** — jobs/dispatch rows in `dispatch_failed` / `FAILED`
+6. **Usage / reconciliation** — meter rollups + dispatch `dispatch_confirmed` rows
+7. **Maintenance** — `demo-rigetti-aspen` in `MAINTENANCE`; related alerts
+8. **Audit trail** — Governance audit after seed (project/workload/dispatch events)
+
+## Simulation vs real telemetry
+
+- **Real:** Provider connectors (when implemented) must show last refresh timestamp.
+- **Demo:** Queue snapshots and provider metadata are **labelled demonstration** in catalogue `integration` JSON — never imply live IBM/IonQ connectivity.
+
+**Demo simulation** (lab): `POST /api/v1/admin/demo-simulation/start` as PLATFORM_ADMIN, or **Start simulation** on the shell banner. The API background loop ticks every ~45s and updates `catalogue_backend.queue_snapshot`, `provider_job` status, and `[DEMO]` alerts in PostgreSQL. Audit actions are prefixed `DEMO_SIM_*`. Shell shows **DEMO SIMULATION** while active.
+
+## Verify population
+
+```bash
+# after login as admin
+curl -b cookies.txt -H "X-CSRF-Token: …" http://127.0.0.1:8010/api/v1/projects | jq '.items | length'
+curl http://127.0.0.1:8010/api/v1/operations/centre | jq
+```
+
+Backend validation: `python -m qre seed-demo` prints counts; integrators can import `qre.seed.validate.validate_demo_seed`.
+
+## Disable demo in shared environments
+
+- Do not mount `qre.seed.api` (requires `QRE_ENV=lab`).
+- Omit seed Makefile target from automation.
+- Remove demo users with admin UI if accidentally created on a shared tenant.

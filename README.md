@@ -12,7 +12,7 @@ Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`do
 | Database | PostgreSQL 16 |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, TanStack Query, React Router |
 | Tests | pytest, Vitest + Testing Library, Playwright |
-| Reference UIs | OSS governance/dispatch patterns — see [`docs/research/VENDOR_REFERENCE_UI.md`](docs/research/VENDOR_REFERENCE_UI.md) and [`docs/reference-analysis/`](docs/reference-analysis/) (Phase 1 research); `bash vendor-references/clone-all.sh` |
+| Reference UIs | **Local research only** — clone with `vendor-references/clone-all.sh` (not in git). Agents: [`docs/product/QRP_RECONSTRUCTION_SPIRIT.md`](docs/product/QRP_RECONSTRUCTION_SPIRIT.md) + [`FULL_STACK_STATUS.md`](docs/product/FULL_STACK_STATUS.md). |
 
 ## Notifications (operator inbox)
 
@@ -70,7 +70,8 @@ From this repository root:
 
 Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8010
 
-**Ports:** QRP uses **8010** (API) and **5176** (dev UI) so Q-TeleScope can keep **8000** / **5173** / **4173**. Override via `scripts/lib/qrp-ports.sh` or `QRP_API_PORT` / `QRP_API_TARGET`.
+**Ports:** QRP uses **8010** (API) and **5176** (dev UI) so Q-TeleScope can keep **8000** / **5173** / **4173**. Override via `QRP_API_PORT` / `QRP_API_TARGET` (see `scripts/lib/qrp-ports.sh`).  
+**VM conflict:** If `verify-stack` fails on `:8010` but logs mention `:8000`, run `unset API_PORT UI_PORT`, `git pull`, then `bash scripts/vm-setup.sh` — stale `export API_PORT=8000` in `.bashrc` is auto-coerced to **8010** on recent scripts.
 From the Q-TeleScope monorepo, use `scripts/vm-qrp-setup.sh` — it delegates to this repo's `scripts/vm-setup.sh`.
 **Redis/Valkey** (port 6379) is used for CAPTCHA challenges and operational cache — `bash scripts/vm-setup.sh` starts it and sets `QRE_REDIS_URL` in `backend/.env`. **Signed-in sessions** remain in **PostgreSQL** (LLD §11.3), same pattern as Q-TeleScope’s split: durable session in DB, ephemeral data in Redis.
 

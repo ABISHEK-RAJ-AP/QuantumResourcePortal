@@ -1,7 +1,7 @@
 # QRP full-stack status (frontend · backend · API · DB · auth · cache)
 
 **Repository:** `QuantumResourcePortal`  
-**Last aligned to code:** commit series through `1a41e7a` (workspace UX + wizards)  
+**Last aligned to code:** Nov 2026 — migrations `0013`, demo seed + simulation (lab)  
 **Audience:** operators, integrators, and developers tracing UI → API → database.
 
 Companion (navigation-focused): [`WORKSPACE_UI_CATALOG.md`](./WORKSPACE_UI_CATALOG.md).
@@ -15,7 +15,7 @@ Companion (navigation-focused): [`WORKSPACE_UI_CATALOG.md`](./WORKSPACE_UI_CATAL
 | **Vite dev server** | `http://localhost:5176` | Serves React SPA; **proxies** `/api`, `/healthz`, `/readyz` → backend (`QRP_API_TARGET`, default `http://127.0.0.1:8010`). |
 | **FastAPI (QRE gateway)** | `http://127.0.0.1:8010` | JSON API under `/api/v1/*`; probes at `/healthz`, `/readyz` (no version prefix). Q-TeleScope may stay on `:8000`. |
 | **Vite preview** | `:4176` | Not Q-TeleScope preview `:4173` |
-| **PostgreSQL 16** | `DATABASE_URL` in `backend/.env` | Sessions, RBAC, audit log, identity tables (Alembic migrations `0001`–`0005`). |
+| **PostgreSQL 16** | `DATABASE_URL` in `backend/.env` | Sessions, RBAC, audit, projects, workloads, reservations, catalogue, dispatch, ops (Alembic `0001`–`0013`). |
 | **Redis 6379** (optional) | `QRE_REDIS_URL` | CAPTCHA challenges + operational JSON cache; **not** session store. |
 
 **Browser rule:** Session cookie is **same-origin** (browser → Vite → proxy → API). Cookies are **not** stored in `localStorage`. CSRF token is **in memory only** (refetched via `GET /api/v1/auth/csrf` after login).
@@ -69,39 +69,21 @@ FastAPI mounts (`gateway/app.py`):
 | **admin** | `/api/v1/admin/*` | **Shipped** (roles, users, memberships) |
 | **authz** | `/api/v1/authz/check` | **Shipped** |
 | **audit (RBAC)** | `/api/v1/rbac/audit` | **Shipped** (list, export, verify chain) |
-| **projects (SVC-03)** | `/api/v1/projects` | **Shipped** (list, create, detail) |
+| **projects (SVC-03)** | `/api/v1/projects`, `/projects/{id}/members` | **Shipped** (list, create, detail, members) |
 | **approvals (SVC-06)** | `/api/v1/workload-submissions`, `/api/v1/approvals/*`, `/api/v1/governance/summary` | **Shipped** (minimal queue + decide/withdraw) |
-| **workspace_lab** | see below | **Lab only** (`QRE_ENV=lab`) |
+| **scheduling (SVC-07)** | `/api/v1/reservations`, `POST .../transition` | **Shipped** (holds list/create; overlap `conflict_count`) |
+| **quotas (SVC-05)** | `/api/v1/quotas/ledger`, `/quotas/evaluate` | **Shipped** (approved workloads; metadata shots) |
+| **demo seed / simulation** | CLI + lab admin API | **Lab only** — `python -m qre seed-demo`, `POST /admin/seed-demo`, `POST /admin/demo-simulation/*` |
+| **workspace_lab** | (minimal) | **Lab only** — placeholder router |
 
-### Lab stubs (`workspace_lab/api.py`) — demo aggregates only
+### Demo data (lab)
 
-When `settings.is_lab` is true, these **GET** routes return fixed demo JSON (`demo: true` on several):
+- **Seed:** `make seed-demo` / `POST /admin/seed-demo` — interconnected `[DEMO]` rows across projects → workloads → dispatch → jobs → alerts. See `docs/development/QRP_DEMO_ENVIRONMENT.md`.
+- **Simulation:** Background tick (~45s) updates demo queue snapshots and job statuses in DB; shell banner **DEMO SIMULATION** when active. Audit prefix `DEMO_SIM_*`.
 
-- `/operations/centre`
-- `/quotas/ledger` (no query params honoured in stub)
-- `/queues`
-- `/dispatch-attempts` (list shape)
-- `/alerts/summary`
-- `/governance/activity`
+### Still missing or partial (UI may 404 / empty)
 
-`/governance/summary` and `/approvals` are **production routers** (SVC-06) — always mounted; counts come from `workload` rows (zeros when empty). Lab no longer fakes those paths.
-
-Outside **lab**, remaining lab stub paths are **not mounted** → **404** until module routers land.
-
-### Workspace paths the UI calls but **no QRP router implements yet**
-
-The Govern workspace UI is built against the **target SRS/LLD contract**. Unless you add module routers (or a BFF), these will **not** work in non-lab production:
-
-`/projects/:id/members`, `/inventory/*`, `/providers`, `/reservations`, `/scheduling`, `/jobs`, `/backends`, `/queues`, `/virtual-pools`, `/connectors`, `/dispatch-icd`, `/incidents`, `/alerts/*`, `/meter-rollups`, `/governance/audit-events`, `/governance/institution-boundary`, `/governance/activity`, `/evidence/snapshots`, `/users` (legacy workspace users API), `/approvals/policy`, `/quotas/evaluate`, `/quotas/ledger`, etc.
-
-**Admin path split:**
-
-| UI area | Frontend calls | Backend |
-| --- | --- | --- |
-| Access (roles/users) | `/api/v1/admin/*` via `api/rbac.ts` | **Implemented** |
-| Audit & Evidence page | `/governance/audit-events` | **Not implemented** (use `/rbac/audit` for identity/RBAC audit only) |
-
-Document this gap when interpreting empty/error states on workspace pages.
+`/governance/institution-boundary`, `/evidence/snapshots`, `/approvals/policy`, some connector live-ingest paths, and any route not listed in `QRP_API_IMPLEMENTATION_MATRIX.md`.
 
 ---
 

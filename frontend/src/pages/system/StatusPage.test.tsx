@@ -13,11 +13,30 @@ function renderPage() {
   )
 }
 
+const CAPABILITIES = {
+  version: '0.1.0',
+  profile: 'lab',
+  captcha_enabled: false,
+  mfa_required: false,
+  mfa_verification_available: false,
+  mfa_enrollment_available: false,
+  password_self_service: false,
+  self_registration: false,
+  federation: { oidc: false, saml: false, local_login: true },
+  features: { procurement_entitlements: false, row_level_security: false, demo_seed: true, demo_simulation: true },
+  session: { store: 'postgresql', idle_minutes: 30, absolute_hours: 12, cookie_secure: false },
+  cache: { enabled: true, redis_configured: false, connected: false, backend: 'memory' },
+  roadmap: { mfa_methods_planned: ['totp'] },
+}
+
 function mockApi(readyStatus: 200 | 503) {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
     const url = String(input)
     if (url.endsWith('/healthz')) {
       return Response.json({ status: 'ok', version: '0.1.0', time: '2026-11-02T07:00:00Z' })
+    }
+    if (url.includes('/auth/capabilities')) {
+      return Response.json(CAPABILITIES)
     }
     return Response.json(
       {

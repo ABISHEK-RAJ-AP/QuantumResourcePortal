@@ -50,6 +50,21 @@ vm_ensure_env_files() {
       echo "$pair" >>"$root/frontend/.env.local"
     fi
   done
+  # shellcheck source=scripts/lib/qrp-ports.sh
+  local ports_sh="$root/scripts/lib/qrp-ports.sh"
+  if [[ -f "$ports_sh" ]]; then
+    # shellcheck disable=SC1090
+    source "$ports_sh"
+  fi
+  local target="${QRP_API_TARGET:-http://127.0.0.1:8010}"
+  if grep -q '^QRP_API_TARGET=' "$root/frontend/.env.local" 2>/dev/null; then
+    sed -i "s|^QRP_API_TARGET=.*|QRP_API_TARGET=${target}|" "$root/frontend/.env.local"
+  else
+    echo "QRP_API_TARGET=${target}" >>"$root/frontend/.env.local"
+  fi
+  if grep -q '^QRE_PUBLIC_BASE_URL=' "$root/backend/.env" 2>/dev/null; then
+    sed -i "s|^QRE_PUBLIC_BASE_URL=.*|QRE_PUBLIC_BASE_URL=http://localhost:${UI_PORT:-5176}|" "$root/backend/.env"
+  fi
 }
 
 vm_postgres_hint() {
@@ -75,11 +90,15 @@ vm_kill_port() {
   sleep 1
 }
 
-# True when this port speaks QRP (captcha JSON), not TeleScope-only or dead proxy.
+# True when this port is the QRP gateway (not TeleScope :8000 or a dead listener).
 vm_qrp_api_ok() {
   local port="${1:-8010}"
+  local caps body
   curl -sf -m 3 "http://127.0.0.1:${port}/healthz" >/dev/null 2>&1 || return 1
-  curl -sf -m 3 "http://127.0.0.1:${port}/api/v1/auth/captcha" 2>/dev/null | grep -q '"captcha_id"' || return 1
+  body="$(curl -sf -m 3 "http://127.0.0.1:${port}/readyz" 2>/dev/null)" || return 1
+  echo "$body" | grep -q '"migrations"' || return 1
+  caps="$(curl -sf -m 3 "http://127.0.0.1:${port}/api/v1/auth/capabilities" 2>/dev/null)" || return 1
+  echo "$caps" | grep -q '"cache"' || return 1
   curl -sf -m 3 "http://127.0.0.1:${port}/api/v1/auth/session" 2>/dev/null | grep -q '"authenticated"' || return 1
   return 0
 }

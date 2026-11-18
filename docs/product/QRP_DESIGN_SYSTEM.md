@@ -108,4 +108,4 @@ Brand accents (`--brand-cyan`, `--brand-violet`) are for focus rings and highlig
 | Feedback | `components/ui/EmptyState`, `Notice`, `StatusBadge` |
 | Wizards | `components/workflow/ProjectCreateWizard.tsx`, `WorkloadSubmitWizard.tsx` |
 
-See `docs/reference-analysis/REFERENCE_COMPONENT_CATALOG.md` for reference → QRP mapping and implementation status.
+Module routes and UI contracts: `docs/product/WORKSPACE_UI_CATALOG.md`. Backend truth: `docs/product/FULL_STACK_STATUS.md`. Reference mapping (local only): `docs/reference-analysis/REFERENCE_COMPONENT_CATALOG.md` if present on disk.

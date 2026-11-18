@@ -137,3 +137,39 @@ async def test_detail_unknown_project_is_404(client, world):
     missing = new_ulid()
     r = await client.get(f"/api/v1/projects/{missing}")
     assert r.status_code == 404
+
+
+async def test_project_members_list_and_add(client, world, engine):
+    login_r = await login(client, world.admin_username, ADMIN_PW)
+    client.headers["X-CSRF-Token"] = login_r.json()["csrf_token"]
+
+    rs_uid = new_ulid()
+    code = world.researcher_username.split("_", 1)[-1][:8]
+
+    def add_user(c):
+        c.execute(
+            text(
+                "INSERT INTO app_user (user_id, home_tenant_id, username, display_name) "
+                "VALUES (:u,:t,:un,'Extra')"
+            ),
+            {"u": rs_uid, "t": world.tenant_id, "un": f"collab_{code}"},
+        )
+
+    async with engine.begin() as aconn:
+        await aconn.run_sync(add_user)
+
+    listed = await client.get(f"/api/v1/projects/{world.project_id}/members")
+    assert listed.status_code == 200, listed.text
+    before = len(listed.json()["items"])
+
+    added = await client.post(
+        f"/api/v1/projects/{world.project_id}/members",
+        json={"username": f"collab_{code}", "role": "viewer"},
+    )
+    assert added.status_code == 201, added.text
+    assert added.json()["role"] == "viewer"
+
+    again = await client.get(f"/api/v1/projects/{world.project_id}/members")
+    assert len(again.json()["items"]) == before + 1
+    usernames = {i["username"] for i in again.json()["items"]}
+    assert f"collab_{code}" in usernames

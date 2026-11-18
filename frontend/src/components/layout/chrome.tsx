@@ -34,6 +34,7 @@ import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { GovernNotificationSync } from '@/components/notifications/GovernNotificationSync'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { NotificationHost } from '@/components/notifications/NotificationHost'
+import { DemoSimulationBanner } from '@/components/shell/DemoSimulationBanner'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -353,6 +354,7 @@ function ShellInner() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <DemoSimulationBanner />
         <header className="sticky top-8 z-10 border-b border-border/80 bg-card/90 px-6 py-4 backdrop-blur-md">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">

@@ -1,0 +1,17 @@
+---
+description: QRP frontend agent contract — inspect, honest data, proof before done
+alwaysApply: true
+---
+
+# QRP UI agent contract
+
+1. Inspect before editing (route, API client, backend handler). Cite paths.
+2. Backend is authority. No fake data. Zero = API returned 0. Missing = "Not reported". Failed = error + retry.
+3. Sprint done only with: build + typecheck + vitest (+ Playwright when touched flows). Screenshots in `docs/qa/<sprint>/` when requested.
+4. Max planning docs per sprint: `QRP_AUDIT.md`, `QRP_TRACKER.md`, `QRP_STACK.md` — only with code in same change.
+5. Never ship: dead buttons, horizontal KPI carousel at ≥1024px, raw ULID as display name, raw enums in UI.
+6. One design system (existing Tailwind + shadcn tokens). `motion` for draggable dashboards only where integrated.
+7. Old routes redirect; preserve RBAC and API contracts.
+8. Draggable home widgets: use `components/ui/draggable-widget-grid.tsx` + real API slices — not stock AI observability demos.
+
+Skill: `.cursor/skills/draggable-dashboard/SKILL.md`

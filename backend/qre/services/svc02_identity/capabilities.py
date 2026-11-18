@@ -25,6 +25,8 @@ def build_auth_capabilities(settings: Settings) -> dict:
         "features": {
             "procurement_entitlements": settings.feature_svc05_enabled,
             "row_level_security": settings.rls_enabled,
+            "demo_seed": settings.is_lab,
+            "demo_simulation": settings.is_lab,
         },
         "session": {
             "store": "postgresql",

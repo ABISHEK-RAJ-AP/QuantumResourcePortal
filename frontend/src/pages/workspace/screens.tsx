@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import {
   Bar,
   BarChart,
@@ -23,6 +23,8 @@ import { DataState } from '@/components/data/DataState'
 import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
 import { formatApiError } from '@/lib/apiMessage'
 import { formatDateTime, formatEnum, formatRole } from '@/lib/display'
+import { seedPortalDemo } from '@/api/seedDemo'
+import { useDemoOperationalPolling } from '@/hooks/useDemoOperationalPolling'
 import { demoActionsAllowed } from '@/lib/demo'
 import { policyDisplayName, policyVersion, stagePermission } from '@/lib/qreFields'
 import { scopedApprovalsPath } from '@/lib/projectScope'
@@ -145,19 +147,23 @@ const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var
 export function OverviewPage() {
   const { user } = useAuth()
   const focus = overviewFocus(user?.roles?.[0] || 'Operator')
+  const pollMs = useDemoOperationalPolling()
   const summary = useQuery({
     queryKey: ['governance-summary'],
     queryFn: () => qre<Row>('/governance/summary'),
+    refetchInterval: pollMs,
   })
   const centre = useQuery({
     queryKey: ['operations-centre'],
     queryFn: () => qre<Row>('/operations/centre'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const queues = useQuery({
     queryKey: ['queues-overview-home'],
     queryFn: () => qre<unknown>('/queues'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const ledger = useQuery({
     queryKey: ['quota-ledger-home'],
@@ -168,6 +174,7 @@ export function OverviewPage() {
     queryKey: ['dispatch-attempts-home'],
     queryFn: () => qre<unknown>('/dispatch-attempts'),
     retry: false,
+    refetchInterval: pollMs,
   })
   const alertSummary = useQuery({
     queryKey: ['alerts-summary-home'],
@@ -314,7 +321,13 @@ export function OverviewPage() {
     ops.active_alerts,
   ])
 
-  const labDemo = Boolean((summary.data as Row | undefined)?.demo)
+  const emptyWorkspace =
+    demoActionsAllowed &&
+    !summary.isPending &&
+    !summary.isError &&
+    queueCount === 0 &&
+    Number(summary.data?.inventory_assets ?? 0) === 0 &&
+    fleetTotal === 0
 
   return (
     <Page
@@ -326,10 +339,17 @@ export function OverviewPage() {
       description="Governance, capacity, and operations."
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
-      {labDemo ? (
-        <p className="text-xs text-muted-foreground">
-          Lab preview metrics — full module APIs ship per service slice; numbers are for walkthrough only.
-        </p>
+      {emptyWorkspace ? (
+        <Notice tone="warning">
+          <p className="font-medium text-foreground">Workspace empty</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Load interconnected demo data from{' '}
+            <Link className="font-medium text-primary hover:underline" to="/qrp/settings">
+              Settings → Demonstration environment
+            </Link>{' '}
+            or Quick actions → Load demo (PLATFORM_ADMIN).
+          </p>
+        </Notice>
       ) : null}
       <OverviewKpiScroll items={kpiRail} />
       <OverviewDashboardGrid
@@ -378,7 +398,6 @@ function approvalsPath(filter: string, projectId?: string) {
 
 export function ApprovalsPage() {
   const client = useQueryClient()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const projectId = searchParams.get('project_id')?.trim() || ''
   const filterParam = searchParams.get('filter')
@@ -408,28 +427,9 @@ export function ApprovalsPage() {
     queryFn: async () => asList(await qre<unknown>(approvalsPath(filter, projectId || undefined))),
   })
   const seed = useMutation({
-    mutationFn: async () => {
-      const listed = asList(await qre<unknown>('/projects'))
-      let projectId = listed[0]?.project_id ? String(listed[0].project_id) : ''
-      if (!projectId) {
-        const createdProject = await qre<Row>('/projects', {
-          method: 'POST',
-          body: JSON.stringify({ name: `Demo ${new Date().toISOString().slice(0, 16)}`, project_type: 'quantum_circuit' }),
-        })
-        projectId = String(createdProject.project_id)
-      }
-      const draft = await qre<Row>('/workload-submissions', {
-        method: 'POST',
-        body: JSON.stringify({ project_id: projectId }),
-      })
-      return qre<Row>(`/workload-submissions/${encodeURIComponent(String(draft.submission_id))}/submit-for-review`, {
-        method: 'POST',
-      })
-    },
-    onSuccess: (row) => {
-      void client.invalidateQueries({ queryKey: ['approvals'] })
-      void client.invalidateQueries({ queryKey: ['governance-summary'] })
-      if (row.workload_id) navigate(`/qrp/approvals/${row.workload_id}`)
+    mutationFn: seedPortalDemo,
+    onSuccess: () => {
+      void client.invalidateQueries()
     },
   })
   const counts = (summary.data?.counts as Row | undefined) ?? {}
@@ -469,7 +469,7 @@ export function ApprovalsPage() {
           </Link>
         ) : demoActionsAllowed ? (
           <button type="button" className="btn-secondary" disabled={seed.isPending} onClick={() => seed.mutate()}>
-            {seed.isPending ? 'Submitting…' : 'Seed review'}
+            {seed.isPending ? 'Loading demo…' : 'Load demo data'}
           </button>
         ) : (
           <Link className="btn-secondary" to="/qrp/projects">
@@ -548,7 +548,11 @@ export function ApprovalsPage() {
           {rows.length === 0 ? (
             <EmptyState
               title="No approvals"
-              body={search.trim() ? 'No rows match search.' : 'Submit a workload for review, or seed one from a project.'}
+              body={
+                search.trim()
+                  ? 'No rows match search.'
+                  : 'Submit a workload from a project, or load the PostgreSQL demo dataset (Settings or Load demo).'
+              }
               action={
                 search.trim() ? (
                   <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
@@ -556,7 +560,7 @@ export function ApprovalsPage() {
                   </button>
                 ) : demoActionsAllowed ? (
                   <button type="button" className="btn-primary" disabled={seed.isPending} onClick={() => seed.mutate()}>
-                    {seed.isPending ? 'Submitting…' : 'Start demo review'}
+                    {seed.isPending ? 'Loading demo…' : 'Load demo data'}
                   </button>
                 ) : (
                   <Link className="btn-primary" to="/qrp/projects">

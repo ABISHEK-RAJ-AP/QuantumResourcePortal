@@ -7,6 +7,10 @@ Commands
                      python -m qre bootstrap --tenant-code CDAC --tenant-name "C-DAC Chennai" \
                                              --admin-username admin [--email a@b.in]
                    The password is read from QRE_BOOTSTRAP_PASSWORD, or prompted if a TTY.
+    seed-demo      Load interconnected demo data into PostgreSQL (lab only).
+                   Usage:
+                     python -m qre seed-demo --tenant-code CDAC [--force] [--reset-only]
+    seed-demo-reset  Alias for seed-demo --reset-only.
 """
 
 from __future__ import annotations
@@ -18,6 +22,56 @@ import os
 import sys
 
 from pydantic import ValidationError
+
+
+def _run_seed_demo(args: argparse.Namespace) -> int:
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from qre.core.config import get_settings
+    from qre.seed.seed_demo import SeedDemoError, seed_demo, seed_demo_reset
+
+    url = get_settings().database_url.get_secret_value()
+
+    async def go() -> int:
+        engine = create_async_engine(url)
+        try:
+            async with engine.begin() as aconn:
+                if args.reset_only:
+                    payload = await aconn.run_sync(
+                        lambda c: seed_demo_reset(c, tenant_code=args.tenant_code)
+                    )
+                    print(json.dumps({"reset": payload}, indent=2))
+                    return 0
+                result = await aconn.run_sync(
+                    lambda c: seed_demo(
+                        c, tenant_code=args.tenant_code, force=bool(args.force)
+                    )
+                )
+        except SeedDemoError as exc:
+            print(f"Seed refused: {exc}", file=sys.stderr)
+            return 1
+        finally:
+            await engine.dispose()
+        print(
+            json.dumps(
+                {
+                    "tenant_id": result.tenant_id,
+                    "tenant_code": result.tenant_code,
+                    "created": result.created,
+                    "counts": result.counts,
+                    "demo_users": result.demo_users,
+                    "password": "Demo-Strong-Pw-2026",
+                },
+                indent=2,
+            )
+        )
+        print(
+            "\nDemo seed complete. See docs/development/QRP_DEMO_ENVIRONMENT.md.",
+            file=sys.stderr,
+        )
+        return 0
+
+    return asyncio.run(go())
 
 
 def _run_bootstrap(args: argparse.Namespace) -> int:
@@ -106,6 +160,18 @@ def main(argv: list[str]) -> int:
         parser.add_argument("--email", default=None)
         args = parser.parse_args(argv[2:])
         return _run_bootstrap(args)
+
+    if command in ("seed-demo", "seed-demo-reset"):
+        parser = argparse.ArgumentParser(prog="qre seed-demo")
+        parser.add_argument("--tenant-code", required=True)
+        parser.add_argument("--force", action="store_true")
+        parser.add_argument(
+            "--reset-only",
+            action="store_true",
+            default=command == "seed-demo-reset",
+        )
+        args = parser.parse_args(argv[2:])
+        return _run_seed_demo(args)
 
     print(__doc__)
     return 0 if command == "help" else 1
