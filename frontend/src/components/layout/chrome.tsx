@@ -160,10 +160,12 @@ function ShellInner() {
     })
   }, [location.pathname])
 
+  const navQuery = { staleTime: 90_000, refetchInterval: 90_000 as const }
   const queue = useQuery({
     queryKey: ['governance-summary'],
     queryFn: () => qre<{ queue?: number; in_review?: number }>('/governance/summary'),
     retry: false,
+    ...navQuery,
   })
   const reconcile = useQuery({
     queryKey: ['nav-reconcile-count'],
@@ -175,11 +177,13 @@ function ShellInner() {
       }).length
     },
     retry: false,
+    ...navQuery,
   })
   const opsCentre = useQuery({
     queryKey: ['operations-centre-nav'],
     queryFn: () => qre<{ operations?: { active_alerts?: number; open_incidents?: number } }>('/operations/centre'),
     retry: false,
+    ...navQuery,
   })
   const badges: Record<'approvals' | 'reconcile' | 'alerts' | 'incidents', number | undefined> = {
     approvals: queue.isError ? undefined : Number(queue.data?.queue ?? queue.data?.in_review ?? 0),
@@ -193,12 +197,6 @@ function ShellInner() {
       ? authUser.principal_id
       : roleLabel
   const showRoleSubline = roleLabel.toLowerCase() !== displayName.toLowerCase()
-
-  useEffect(() => {
-    if (queue.isSuccess) {
-      window.dispatchEvent(new CustomEvent('qrp:data-refresh'))
-    }
-  }, [queue.dataUpdatedAt, queue.isSuccess])
 
   async function logout() {
     await authLogout()

@@ -34,6 +34,7 @@ import {
 } from '@/components/layout/Page'
 import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
+import { WorkloadSubmitWizard } from '@/components/workflow/WorkloadSubmitWizard'
 import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
 import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
@@ -45,10 +46,8 @@ import {
   projectMemberSchema,
   reservationHoldSchema,
   evidenceLabelSchema,
-  workloadSubmitSchema,
 } from '@/lib/validation/schemas'
 import { APPROVAL_VS_DISPATCH, HOLD_VS_DISPATCH } from '@/lib/operatorCopy'
-import { GOVERNANCE_LIFECYCLE } from '@/lib/workflow/governance'
 import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
@@ -215,8 +214,6 @@ export function ApprovalHistoryPage() {
       ]}
       title="Approval history"
       description="Append-only decisions. A later decision does not rewrite an earlier one."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={5}
       actions={
         <Link to="/qrp/approvals" className="text-sm font-medium text-primary hover:underline">
           Queue
@@ -317,8 +314,6 @@ export function ReconciliationPage() {
       ]}
       title="Reconciliation"
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={4}
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
@@ -540,8 +535,6 @@ export function SchedulingPage() {
       ]}
       title="Request reservation window"
       description={`Plan a governance hold. Calendar shows existing holds, not live provider availability. ${HOLD_VS_DISPATCH}`}
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={3}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reservations" className="btn-secondary">
@@ -857,8 +850,6 @@ export function RegisterAssetPage() {
       eyebrow="Resources"
       title="Register asset"
       description="One asset, one provider, one native id."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={3}
       actions={
         <Link to="/qrp/inventory" className="btn-secondary">
           Inventory
@@ -1083,7 +1074,6 @@ type ProjectTab = (typeof PROJECT_TABS)[number]['id']
 
 export function ProjectDetailPage() {
   const { projectId = '' } = useParams()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const tab: ProjectTab = PROJECT_TABS.some((t) => t.id === tabParam) ? (tabParam as ProjectTab) : 'overview'
@@ -1092,10 +1082,7 @@ export function ProjectDetailPage() {
     else setSearchParams({ tab: id }, { replace: true })
   }
 
-  const [purpose, setPurpose] = useState('')
-  const [notes, setNotes] = useState('')
-  const [resourceHint, setResourceHint] = useState('')
-  const [submitFields, setSubmitFields] = useState<Record<string, string>>({})
+  const [submitOpen, setSubmitOpen] = useState(false)
 
   const tabCrumb =
     tab === 'members'
@@ -1110,30 +1097,6 @@ export function ProjectDetailPage() {
               ? 'Activity'
               : null
 
-  const client = useQueryClient()
-  const submit = useMutation({
-    mutationFn: async () => {
-      const metadata: Record<string, string> = {}
-      if (purpose.trim()) metadata.purpose = purpose.trim()
-      if (notes.trim()) metadata.notes = notes.trim()
-      if (resourceHint.trim()) metadata.resource_hint = resourceHint.trim()
-      const created = await qre<Row>('/workload-submissions', {
-        method: 'POST',
-        body: JSON.stringify({ project_id: projectId, metadata }),
-      })
-      return qre<Row>(`/workload-submissions/${encodeURIComponent(String(created.submission_id))}/submit-for-review`, {
-        method: 'POST',
-      })
-    },
-    onSuccess: (row) => {
-      setPurpose('')
-      setNotes('')
-      setResourceHint('')
-      void client.invalidateQueries({ queryKey: ['project-approvals', projectId] })
-      void client.invalidateQueries({ queryKey: ['project-activity', projectId] })
-      if (row.workload_id) navigate(`/qrp/approvals/${row.workload_id}`)
-    },
-  })
   const project = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => qre<Row>(`/projects/${encodeURIComponent(projectId)}`),
@@ -1209,14 +1172,19 @@ export function ProjectDetailPage() {
       ]}
       title={projectName}
       description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={0}
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={projectId} keep={14} />
           
-          <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
-            {locked ? 'View requests' : 'Create resource request'}
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              if (locked || archived) setTab('requests')
+              else setSubmitOpen(true)
+            }}
+          >
+            {locked ? 'View requests' : archived ? 'View requests' : 'Create resource request'}
           </button>
           <Link to="/qrp/scheduling" className="btn-secondary">
             Request hold
@@ -1225,6 +1193,7 @@ export function ProjectDetailPage() {
       }
       updatedAt={project.dataUpdatedAt}
     >
+      <WorkloadSubmitWizard open={submitOpen} projectId={projectId} onClose={() => setSubmitOpen(false)} />
       {project.isPending ? (
         <DetailSkeleton />
       ) : (
@@ -1275,7 +1244,7 @@ export function ProjectDetailPage() {
               ],
               primary: locked || archived
                 ? { label: 'Open Requests', onClick: () => setTab('requests') }
-                : { label: 'Create request', onClick: () => setTab('requests') },
+                : { label: 'Create request', onClick: () => setSubmitOpen(true) },
               secondary: { to: scopedApprovalsPath(projectId), label: 'Review Queue' },
             }}
             related={[
@@ -1498,63 +1467,12 @@ export function ProjectDetailPage() {
                   ) : archived ? (
                     <EmptyState title="Archived" body="Unarchive before submitting new requests." />
                   ) : (
-                    <form
-                      className="grid gap-3"
-                      noValidate
-                      onSubmit={(event) => {
-                        event.preventDefault()
-                        setSubmitFields({})
-                        const parsed = parseForm(workloadSubmitSchema, {
-                          purpose,
-                          resource_hint: resourceHint.trim() || undefined,
-                          notes: notes.trim() || undefined,
-                        })
-                        if (!parsed.ok) {
-                          setSubmitFields(parsed.fieldErrors)
-                          return
-                        }
-                        submit.mutate()
-                      }}
-                    >
-                      <FormField label="Purpose" htmlFor="wl-purpose" error={submitFields.purpose}>
-                        <input
-                          id="wl-purpose"
-                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.purpose)))}
-                          value={purpose}
-                          placeholder="Scientific / technical purpose for reviewers"
-                          onChange={(e) => setPurpose(e.target.value)}
-                        />
-                      </FormField>
-                      <FormField
-                        label="Resource hint"
-                        htmlFor="wl-hint"
-                        error={submitFields.resource_hint}
-                        hint="Optional — not a booking"
-                      >
-                        <input
-                          id="wl-hint"
-                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.resource_hint)))}
-                          value={resourceHint}
-                          placeholder="e.g. simulator class or catalogue ref"
-                          onChange={(e) => setResourceHint(e.target.value)}
-                        />
-                      </FormField>
-                      <FormField label="Notes for reviewers" htmlFor="wl-notes" error={submitFields.notes} hint="Optional">
-                        <textarea
-                          id="wl-notes"
-                          className={cn(fieldClass, fieldErrorClass(Boolean(submitFields.notes)))}
-                          rows={3}
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                        />
-                      </FormField>
-                      <div className="flex flex-wrap gap-2">
-                        <button type="submit" className={buttonClass} disabled={submit.isPending}>
-                          {submit.isPending ? 'Submitting…' : 'Submit for review'}
-                        </button>
-                      </div>
-                      {submit.error && <p className="text-sm text-critical">{message(submit.error)}</p>}
-                    </form>
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <p>Package purpose and optional hints in the guided submit flow. You land on the approval record when review opens.</p>
+                      <button type="button" className={buttonClass} onClick={() => setSubmitOpen(true)}>
+                        Open submit wizard
+                      </button>
+                    </div>
                   )}
                 </Card>
                 <Card className="space-y-3">
@@ -2798,8 +2716,6 @@ export function DispatchPage() {
       eyebrow="Operations"
       title="Dispatch & Jobs"
       description={`Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs and reconciliation. ${APPROVAL_VS_DISPATCH}`}
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={4}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reconciliation" className="btn-primary">
@@ -4153,8 +4069,6 @@ export function CentrePage() {
       ]}
       title="Operations Centre"
       description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions for this tenant."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={4}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/approvals">
@@ -5039,8 +4953,6 @@ export function EvidencePage() {
       ]}
       title="Evidence"
       description="Point-in-time fleet snapshots for audit and compliance — distinct from the live audit event stream."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={5}
       actions={
         <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
           Capture snapshot

@@ -9,7 +9,7 @@ function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 30_000,
+        staleTime: 60_000,
         refetchOnWindowFocus: false,
         // Never retry client errors (4xx); retry network/5xx twice.
         retry: (failureCount, error) =>

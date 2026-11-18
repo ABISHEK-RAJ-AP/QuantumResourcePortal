@@ -25,6 +25,7 @@ export function Page({
   crumbs?: Crumb[]
   /** Shown in shell header only — do not also render DataFreshness in the body. */
   updatedAt?: number
+  /** Contextual lifecycle rail only (approval detail, asset lifecycle, incident record). Omit on list/hub pages — use breadcrumbs instead. */
   steps?: WorkflowStep[]
   stepIndex?: number | null
   /** Role-aware detail card under the step trail (uses active step metadata). */

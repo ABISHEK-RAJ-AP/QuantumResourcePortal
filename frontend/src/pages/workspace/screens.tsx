@@ -33,11 +33,11 @@ import { FilterBar } from '@/components/data/FilterBar'
 import { KpiStrip } from '@/components/data/KpiStrip'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { InfoTip } from '@/components/ui/InfoTip'
-import { Modal } from '@/components/ui/Modal'
-import { FormField, fieldErrorClass } from '@/components/forms/FormField'
+import { ProjectCreateWizard } from '@/components/workflow/ProjectCreateWizard'
+import { fieldErrorClass } from '@/components/forms/FormField'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { parseForm } from '@/lib/validation/parseForm'
-import { approvalDecisionSchema, projectCreateSchema } from '@/lib/validation/schemas'
+import { approvalDecisionSchema } from '@/lib/validation/schemas'
 import { EMPTY_SAMPLE } from '@/lib/operatorCopy'
 import {
   enrichWorkflowSteps,
@@ -462,8 +462,6 @@ export function ApprovalsPage() {
       ]}
       title="Review Queue"
       description="Multi-stage approvals before capacity holds or dispatch. Filter by project or open the next item in queue."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={1}
       actions={
         nextRow?.workload_id ? (
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
@@ -1296,8 +1294,6 @@ export function InventoryPage() {
       ]}
       title={tab === 'pools' ? 'Resource pools' : tab === 'backends' ? 'Backends' : 'Inventory catalogue'}
       description="Register assets and backends before scheduling governance holds."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={3}
       actions={
         tab === 'catalogue' ? (
           <span className="flex flex-wrap gap-2">
@@ -1385,8 +1381,6 @@ export function ProvidersPage() {
       ]}
       title="Providers"
       description="Provider manifests and integration stage — upstream of inventory and connectors."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={3}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-secondary" to="/qrp/connectors">
@@ -1501,12 +1495,7 @@ export function ProvidersPage() {
 }
 
 export function ProjectsPage() {
-  const client = useQueryClient()
-  const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  const [createFields, setCreateFields] = useState<Record<string, string>>({})
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'table' | 'cards'>('table')
@@ -1520,24 +1509,6 @@ export function ProjectsPage() {
     queryKey: ['approvals-projects-strip'],
     queryFn: async () => asList(await qre<unknown>('/approvals')),
     retry: false,
-  })
-  const create = useMutation({
-    mutationFn: () =>
-      qre<Row>('/projects', {
-        method: 'POST',
-        body: JSON.stringify({
-          name,
-          description: description.trim() || undefined,
-          project_type: 'quantum_circuit',
-        }),
-      }),
-    onSuccess: (row) => {
-      setName('')
-      setDescription('')
-      setCreateOpen(false)
-      void client.invalidateQueries({ queryKey: ['projects'] })
-      if (row.project_id) navigate(`/qrp/projects/${row.project_id}`)
-    },
   })
   const all = query.data ?? []
   const rows = all.filter((row) => {
@@ -1585,8 +1556,6 @@ export function ProjectsPage() {
       ]}
       title="Projects"
       description="Create projects, submit workloads, and track open reviews per owner."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={0}
       actions={
         <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
           New project
@@ -1594,60 +1563,7 @@ export function ProjectsPage() {
       }
       updatedAt={query.dataUpdatedAt}
     >
-      <Modal open={createOpen} title="New project" onClose={() => setCreateOpen(false)}>
-        <form
-          className="flex flex-col gap-3"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault()
-            setCreateFields({})
-            const parsed = parseForm(projectCreateSchema, {
-              name,
-              description: description.trim() || undefined,
-            })
-            if (!parsed.ok) {
-              setCreateFields(parsed.fieldErrors)
-              return
-            }
-            create.mutate()
-          }}
-        >
-          <FormField label="Project name" htmlFor="project-name" error={createFields.name}>
-            <input
-              id="project-name"
-              className={cn('field-input w-full', fieldErrorClass(Boolean(createFields.name)))}
-              value={name}
-              placeholder="e.g. QEC benchmark lane"
-              onChange={(event) => {
-                setName(event.target.value)
-                if (createFields.name) setCreateFields((f) => ({ ...f, name: '' }))
-              }}
-              autoFocus
-            />
-          </FormField>
-          <FormField label="Description" htmlFor="project-desc" error={createFields.description} hint="Optional · shown in project hub">
-            <input
-              id="project-desc"
-              className={cn('field-input w-full', fieldErrorClass(Boolean(createFields.description)))}
-              value={description}
-              placeholder="Short purpose for reviewers"
-              onChange={(event) => {
-                setDescription(event.target.value)
-                if (createFields.description) setCreateFields((f) => ({ ...f, description: '' }))
-              }}
-            />
-          </FormField>
-          {create.error ? <p className="text-sm text-critical">{message(create.error)}</p> : null}
-          <div className="flex justify-end gap-2">
-            <button type="button" className="btn-ghost" onClick={() => setCreateOpen(false)}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={create.isPending}>
-              {create.isPending ? 'Creating…' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <ProjectCreateWizard open={createOpen} onClose={() => setCreateOpen(false)} />
       <KpiStrip className="xl:grid-cols-5">
         <MetricTile label="Projects" value={query.isError ? '—' : all.length} />
         <MetricTile label="Active" value={query.isError ? '—' : active} tone="success" />
@@ -1809,8 +1725,6 @@ export function PoliciesPage() {
       ]}
       title="Policies"
       description="Published approval stages, permissions, and policy version tied to the review queue."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={1}
       actions={
         <Link className="btn-primary" to="/qrp/approvals">
           Review queue
@@ -1921,8 +1835,6 @@ export function QuotasPage() {
       ]}
       title="Quotas"
       description="Daily shot ledger and headroom — evaluated before approve on each workload."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={2}
       updatedAt={query.dataUpdatedAt}
     >
       {projectId ? (
@@ -2187,8 +2099,6 @@ export function ReservationsPage() {
       ]}
       title="Reservations"
       description="Governance holds on assets — calendar view; overlaps may need manual resolution."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={3}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/scheduling" className="btn-primary">
@@ -2393,8 +2303,6 @@ export function MeteringPage() {
       ]}
       title="Metering"
       description="Connector rollups and usage samples — complements quota ledger and audit exports."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={5}
       actions={
         <span className="flex flex-wrap items-center gap-2">
           
@@ -2550,8 +2458,6 @@ export function AuditPage() {
       ]}
       title="Audit Trail"
       description="Append-only events for approvals, inventory, quotas, dispatch, and admin actions."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={5}
       actions={
         <span className="flex flex-wrap gap-2">
           <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
@@ -2665,8 +2571,6 @@ export function SupportPage() {
       ]}
       title="Alerts"
       description="Active detector rows from the fleet. Group related warnings into incidents before deep-drilling single alerts."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={4}
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/incidents" className="btn-primary">

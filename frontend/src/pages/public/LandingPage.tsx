@@ -78,7 +78,7 @@ export function LandingPage() {
     <PublicShell>
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
-        <GridPulse className="z-0 opacity-90" />
+        <GridPulse className="z-0 opacity-90" ambient={1} maxLit={96} reach={2.2} />
         <section className="qrp-landing-hero relative z-10 flex min-h-[min(92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
           <div className="fade-up pointer-events-auto mx-auto w-full max-w-6xl">
             <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow', guard)}>
