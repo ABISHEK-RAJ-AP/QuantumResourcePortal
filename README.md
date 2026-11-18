@@ -37,7 +37,7 @@ make migrate      # alembic upgrade head
 
 # 3. Run (two terminals)
 make dev-api      # http://127.0.0.1:8000  (API docs: /api/v1/docs)
-make dev-web      # http://localhost:5173  (open this one)
+make dev-web      # http://localhost:5176  (proxies /api → :8000)
 
 # 4. Verify
 make check        # lint + backend and frontend tests
@@ -69,9 +69,9 @@ From this repository root:
 
 Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000
 
-When developing inside the larger Quantum Monitoring monorepo, use
-`Quantum_Monitoring-main/scripts/start-qrp.sh` so shared Postgres/Redis and the
-integrated TeleScope API on `:8000` start with the portal.
+**Do not** point QRP at the Q-TeleScope API on `:8000`. QRP runs its own gateway in this repo.
+From the Q-TeleScope monorepo, use `scripts/vm-qrp-setup.sh` — it delegates to this repo's `scripts/vm-setup.sh`.
+Redis is **not** required for QRP (TeleScope may use it; QRP does not).
 
 ## VM
 

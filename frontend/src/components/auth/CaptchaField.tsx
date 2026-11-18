@@ -4,6 +4,7 @@ import { RotateCw } from 'lucide-react'
 import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
+import { enrichApiFailure } from '@/lib/apiReachability'
 import { cn } from '@/lib/utils'
 
 type CaptchaPayload = {
@@ -61,10 +62,11 @@ export function CaptchaField({
       onChallenge('')
       setAvailable(false)
       onAvailability?.(false)
-      if (err instanceof ApiError) {
-        setError(err.detail || 'Could not load verification image.')
+      const resolved = enrichApiFailure(err)
+      if (resolved instanceof ApiError) {
+        setError(resolved.detail || 'Could not load verification image.')
       } else {
-        setError('Could not load verification image. Confirm API is running, then retry.')
+        setError(resolved.message || 'Could not load verification image.')
       }
     } finally {
       setLoading(false)

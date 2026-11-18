@@ -7,11 +7,12 @@ import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
-import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { AuthDemoPresets } from '@/components/auth/AuthDemoPresets'
+import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { parseForm } from '@/lib/validation/parseForm'
 import { loginSchema } from '@/lib/validation/schemas'
 
-const LAB_PRESETS = [{ label: 'Admin', username: 'admin', password: 'Admin-Strong-Pw-2026' }] as const
 const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
 
 export function LoginPage() {
@@ -19,7 +20,7 @@ export function LoginPage() {
   const location = useLocation()
   const { login } = useAuth()
   const from = (location.state as { from?: string } | null)?.from || '/qrp'
-  const captchaEnabled = isAuthCaptchaEnabled()
+  const captchaEnabled = useAuthCaptchaRequired()
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -79,7 +80,19 @@ export function LoginPage() {
     <AuthPanel
       title="Sign in"
       subtitle="Use your portal credentials"
-      footer={<AuthFooterLinks showForgot showRegister />}
+      footer={
+        <div className="space-y-3">
+          <AuthFooterLinks showForgot showRegister />
+          <AuthDemoPresets
+            visible={showLabPresets}
+            disabled={busy}
+            onSelect={(user, pass) => {
+              setUsername(user)
+              setPassword(pass)
+            }}
+          />
+        </div>
+      }
     >
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
@@ -119,29 +132,6 @@ export function LoginPage() {
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-
-      {showLabPresets ? (
-        <details className="auth-demo-presets mt-5">
-          <summary className="auth-demo-presets__summary">Demo accounts</summary>
-          <div className="mt-2 grid gap-2 p-3">
-            {LAB_PRESETS.map((p) => (
-              <button
-                key={p.label}
-                type="button"
-                disabled={busy}
-                className="btn-secondary text-base"
-                onClick={() => {
-                  setUsername(p.username)
-                  setPassword(p.password)
-                  void doLogin(p.username, p.password)
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </details>
-      ) : null}
     </AuthPanel>
   )
 }

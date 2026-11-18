@@ -23,9 +23,15 @@ export default defineConfig({
     strictPort: true,
     host: '::',
     proxy: {
-      '/api': { target: API_TARGET, changeOrigin: false },
-      '/healthz': { target: API_TARGET, changeOrigin: false },
-      '/readyz': { target: API_TARGET, changeOrigin: false },
+      '/api': {
+        target: API_TARGET,
+        changeOrigin: true,
+        secure: false,
+        timeout: 30_000,
+        proxyTimeout: 30_000,
+      },
+      '/healthz': { target: API_TARGET, changeOrigin: true, secure: false },
+      '/readyz': { target: API_TARGET, changeOrigin: true, secure: false },
     },
   },
   preview: { port: 4173 },

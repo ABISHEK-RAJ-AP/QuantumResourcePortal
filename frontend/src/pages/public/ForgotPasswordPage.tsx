@@ -2,12 +2,12 @@ import { Link } from 'react-router'
 
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
-import { isAuthCaptchaEnabled } from '@/lib/authCaptcha'
+import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { useState } from 'react'
 
 /** Self-service reset lands in a later identity slice; captcha shown for parity with login. */
 export function ForgotPasswordPage() {
-  const captchaEnabled = isAuthCaptchaEnabled()
+  const captchaEnabled = useAuthCaptchaRequired()
   const [captchaCode, setCaptchaCode] = useState('')
   const [, setCaptchaId] = useState('')
   const [, setCaptchaOn] = useState(false)

@@ -7,7 +7,8 @@ import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
-import { buildCaptchaPayload, isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { FieldAlert } from '@/components/auth/FormAlerts'
 import { parseForm } from '@/lib/validation/parseForm'
 import { passwordResetSchema } from '@/lib/validation/schemas'
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils'
 export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const captchaEnabled = isAuthCaptchaEnabled()
+  const captchaEnabled = useAuthCaptchaRequired()
   const [token, setToken] = useState(params.get('token') || '')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')

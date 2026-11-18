@@ -7,6 +7,7 @@
  * genuinely unauthenticated public endpoints (login, register, password reset, captcha).
  */
 import { ApiError, apiRequest } from '@/api/client'
+import { apiReachabilityMessage } from '@/lib/apiReachability'
 
 /** Back-compat alias: existing callers import `QreError`; it is now the shared `ApiError`. */
 export { ApiError as QreError }
@@ -58,10 +59,11 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     body = null
   }
   if (!response.ok) {
+    const reachability = apiReachabilityMessage(response.status)
     throw new ApiError({
-      code: 'REQUEST_FAILED',
-      title: 'Request failed',
-      detail: problemDetail(body, response.statusText || `Request failed (${response.status})`),
+      code: reachability ? 'NETWORK_ERROR' : 'REQUEST_FAILED',
+      title: reachability ? 'API unreachable' : 'Request failed',
+      detail: reachability ?? problemDetail(body, response.statusText || `Request failed (${response.status})`),
       status: response.status,
     })
   }

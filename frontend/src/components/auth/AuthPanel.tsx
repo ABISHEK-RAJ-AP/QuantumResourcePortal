@@ -56,9 +56,7 @@ export function AuthPanel({
                   ) : null}
                 </header>
                 {children}
-                {footer ? (
-                  <footer className="border-t border-border pt-4 text-center text-base text-muted-foreground">{footer}</footer>
-                ) : null}
+                {footer ? <div className="auth-panel-footer border-t border-border pt-3">{footer}</div> : null}
               </div>
             </div>
           </div>
@@ -75,27 +73,35 @@ export function AuthFooterLinks({
   showForgot?: boolean
   showRegister?: boolean
 }) {
+  const links: ReactNode[] = []
+  if (showForgot) {
+    links.push(
+      <Link key="forgot" className="font-semibold text-primary hover:underline" to="/forgot-password">
+        Forgot password
+      </Link>,
+    )
+  }
+  if (showRegister) {
+    links.push(
+      <Link key="register" className="font-semibold text-primary hover:underline" to="/register">
+        Request access
+      </Link>,
+    )
+  }
+  links.push(
+    <Link key="home" className="font-semibold text-primary hover:underline" to="/">
+      Home
+    </Link>,
+  )
+
   return (
-    <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-      {showForgot ? (
-        <Link className="font-medium text-primary hover:underline" to="/forgot-password">
-          Forgot password
-        </Link>
-      ) : null}
-      {showForgot && showRegister ? <span aria-hidden className="text-muted-foreground">
-        ·
-      </span> : null}
-      {showRegister ? (
-        <Link className="font-medium text-primary hover:underline" to="/register">
-          Request access
-        </Link>
-      ) : null}
-      <span aria-hidden className="text-muted-foreground">
-        ·
-      </span>
-      <Link className="font-medium text-primary hover:underline" to="/">
-        Home
-      </Link>
+    <p className="auth-panel-footer__links text-center text-sm text-muted-foreground">
+      {links.map((node, i) => (
+        <span key={i} className="inline-flex items-center gap-2">
+          {i > 0 ? <span aria-hidden>·</span> : null}
+          {node}
+        </span>
+      ))}
     </p>
   )
 }

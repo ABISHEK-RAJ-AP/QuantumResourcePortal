@@ -1,8 +1,12 @@
-/** Lab/on by default; set `VITE_QRE_CAPTCHA=0` to hide fields in the SPA. */
+/** SPA preference — off in production builds unless `VITE_QRE_CAPTCHA=1`; on in lab/dev by default. */
 export function isAuthCaptchaEnabled(): boolean {
+  if (import.meta.env.VITE_QRE_ENV === 'production') {
+    const flag = import.meta.env.VITE_QRE_CAPTCHA
+    return flag === '1' || flag === 'true'
+  }
   const flag = import.meta.env.VITE_QRE_CAPTCHA
   if (flag === '0' || flag === 'false') return false
-  return flag === '1' || flag === 'true' || import.meta.env.VITE_QRE_ENV === 'lab'
+  return true
 }
 
 export type CaptchaPayload = {

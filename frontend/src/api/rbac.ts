@@ -79,7 +79,7 @@ export interface EffectivePermissions {
 
 /** Soft session probe (always HTTP 200). Prefer this for AuthProvider mount. */
 export async function getSession(): Promise<Me> {
-  return apiGet<Me>(`${BASE}/auth/session`)
+  return (await apiRequest<Me>(`${BASE}/auth/session`, { method: 'GET', timeoutMs: 8_000 })).data
 }
 
 /** Hard /me — 401 when signed out (protected routes / tests). */

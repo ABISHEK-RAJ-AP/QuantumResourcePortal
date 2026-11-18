@@ -1,6 +1,6 @@
 import { CaptchaField } from '@/components/auth/CaptchaField'
 import { FieldAlert } from '@/components/auth/FormAlerts'
-import { isAuthCaptchaEnabled } from '@/lib/authCaptcha'
+import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 
 /** Standard captcha slot for login, register, reset, MFA. */
 export function AuthCaptchaBlock({
@@ -16,7 +16,8 @@ export function AuthCaptchaBlock({
   onAvailability: (available: boolean) => void
   fieldError?: string
 }) {
-  if (!isAuthCaptchaEnabled()) return null
+  const required = useAuthCaptchaRequired()
+  if (!required) return null
   return (
     <div className="qrp-auth-captcha">
       <CaptchaField

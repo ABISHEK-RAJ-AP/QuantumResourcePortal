@@ -53,8 +53,8 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
       )}
       aria-label="Site footer"
     >
-      <div className="mx-auto max-w-6xl px-6 py-12 lg:py-14">
-        <div className="grid gap-10 lg:grid-cols-5 lg:gap-12">
+      <div className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-8 lg:px-12 lg:py-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-12">
           <div className="space-y-4 lg:col-span-2">
             <Link to="/" className="inline-flex items-center gap-3">
               <LogoMark className={cn('h-10 w-auto', dark && 'brightness-0 invert')} />
@@ -119,12 +119,12 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
 
         <div
           className={cn(
-            'mt-10 flex flex-col items-start justify-between gap-3 border-t pt-6 text-xs sm:flex-row sm:items-center',
+            'mt-12 flex flex-col items-center justify-between gap-4 border-t pt-6 text-xs sm:flex-row',
             dark ? 'border-white/10 text-white/45' : 'border-border text-muted-foreground',
           )}
         >
-          <p>© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
-          <div className="flex flex-wrap gap-4">
+          <p className="text-center sm:text-start">© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:justify-end">
             <a href="/#capabilities" className="font-semibold hover:underline">
               Capabilities
             </a>

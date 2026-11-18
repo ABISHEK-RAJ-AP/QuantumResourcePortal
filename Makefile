@@ -30,6 +30,12 @@ dev-api:  ## Run the FastAPI backend with auto-reload on :8000
 dev-web:  ## Run the Vite dev server on :5176 (proxies /api to :8000)
 	cd frontend && npm run dev -- --host 127.0.0.1 --port 5176
 
+dev-vm:  ## Start API + Vite on the VM (captcha-safe; verifies /auth/captcha)
+	bash scripts/vm-setup.sh
+
+verify-stack:  ## Smoke-test API :8000 + Vite proxy :5176 (QRP endpoints only)
+	bash scripts/verify-qrp-stack.sh
+
 test: test-backend test-frontend  ## Run backend and frontend unit/integration tests
 
 test-backend:  ## Backend tests (needs the qre_test database)

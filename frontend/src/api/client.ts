@@ -1,3 +1,5 @@
+import { apiReachabilityMessage } from '@/lib/apiReachability'
+
 /**
  * Minimal API client for the QRE backend (LLD §8.1, §10.2).
  *
@@ -55,6 +57,8 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   json?: unknown
   /** Extra statuses (besides 2xx) whose JSON body is returned instead of thrown, e.g. 503 from /readyz. */
   acceptStatuses?: number[]
+  /** Abort the request after this many ms (avoids endless spin when Vite proxy returns 502). */
+  timeoutMs?: number
 }
 
 export interface ApiResponse<T> {
@@ -81,6 +85,18 @@ async function toApiError(response: Response): Promise<ApiError> {
       // fall through to the generic error below
     }
   }
+  const reachability = apiReachabilityMessage(response.status)
+  if (reachability) {
+    return new ApiError(
+      {
+        code: CLIENT_ERROR_CODES.network,
+        title: 'API unreachable',
+        status: response.status,
+        detail: reachability,
+      },
+      correlationId,
+    )
+  }
   return new ApiError(
     {
       code: CLIENT_ERROR_CODES.unexpectedResponse,
@@ -92,7 +108,7 @@ async function toApiError(response: Response): Promise<ApiError> {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
-  const { json, acceptStatuses = [], headers, ...init } = options
+  const { json, acceptStatuses = [], headers, timeoutMs, ...init } = options
   const finalHeaders = new Headers(headers)
   finalHeaders.set('Accept', 'application/json')
   let body: BodyInit | undefined
@@ -107,16 +123,37 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     finalHeaders.set('X-CSRF-Token', _csrfToken)
   }
 
+  const effectiveTimeout = timeoutMs ?? (method === 'GET' || method === 'HEAD' ? 12_000 : undefined)
+  const controller = new AbortController()
+  const timer =
+    effectiveTimeout != null
+      ? setTimeout(() => controller.abort(), effectiveTimeout)
+      : undefined
+  if (init.signal) {
+    init.signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
+
   let response: Response
   try {
-    response = await fetch(path, { credentials: 'same-origin', ...init, headers: finalHeaders, body })
-  } catch {
+    response = await fetch(path, {
+      credentials: 'same-origin',
+      ...init,
+      headers: finalHeaders,
+      body,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    const aborted = err instanceof DOMException && err.name === 'AbortError'
     throw new ApiError({
       code: CLIENT_ERROR_CODES.network,
       title: 'The QRP API could not be reached.',
-      detail: 'Check that the backend is running and your network connection is available.',
+      detail: aborted
+        ? 'API timeout or proxy 502. From repo root run: bash scripts/vm-setup.sh (QRP API on :8000, not Q-TeleScope alone).'
+        : 'Check that the backend is running and your network connection is available.',
       status: 0,
     })
+  } finally {
+    if (timer) clearTimeout(timer)
   }
 
   // An authenticated session that has expired or been revoked: let the app send the user to login.

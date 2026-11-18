@@ -4,14 +4,15 @@ import { Link, useNavigate } from 'react-router'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { FormBanner } from '@/components/auth/FormAlerts'
-import { isAuthCaptchaEnabled, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
+import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 
 /**
  * Request-access page (RBAC-6). Self-service registration is disabled; captcha gates the path to sign-in.
  */
 export function RegisterPage() {
   const navigate = useNavigate()
-  const captchaEnabled = isAuthCaptchaEnabled()
+  const captchaEnabled = useAuthCaptchaRequired()
   const [captchaId, setCaptchaId] = useState('')
   const [captchaCode, setCaptchaCode] = useState('')
   const [captchaOn, setCaptchaOn] = useState(false)
