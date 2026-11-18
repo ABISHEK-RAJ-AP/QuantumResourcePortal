@@ -12,6 +12,7 @@ Built to the QRE SRS v1.0.0, HLD v1.1.0 and LLD v1.1.0 (C-DAC Chennai). See [`do
 | Database | PostgreSQL 16 |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, shadcn/ui, TanStack Query, React Router |
 | Tests | pytest, Vitest + Testing Library, Playwright |
+| Reference UIs | OSS governance/dispatch patterns — see [`docs/research/VENDOR_REFERENCE_UI.md`](docs/research/VENDOR_REFERENCE_UI.md); `bash vendor-references/clone-all.sh` |
 
 ## Notifications (operator inbox)
 
