@@ -45,8 +45,8 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     clearTimeout(timer)
     const msg =
       err instanceof DOMException && err.name === 'AbortError'
-        ? 'API timeout. Start QRE backend on port 8000.'
-        : 'API unreachable. Start QRE backend on port 8000.'
+        ? 'API timeout. Start QRE backend on port 8010 (make dev-api).'
+        : 'API unreachable. Start QRE backend on port 8010 (make dev-api).'
     throw new ApiError({ code: 'NETWORK_ERROR', title: 'Network error', detail: msg, status: 0 })
   } finally {
     clearTimeout(timer)

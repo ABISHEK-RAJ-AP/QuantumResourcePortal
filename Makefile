@@ -4,6 +4,9 @@
 SHELL := /bin/bash
 VENV  := backend/.venv
 PY    := $(VENV)/bin/python
+QRP_API_PORT ?= 8010
+QRP_UI_PORT  ?= 5176
+QRP_API_TARGET ?= http://127.0.0.1:$(QRP_API_PORT)
 
 .PHONY: help setup setup-backend setup-frontend migrate dev-api dev-web test test-backend test-frontend test-e2e lint check
 
@@ -24,16 +27,16 @@ setup-frontend:  ## Install frontend dependencies from the lock file
 migrate:  ## Apply database migrations to the development database
 	cd backend && .venv/bin/alembic upgrade head
 
-dev-api:  ## Run the FastAPI backend with auto-reload on :8000
-	cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port 8000
+dev-api:  ## Run the FastAPI backend with auto-reload on :8010 (not Q-TeleScope :8000)
+	cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port $(QRP_API_PORT)
 
-dev-web:  ## Run the Vite dev server on :5176 (proxies /api to :8000)
-	cd frontend && npm run dev -- --host 127.0.0.1 --port 5176
+dev-web:  ## Run the Vite dev server on :5176 (proxies /api to :8010)
+	cd frontend && QRP_API_TARGET=$(QRP_API_TARGET) npm run dev -- --host 127.0.0.1 --port $(QRP_UI_PORT)
 
 dev-vm:  ## Start API + Vite on the VM (captcha-safe; verifies /auth/captcha)
 	bash scripts/vm-setup.sh
 
-verify-stack:  ## Smoke-test API :8000 + Vite proxy :5176 (QRP endpoints only)
+verify-stack:  ## Smoke-test API :8010 + Vite proxy :5176 (QRP endpoints only)
 	bash scripts/verify-qrp-stack.sh
 
 test: test-backend test-frontend  ## Run backend and frontend unit/integration tests

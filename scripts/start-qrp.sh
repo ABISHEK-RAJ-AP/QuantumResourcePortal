@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Standalone QRP launcher (this repo root = quantum-resource-portal).
-# Starts Postgres (if configured), FastAPI :8000, Vite :5176 in separate terminals when possible.
+# Starts Postgres (if configured), FastAPI :8010, Vite :5176 in separate terminals when possible.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=scripts/lib/qrp-ports.sh
+source "$ROOT/scripts/lib/qrp-ports.sh"
 
 log() { printf '\033[1;36m[qrp]\033[0m %s\n' "$*"; }
 pause_fail() {
@@ -63,22 +65,22 @@ fi
 
 API_UP=0
 UI_UP=0
-curl -sf -m 1 http://127.0.0.1:8000/readyz >/dev/null 2>&1 && API_UP=1 || true
+curl -sf -m 1 "http://127.0.0.1:${API_PORT}/readyz" >/dev/null 2>&1 && API_UP=1 || true
 curl -sf -m 1 -o /dev/null http://127.0.0.1:5176/ >/dev/null 2>&1 && UI_UP=1 || true
 
 if [[ "$API_UP" -eq 0 ]]; then
-  log "Opening terminal: QRP API :8000"
-  spawn_term "QRP API :8000" \
-    "cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port 8000"
+  log "Opening terminal: QRP API :${API_PORT}"
+  spawn_term "QRP API :${API_PORT}" \
+    "cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port ${API_PORT}"
 fi
 if [[ "$UI_UP" -eq 0 ]]; then
   log "Opening terminal: QRP UI :5176"
-  spawn_term "QRP UI :5176" \
-    "cd frontend && npm run dev -- --host 127.0.0.1 --port 5176"
+  spawn_term "QRP UI :${UI_PORT}" \
+    "cd frontend && QRP_API_TARGET=${QRP_API_TARGET} npm run dev -- --host 127.0.0.1 --port ${UI_PORT}"
 fi
 
 sleep 2
 command -v xdg-open >/dev/null && xdg-open "http://127.0.0.1:5176/qrp" >/dev/null 2>&1 || true
-log "  API    http://127.0.0.1:8000  (docs /api/v1/docs)"
-log "  Portal http://127.0.0.1:5176/qrp"
+log "  API    http://127.0.0.1:${API_PORT}  (docs /api/v1/docs)"
+log "  Portal http://127.0.0.1:${UI_PORT}/qrp"
 read -r -p "Launcher OK — Press Enter to close (servers keep running)… " _

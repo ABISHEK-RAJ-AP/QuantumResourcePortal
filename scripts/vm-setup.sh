@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# VM: Quantum Resource Portal only. Postgres + QRP API :8000 + Vite :5176.
-# Does NOT use Redis. Does NOT start Q-TeleScope — port 8000 must be this repo's qre.main:app.
+# VM: Quantum Resource Portal only. Postgres + QRP API :8010 + Vite :5176 (Q-TeleScope may use :8000 / :4173).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+# shellcheck source=scripts/lib/qrp-ports.sh
+source "$ROOT/scripts/lib/qrp-ports.sh"
 # shellcheck source=scripts/lib/vm-common.sh
 source "$ROOT/scripts/lib/vm-common.sh"
 
 vm_bootstrap_path
-API_PORT="${API_PORT:-8000}"
-UI_PORT="${UI_PORT:-5176}"
 mkdir -p "$ROOT/logs"
 
 if command -v git >/dev/null; then
@@ -59,7 +58,7 @@ else
   if curl -sf -m 1 "http://127.0.0.1:${UI_PORT}/" >/dev/null 2>&1; then
     vm_log "Vite on :${UI_PORT} but /api proxy failing — restarting UI"
   fi
-  vm_start_ui "$ROOT" "$UI_PORT"
+  vm_start_ui "$ROOT" "$UI_PORT" "$API_PORT"
   sleep 2
   vm_proxy_ok "$UI_PORT" || vm_log "WARN: proxy still failing — check logs/ui.log and logs/api.log"
 fi

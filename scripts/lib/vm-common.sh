@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Shared VM / lab bootstrap for Quantum Resource Portal (QRP only — not Q-TeleScope).
-# Redis/Valkey for cache + CAPTCHA; signed-in sessions in PostgreSQL. API :8000 + Vite :5176.
+# Redis/Valkey for cache + CAPTCHA; signed-in sessions in PostgreSQL. API :8010 + Vite :5176 (not TeleScope :8000).
 
 vm_log() { printf '\033[1;36m[qrp-vm]\033[0m %s\n' "$*"; }
 vm_die() { printf '\033[1;31m[qrp-vm]\033[0m %s\n' "$*" >&2; exit 1; }
@@ -77,7 +77,7 @@ vm_kill_port() {
 
 # True when this port speaks QRP (captcha JSON), not TeleScope-only or dead proxy.
 vm_qrp_api_ok() {
-  local port="${1:-8000}"
+  local port="${1:-8010}"
   curl -sf -m 3 "http://127.0.0.1:${port}/healthz" >/dev/null 2>&1 || return 1
   curl -sf -m 3 "http://127.0.0.1:${port}/api/v1/auth/captcha" 2>/dev/null | grep -q '"captcha_id"' || return 1
   curl -sf -m 3 "http://127.0.0.1:${port}/api/v1/auth/session" 2>/dev/null | grep -q '"authenticated"' || return 1
@@ -92,7 +92,7 @@ vm_stop_logged_api() {
 
 vm_start_api() {
   local root="$1"
-  local port="${2:-8000}"
+  local port="${2:-8010}"
   local py="$root/backend/.venv/bin/python"
   vm_stop_logged_api "$root"
   vm_kill_port "$port"
@@ -122,8 +122,9 @@ vm_start_ui() {
   local port="${2:-5176}"
   vm_stop_logged_ui "$root"
   vm_kill_port "$port"
-  vm_log "Starting Vite on :${port} (proxies /api → :8000)"
-  nohup bash -lc "cd $(printf %q "$root/frontend") && npm run dev -- --host 0.0.0.0 --port $port" \
+  local api_port="${3:-8010}"
+  vm_log "Starting Vite on :${port} (proxies /api → :${api_port})"
+  nohup bash -lc "cd $(printf %q "$root/frontend") && QRP_API_TARGET=http://127.0.0.1:${api_port} npm run dev -- --host 0.0.0.0 --port $port" \
     >"$root/logs/ui.log" 2>&1 &
   echo $! >"$root/logs/ui.pid"
   sleep 2

@@ -2,7 +2,7 @@
 
 Run in development from the ``backend/`` directory::
 
-    uvicorn qre.main:app --reload --port 8000
+    uvicorn qre.main:app --reload --port 8010
 """
 
 from qre.gateway.app import create_app

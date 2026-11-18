@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     database_url: SecretStr = Field(
         description="SQLAlchemy async DSN, e.g. postgresql+asyncpg://user:pw@host:5432/qre"
     )
-    public_base_url: str = "http://localhost:5173"
+    public_base_url: str = "http://localhost:5176"
     cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
     log_level: str = "INFO"

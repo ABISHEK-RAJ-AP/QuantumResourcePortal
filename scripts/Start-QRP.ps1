@@ -1,4 +1,4 @@
-# Quantum Resource Portal — separate terminals for API (:8000) + Vite (:5176).
+# Quantum Resource Portal — API :8010 + Vite :5176 (Q-TeleScope may use :8000).
 # From this repo root (quantum-resource-portal). Linux uses scripts/start-qrp.sh.
 
 $ErrorActionPreference = "Stop"
@@ -22,16 +22,16 @@ if (-not (Test-Path (Join-Path $Root "backend" ".env"))) {
   Copy-Item (Join-Path $Root "backend" ".env.example") (Join-Path $Root "backend" ".env")
 }
 
-Write-Host "QRP Windows — API :8000 + UI :5176 in separate windows"
+Write-Host "QRP Windows — API :8010 + UI :5176 in separate windows"
 
 Start-Process powershell -ArgumentList @(
   "-NoExit", "-Command",
-  "Set-Location '$Root\backend'; ..\backend\.venv\Scripts\Activate.ps1; uvicorn qre.main:app --reload --host 127.0.0.1 --port 8000"
+  "Set-Location '$Root\backend'; ..\backend\.venv\Scripts\Activate.ps1; uvicorn qre.main:app --reload --host 127.0.0.1 --port 8010"
 )
 Start-Sleep -Seconds 2
 Start-Process powershell -ArgumentList @(
   "-NoExit", "-Command",
-  "Set-Location '$Root\frontend'; npm run dev -- --host 127.0.0.1 --port 5176"
+  "Set-Location '$Root\frontend'; `$env:QRP_API_TARGET='http://127.0.0.1:8010'; npm run dev -- --host 127.0.0.1 --port 5176"
 )
 Start-Sleep -Seconds 2
 Start-Process "http://127.0.0.1:5176/qrp"

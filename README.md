@@ -36,8 +36,8 @@ make setup        # venv + pip install, npm ci, creates backend/.env
 make migrate      # alembic upgrade head
 
 # 3. Run (two terminals)
-make dev-api      # http://127.0.0.1:8000  (API docs: /api/v1/docs)
-make dev-web      # http://localhost:5176  (proxies /api → :8000)
+make dev-api      # http://127.0.0.1:8010  (API docs: /api/v1/docs)
+make dev-web      # http://localhost:5176  (proxies /api → :8010)
 
 # 4. Verify
 make check        # lint + backend and frontend tests
@@ -67,9 +67,9 @@ From this repository root:
 .\scripts\Start-QRP.ps1
 ```
 
-Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000
+Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8010
 
-**Do not** point QRP at the Q-TeleScope API on `:8000`. QRP runs its own gateway in this repo.
+**Ports:** QRP uses **8010** (API) and **5176** (dev UI) so Q-TeleScope can keep **8000** / **5173** / **4173**. Override via `scripts/lib/qrp-ports.sh` or `QRP_API_PORT` / `QRP_API_TARGET`.
 From the Q-TeleScope monorepo, use `scripts/vm-qrp-setup.sh` — it delegates to this repo's `scripts/vm-setup.sh`.
 **Redis/Valkey** (port 6379) is used for CAPTCHA challenges and operational cache — `bash scripts/vm-setup.sh` starts it and sets `QRE_REDIS_URL` in `backend/.env`. **Signed-in sessions** remain in **PostgreSQL** (LLD §11.3), same pattern as Q-TeleScope’s split: durable session in DB, ephemeral data in Redis.
 
@@ -79,7 +79,7 @@ From the Q-TeleScope monorepo, use `scripts/vm-qrp-setup.sh` — it delegates to
 git clone git@github.com:ABISHEK-RAJ-AP/QuantumResourcePortal.git
 cd QuantumResourcePortal
 bash scripts/vm-pull-main.sh   # if you were on afk/* or diverged from main
-bash scripts/vm-setup.sh       # QRE API :8000, Vite :5176, CAPTCHA + demo login in lab
+bash scripts/vm-setup.sh       # QRE API :8010, Vite :5176, CAPTCHA + demo login in lab
 ```
 
 Portal: http://\<host\>:5176/qrp

@@ -148,7 +148,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       code: CLIENT_ERROR_CODES.network,
       title: 'The QRP API could not be reached.',
       detail: aborted
-        ? 'API timeout or proxy 502. From repo root run: bash scripts/vm-setup.sh (QRP API on :8000, not Q-TeleScope alone).'
+        ? 'API timeout or proxy 502. From repo root run: bash scripts/vm-setup.sh (QRP API on :8010).'
         : 'Check that the backend is running and your network connection is available.',
       status: 0,
     })

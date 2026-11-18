@@ -12,14 +12,15 @@ Companion (navigation-focused): [`WORKSPACE_UI_CATALOG.md`](./WORKSPACE_UI_CATAL
 
 | Process | Default URL | Role |
 | --- | --- | --- |
-| **Vite dev server** | `http://localhost:5176` | Serves React SPA; **proxies** `/api`, `/healthz`, `/readyz` → backend (`QRP_API_TARGET`, default `http://127.0.0.1:8000`). |
-| **FastAPI (QRE gateway)** | `http://127.0.0.1:8000` | JSON API under `/api/v1/*`; probes at `/healthz`, `/readyz` (no version prefix). |
+| **Vite dev server** | `http://localhost:5176` | Serves React SPA; **proxies** `/api`, `/healthz`, `/readyz` → backend (`QRP_API_TARGET`, default `http://127.0.0.1:8010`). |
+| **FastAPI (QRE gateway)** | `http://127.0.0.1:8010` | JSON API under `/api/v1/*`; probes at `/healthz`, `/readyz` (no version prefix). Q-TeleScope may stay on `:8000`. |
+| **Vite preview** | `:4176` | Not Q-TeleScope preview `:4173` |
 | **PostgreSQL 16** | `DATABASE_URL` in `backend/.env` | Sessions, RBAC, audit log, identity tables (Alembic migrations `0001`–`0005`). |
 | **Redis 6379** (optional) | `QRE_REDIS_URL` | CAPTCHA challenges + operational JSON cache; **not** session store. |
 
 **Browser rule:** Session cookie is **same-origin** (browser → Vite → proxy → API). Cookies are **not** stored in `localStorage`. CSRF token is **in memory only** (refetched via `GET /api/v1/auth/csrf` after login).
 
-**Wrong stack symptom:** Vite proxy **502** — nothing on `:8000`, or Q-TeleScope monolith bound to `:8000` instead of QRP. Frontend maps this in `lib/apiReachability.ts`.
+**Wrong stack symptom:** Vite proxy **502** — nothing on `:8010` (start `make dev-api`) or `QRP_API_TARGET` mismatch. Frontend maps this in `lib/apiReachability.ts`.
 
 ---
 
@@ -144,7 +145,7 @@ Pydantic `extra=forbid` on all bodies.
 ## 5. Auth layer (end-to-end)
 
 ```
-Browser → Vite:5176 → proxy → FastAPI:8000
+Browser → Vite:5176 → proxy → FastAPI:8010
          Cookie qre_sid (HttpOnly, SameSite=Lax)
          X-CSRF-Token (memory, from /auth/csrf)
 ```

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Smoke-test QRP stack (QRP backend only — no Redis, no TeleScope :8000).
+# Smoke-test QRP stack (QRP :8010 + Vite :5176; Q-TeleScope may keep :8000).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib/qrp-ports.sh
+source "$ROOT/scripts/lib/qrp-ports.sh"
 # shellcheck source=scripts/lib/vm-common.sh
 source "$ROOT/scripts/lib/vm-common.sh"
-
-API_PORT="${API_PORT:-8000}"
-UI_PORT="${UI_PORT:-5176}"
 API="http://127.0.0.1:${API_PORT}"
 UI="http://127.0.0.1:${UI_PORT}"
 

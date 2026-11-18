@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 
 // Backend address used by the dev-server proxy. The browser only ever talks to the Vite origin,
 // so session cookies stay same-origin (LLD PD-34) and no CORS configuration is needed.
-const API_TARGET = process.env.QRP_API_TARGET ?? 'http://127.0.0.1:8000'
+const API_TARGET = process.env.QRP_API_TARGET ?? 'http://127.0.0.1:8010'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -34,5 +34,5 @@ export default defineConfig({
       '/readyz': { target: API_TARGET, changeOrigin: true, secure: false },
     },
   },
-  preview: { port: 4173 },
+  preview: { port: Number(process.env.QRP_PREVIEW_PORT) || 4176 },
 })
