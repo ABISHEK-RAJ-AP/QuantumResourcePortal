@@ -39,11 +39,7 @@ make migrate      # alembic upgrade head
 If migration **0010** failed halfway (`catalogue_provider` exists, `catalogue_backend` missing), `git pull` then:
 
 ```bash
-cd backend && .venv/bin/alembic current
-sudo -u postgres psql -d qre -c "DROP TABLE IF EXISTS catalogue_backend CASCADE; DROP TABLE IF EXISTS catalogue_provider CASCADE;"
-# only if alembic_version is 0010 but tables were incomplete:
-# sudo -u postgres psql -d qre -c "UPDATE alembic_version SET version_num='0009';"
-cd .. && make migrate
+bash scripts/fix-alembic-0010-partial.sh
 ```
 
 # 3. Run (two terminals)

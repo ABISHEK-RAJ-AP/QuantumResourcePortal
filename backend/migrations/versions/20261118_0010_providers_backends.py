@@ -15,9 +15,13 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+def _ddl(sql: str) -> None:
+    """Raw DDL — bypasses SQLAlchemy text() so JSON/:: casts are not mistaken for bind params."""
+    op.get_bind().exec_driver_sql(sql)
+
+
 def upgrade() -> None:
-    # JSON string defaults inside op.execute() confuse SQLAlchemy text() bind parsing — use jsonb_build_object
-    op.execute(
+    _ddl(
         """
         CREATE TABLE catalogue_provider (
             tenant_id CHAR(26) NOT NULL,
@@ -40,7 +44,7 @@ def upgrade() -> None:
         )
         """
     )
-    op.execute(
+    _ddl(
         """
         CREATE TABLE catalogue_backend (
             tenant_id CHAR(26) NOT NULL,
@@ -52,8 +56,8 @@ def upgrade() -> None:
             qpu_modality VARCHAR(64),
             topology_type VARCHAR(64),
             topology JSONB NOT NULL DEFAULT jsonb_build_object(
-                'nodes', '[]'::jsonb,
-                'edges', '[]'::jsonb
+                'nodes', jsonb_build_array(),
+                'edges', jsonb_build_array()
             ),
             queue_snapshot JSONB NOT NULL DEFAULT jsonb_build_object(
                 'pending_jobs', 0,
@@ -71,11 +75,11 @@ def upgrade() -> None:
         )
         """
     )
-    op.execute(
+    _ddl(
         "CREATE INDEX ix_catalogue_backend_provider ON catalogue_backend (tenant_id, provider_id)"
     )
 
 
 def downgrade() -> None:
-    op.execute("DROP TABLE IF EXISTS catalogue_backend")
-    op.execute("DROP TABLE IF EXISTS catalogue_provider")
+    _ddl("DROP TABLE IF EXISTS catalogue_backend")
+    _ddl("DROP TABLE IF EXISTS catalogue_provider")
