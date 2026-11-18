@@ -16,7 +16,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # SQLAlchemy text() treats ":false", ":0", etc. in JSON defaults as bind params — escape as \:
+    # JSON string defaults inside op.execute() confuse SQLAlchemy text() bind parsing — use jsonb_build_object
     op.execute(
         """
         CREATE TABLE catalogue_provider (
@@ -24,7 +24,10 @@ def upgrade() -> None:
             provider_id VARCHAR(128) NOT NULL,
             provider_name VARCHAR(256) NOT NULL,
             status VARCHAR(24) NOT NULL DEFAULT 'draft',
-            integration JSONB NOT NULL DEFAULT '{"stage":"I1","manifest_registered"\:false}',
+            integration JSONB NOT NULL DEFAULT jsonb_build_object(
+                'stage', 'I1',
+                'manifest_registered', false
+            ),
             created_by CHAR(26),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -48,9 +51,15 @@ def upgrade() -> None:
             qubit_count INTEGER,
             qpu_modality VARCHAR(64),
             topology_type VARCHAR(64),
-            topology JSONB NOT NULL DEFAULT '{"nodes":[],"edges":[]}',
-            queue_snapshot JSONB NOT NULL DEFAULT
-                '{"pending_jobs"\:0,"queue_condition":"idle","trend":"flat"}',
+            topology JSONB NOT NULL DEFAULT jsonb_build_object(
+                'nodes', '[]'::jsonb,
+                'edges', '[]'::jsonb
+            ),
+            queue_snapshot JSONB NOT NULL DEFAULT jsonb_build_object(
+                'pending_jobs', 0,
+                'queue_condition', 'idle',
+                'trend', 'flat'
+            ),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             CONSTRAINT pk_catalogue_backend PRIMARY KEY (tenant_id, backend_id),

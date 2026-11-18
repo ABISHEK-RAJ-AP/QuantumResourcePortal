@@ -36,6 +36,16 @@ sudo -u postgres psql -c "CREATE DATABASE qre_test OWNER qre_app;"
 make setup        # venv + pip install, npm ci, creates backend/.env
 make migrate      # alembic upgrade head
 
+If migration **0010** failed halfway (`catalogue_provider` exists, `catalogue_backend` missing), `git pull` then:
+
+```bash
+cd backend && .venv/bin/alembic current
+sudo -u postgres psql -d qre -c "DROP TABLE IF EXISTS catalogue_backend CASCADE; DROP TABLE IF EXISTS catalogue_provider CASCADE;"
+# only if alembic_version is 0010 but tables were incomplete:
+# sudo -u postgres psql -d qre -c "UPDATE alembic_version SET version_num='0009';"
+cd .. && make migrate
+```
+
 # 3. Run (two terminals)
 make dev-api      # http://127.0.0.1:8010  (API docs: /api/v1/docs)
 make dev-web      # http://localhost:5176  (proxies /api → :8010)
