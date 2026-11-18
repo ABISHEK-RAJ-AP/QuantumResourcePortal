@@ -17,25 +17,6 @@ router = APIRouter(tags=["workspace-lab"])
 _DEMO_NOW = datetime.now(UTC).isoformat()
 
 
-@router.get("/governance/summary")
-async def governance_summary(ctx=Depends(require_permission("governance:read"))):
-    _ = ctx
-    return {
-        "queue": 3,
-        "in_review": 2,
-        "inventory_assets": 12,
-        "counts": {
-            "submitted_for_review": 1,
-            "in_review": 2,
-            "approved": 5,
-            "rejected": 1,
-            "withdrawn": 0,
-        },
-        "demo": True,
-        "label": "Lab preview data — module APIs not fully deployed",
-    }
-
-
 @router.get("/operations/centre")
 async def operations_centre(ctx=Depends(require_permission("governance:read"))):
     _ = ctx
@@ -106,42 +87,3 @@ async def governance_activity(
         {"action": "quota.evaluated", "actor": "system", "at": _DEMO_NOW},
     ]
     return {"items": rows[:limit], "demo": True}
-
-
-@router.get("/approvals")
-async def approvals_list(
-    ctx=Depends(require_permission("approval:read")),
-    scope: str | None = None,
-    state: str | None = None,
-    project_id: str | None = None,
-):
-    _ = ctx
-    _ = project_id
-    items = [
-        {
-            "approval_id": "apr_demo_1",
-            "state": "in_review",
-            "project_id": "prj_demo",
-            "submitter": "user_researcher",
-            "stage": "policy",
-        },
-        {
-            "approval_id": "apr_demo_2",
-            "state": "submitted_for_review",
-            "project_id": "prj_demo_2",
-            "submitter": "user_analyst",
-            "stage": "technical",
-        },
-        {
-            "approval_id": "apr_demo_3",
-            "state": "approved",
-            "project_id": "prj_demo_3",
-            "submitter": "user_researcher",
-            "stage": "quota",
-        },
-    ]
-    if scope == "mine":
-        items = [items[0]]
-    elif state:
-        items = [i for i in items if i["state"] == state]
-    return {"items": items, "demo": True}

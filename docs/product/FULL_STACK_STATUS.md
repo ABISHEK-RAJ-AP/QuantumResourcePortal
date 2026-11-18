@@ -69,28 +69,30 @@ FastAPI mounts (`gateway/app.py`):
 | **admin** | `/api/v1/admin/*` | **Shipped** (roles, users, memberships) |
 | **authz** | `/api/v1/authz/check` | **Shipped** |
 | **audit (RBAC)** | `/api/v1/rbac/audit` | **Shipped** (list, export, verify chain) |
+| **projects (SVC-03)** | `/api/v1/projects` | **Shipped** (list, create, detail) |
+| **approvals (SVC-06)** | `/api/v1/workload-submissions`, `/api/v1/approvals/*`, `/api/v1/governance/summary` | **Shipped** (minimal queue + decide/withdraw) |
 | **workspace_lab** | see below | **Lab only** (`QRE_ENV=lab`) |
 
 ### Lab stubs (`workspace_lab/api.py`) — demo aggregates only
 
 When `settings.is_lab` is true, these **GET** routes return fixed demo JSON (`demo: true` on several):
 
-- `/governance/summary`
 - `/operations/centre`
 - `/quotas/ledger` (no query params honoured in stub)
 - `/queues`
 - `/dispatch-attempts` (list shape)
 - `/alerts/summary`
 - `/governance/activity`
-- `/approvals` (partial; shape differs from UI expectations in places)
 
-Outside **lab**, these paths are **not mounted** → workspace `qre()` calls return **404** unless another service is added later.
+`/governance/summary` and `/approvals` are **production routers** (SVC-06) — always mounted; counts come from `workload` rows (zeros when empty). Lab no longer fakes those paths.
+
+Outside **lab**, remaining lab stub paths are **not mounted** → **404** until module routers land.
 
 ### Workspace paths the UI calls but **no QRP router implements yet**
 
 The Govern workspace UI is built against the **target SRS/LLD contract**. Unless you add module routers (or a BFF), these will **not** work in non-lab production:
 
-`/projects`, `/projects/:id`, `/projects/:id/members`, `/workload-submissions`, `/approvals/*`, `/inventory/*`, `/providers`, `/reservations`, `/scheduling`, `/jobs`, `/backends`, `/queues`, `/virtual-pools`, `/connectors`, `/dispatch-icd`, `/incidents`, `/alerts/*`, `/meter-rollups`, `/governance/audit-events`, `/governance/institution-boundary`, `/evidence/snapshots`, `/users` (legacy workspace users API), `/approvals/policy`, `/quotas/evaluate`, etc.
+`/projects/:id/members`, `/inventory/*`, `/providers`, `/reservations`, `/scheduling`, `/jobs`, `/backends`, `/queues`, `/virtual-pools`, `/connectors`, `/dispatch-icd`, `/incidents`, `/alerts/*`, `/meter-rollups`, `/governance/audit-events`, `/governance/institution-boundary`, `/governance/activity`, `/evidence/snapshots`, `/users` (legacy workspace users API), `/approvals/policy`, `/quotas/evaluate`, `/quotas/ledger`, etc.
 
 **Admin path split:**
 
@@ -139,6 +141,26 @@ Pydantic `extra=forbid` on all bodies.
 | GET | `` | `audit:read` — paginated `items` |
 | GET | `/export` | `audit:export` — CSV |
 | GET | `/verify` | `audit:verify` — hash chain |
+
+### Projects (`/projects`)
+
+| Method | Path | Permission | Notes |
+| --- | --- | --- | --- |
+| GET | `/projects` | `project:read` | `{ items: [...] }` — scoped to visible projects |
+| POST | `/projects` | `project:create` | `name`, optional `description`, `project_type` |
+| GET | `/projects/{id}` | `project:read` | Detail + `submission_lock`, `is_archived` |
+
+### Workloads & approvals
+
+| Method | Path | Permission | Notes |
+| --- | --- | --- | --- |
+| POST | `/workload-submissions` | `workload:create` | `{ project_id, metadata }` → `submission_id` |
+| POST | `/workload-submissions/{id}/submit-for-review` | `workload:submit` | Returns `workload_id`, `governance_state` |
+| GET | `/approvals` | `approval:read` | Query `project_id`, `state`, `scope=mine`; default queue = open states |
+| GET | `/approvals/{workload_id}` | session + `approval:read` or own submitter + `workload:read` | `governance_progress`, `history` |
+| POST | `/approvals/{id}/decide` | `approval:decide` | SoD: not own submission; multi-stage stub |
+| POST | `/approvals/{id}/withdraw` | `workload:withdraw` | Submitter only |
+| GET | `/governance/summary` | `governance:read` | Queue counts from `workload` table |
 
 ---
 
