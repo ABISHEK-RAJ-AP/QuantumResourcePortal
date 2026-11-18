@@ -17,4 +17,12 @@ git fetch origin
 git checkout main 2>/dev/null || git checkout -b main origin/main
 git reset --hard origin/main
 log "Now on main @ $(git rev-parse --short HEAD) — $(git log -1 --format=%s)"
+M0010="$ROOT/backend/migrations/versions/20261118_0010_providers_backends.py"
+if grep -q 'pending_jobs":' "$M0010" 2>/dev/null; then
+  die "Stale migration 0010 on disk — expected op.create_table; run: git fetch origin && git reset --hard origin/main"
+fi
+if ! grep -q 'op.create_table' "$M0010" 2>/dev/null; then
+  die "Migration 0010 missing op.create_table — git reset --hard origin/main"
+fi
+log "Migration 0010 fingerprint OK"
 log "To return to your branch: git checkout ${PREV}"

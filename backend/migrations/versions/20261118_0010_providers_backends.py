@@ -5,81 +5,107 @@ Revises: 0009
 Create Date: 2026-11-18
 """
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 
+import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects.postgresql import JSONB
 
 revision: str = "0010"
 down_revision: str | None = "0009"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-
-def _ddl(sql: str) -> None:
-    """Raw DDL — bypasses SQLAlchemy text() so JSON/:: casts are not mistaken for bind params."""
-    op.get_bind().exec_driver_sql(sql)
+_DEFAULT_INTEGRATION = sa.text(
+    "jsonb_build_object('stage', 'I1', 'manifest_registered', false)"
+)
+_DEFAULT_TOPOLOGY = sa.text(
+    "jsonb_build_object('nodes', jsonb_build_array(), 'edges', jsonb_build_array())"
+)
+_DEFAULT_QUEUE = sa.text(
+    "jsonb_build_object('pending_jobs', 0, 'queue_condition', 'idle', 'trend', 'flat')"
+)
 
 
 def upgrade() -> None:
-    _ddl(
-        """
-        CREATE TABLE catalogue_provider (
-            tenant_id CHAR(26) NOT NULL,
-            provider_id VARCHAR(128) NOT NULL,
-            provider_name VARCHAR(256) NOT NULL,
-            status VARCHAR(24) NOT NULL DEFAULT 'draft',
-            integration JSONB NOT NULL DEFAULT jsonb_build_object(
-                'stage', 'I1',
-                'manifest_registered', false
-            ),
-            created_by CHAR(26),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            CONSTRAINT pk_catalogue_provider PRIMARY KEY (tenant_id, provider_id),
-            CONSTRAINT fk_catalogue_provider_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(tenant_id),
-            CONSTRAINT fk_catalogue_provider_user FOREIGN KEY (created_by) REFERENCES app_user(user_id),
-            CONSTRAINT ck_catalogue_provider_status CHECK (
-                status IN ('draft', 'active', 'suspended')
-            )
-        )
-        """
+    op.create_table(
+        "catalogue_provider",
+        sa.Column("tenant_id", sa.CHAR(26), nullable=False),
+        sa.Column("provider_id", sa.String(128), nullable=False),
+        sa.Column("provider_name", sa.String(256), nullable=False),
+        sa.Column("status", sa.String(24), server_default="draft", nullable=False),
+        sa.Column("integration", JSONB, server_default=_DEFAULT_INTEGRATION, nullable=False),
+        sa.Column("created_by", sa.CHAR(26), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.tenant_id"]),
+        sa.ForeignKeyConstraint(["created_by"], ["app_user.user_id"]),
+        sa.PrimaryKeyConstraint("tenant_id", "provider_id", name="pk_catalogue_provider"),
+        sa.CheckConstraint(
+            "status IN ('draft', 'active', 'suspended')",
+            name="ck_catalogue_provider_status",
+        ),
     )
-    _ddl(
-        """
-        CREATE TABLE catalogue_backend (
-            tenant_id CHAR(26) NOT NULL,
-            backend_id VARCHAR(128) NOT NULL,
-            provider_id VARCHAR(128) NOT NULL,
-            backend_name VARCHAR(256) NOT NULL,
-            operational_status VARCHAR(24) NOT NULL DEFAULT 'OFFLINE',
-            qubit_count INTEGER,
-            qpu_modality VARCHAR(64),
-            topology_type VARCHAR(64),
-            topology JSONB NOT NULL DEFAULT jsonb_build_object(
-                'nodes', jsonb_build_array(),
-                'edges', jsonb_build_array()
-            ),
-            queue_snapshot JSONB NOT NULL DEFAULT jsonb_build_object(
-                'pending_jobs', 0,
-                'queue_condition', 'idle',
-                'trend', 'flat'
-            ),
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            CONSTRAINT pk_catalogue_backend PRIMARY KEY (tenant_id, backend_id),
-            CONSTRAINT fk_catalogue_backend_provider FOREIGN KEY (tenant_id, provider_id)
-                REFERENCES catalogue_provider (tenant_id, provider_id),
-            CONSTRAINT ck_catalogue_backend_status CHECK (
-                operational_status IN ('ONLINE', 'OFFLINE', 'MAINTENANCE')
-            )
-        )
-        """
+    op.create_table(
+        "catalogue_backend",
+        sa.Column("tenant_id", sa.CHAR(26), nullable=False),
+        sa.Column("backend_id", sa.String(128), nullable=False),
+        sa.Column("provider_id", sa.String(128), nullable=False),
+        sa.Column("backend_name", sa.String(256), nullable=False),
+        sa.Column(
+            "operational_status",
+            sa.String(24),
+            server_default="OFFLINE",
+            nullable=False,
+        ),
+        sa.Column("qubit_count", sa.Integer(), nullable=True),
+        sa.Column("qpu_modality", sa.String(64), nullable=True),
+        sa.Column("topology_type", sa.String(64), nullable=True),
+        sa.Column("topology", JSONB, server_default=_DEFAULT_TOPOLOGY, nullable=False),
+        sa.Column("queue_snapshot", JSONB, server_default=_DEFAULT_QUEUE, nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["tenant_id", "provider_id"],
+            ["catalogue_provider.tenant_id", "catalogue_provider.provider_id"],
+            name="fk_catalogue_backend_provider",
+        ),
+        sa.PrimaryKeyConstraint("tenant_id", "backend_id", name="pk_catalogue_backend"),
+        sa.CheckConstraint(
+            "operational_status IN ('ONLINE', 'OFFLINE', 'MAINTENANCE')",
+            name="ck_catalogue_backend_status",
+        ),
     )
-    _ddl(
-        "CREATE INDEX ix_catalogue_backend_provider ON catalogue_backend (tenant_id, provider_id)"
+    op.create_index(
+        "ix_catalogue_backend_provider",
+        "catalogue_backend",
+        ["tenant_id", "provider_id"],
     )
 
 
 def downgrade() -> None:
-    _ddl("DROP TABLE IF EXISTS catalogue_backend")
-    _ddl("DROP TABLE IF EXISTS catalogue_provider")
+    op.drop_index("ix_catalogue_backend_provider", table_name="catalogue_backend")
+    op.drop_table("catalogue_backend")
+    op.drop_table("catalogue_provider")

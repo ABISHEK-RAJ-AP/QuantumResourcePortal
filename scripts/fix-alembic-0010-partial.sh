@@ -2,6 +2,7 @@
 # Reset partial migration 0010 (provider table created, backend/index missing) then re-run migrate.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+bash "$ROOT/scripts/vm-pull-main.sh"
 cd "$ROOT/backend"
 set -a
 # shellcheck disable=SC1091
