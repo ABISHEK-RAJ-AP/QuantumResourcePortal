@@ -39,9 +39,9 @@ export function DataState({
     const tone = info.forbidden ? ('warning' as const) : ('critical' as const)
     const title = info.forbidden ? 'Access denied' : info.notFound ? notReportedTitle : 'Unavailable'
     return (
-      <Notice tone={tone}>
+      <Notice tone={tone} className="w-full max-w-none text-left">
         <p className="font-medium text-foreground">{title}</p>
-        <p className="mt-1">{formatApiError(error)}</p>
+        <p className="mt-1 text-pretty">{formatApiError(error)}</p>
         {onRetry ? (
           <button type="button" className="btn-secondary mt-3 text-sm" onClick={onRetry}>
             Retry

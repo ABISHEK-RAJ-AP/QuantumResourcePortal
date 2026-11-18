@@ -95,7 +95,7 @@ export function AuthFooterLinks({
   )
 
   return (
-    <p className="auth-panel-footer__links text-center text-sm text-muted-foreground">
+    <p className="auth-panel-footer__links text-left text-sm text-muted-foreground">
       {links.map((node, i) => (
         <span key={i} className="inline-flex items-center gap-2">
           {i > 0 ? <span aria-hidden>·</span> : null}

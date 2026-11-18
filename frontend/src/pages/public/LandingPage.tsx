@@ -79,56 +79,35 @@ export function LandingPage() {
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="z-0 opacity-90" />
-        <section className="relative z-10 flex min-h-[calc(100svh-7.5rem)] flex-col items-center justify-center px-4 py-16 sm:px-8 lg:px-10">
-          <div
-            className={cn(
-              'fade-up pointer-events-auto mx-auto w-full max-w-3xl rounded-[var(--radius)] border px-6 py-10 text-center backdrop-blur-xl sm:px-10 sm:py-12',
-              dark
-                ? 'border-border bg-background/80 shadow-card'
-                : 'border-border/70 bg-card/80 shadow-card',
-            )}
-          >
-            <p data-grid-avoid className={cn('mb-2 text-sm text-muted-foreground', guard)}>
-              Centre for Development of Advanced Computing
+        <section className="qrp-landing-hero relative z-10 flex min-h-[min(92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
+          <div className="fade-up pointer-events-auto mx-auto w-full max-w-6xl">
+            <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow', guard)}>
+              C-DAC · Quantum platform
             </p>
-            <h1
-              data-grid-avoid
-              className={cn(
-                'text-4xl font-semibold tracking-tight text-balance text-foreground sm:text-5xl lg:text-6xl',
-                guard,
-              )}
-            >
+            <h1 data-grid-avoid className={cn('qrp-landing-hero__title text-balance', guard)}>
               Quantum Resource Portal
             </h1>
-            <p
-              data-grid-avoid
-              className={cn('mx-auto mt-4 max-w-prose text-pretty text-base text-muted-foreground sm:text-lg', guard)}
-            >
+            <p data-grid-avoid className={cn('qrp-landing-hero__lead mx-auto max-w-3xl text-pretty', guard)}>
               Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
-            <div className="mt-10 flex w-full max-w-lg flex-col gap-4 sm:mx-auto sm:flex-row sm:justify-center">
-              <Link to="/login" className="btn-primary landing-hero-cta w-full gap-2 sm:w-auto">
+            <div className="mt-10 flex flex-col flex-wrap justify-center gap-4 sm:flex-row">
+              <Link to="/login" className="btn-primary landing-hero-cta gap-2">
                 Enter portal
                 <ArrowRight className="size-5" aria-hidden />
               </Link>
-              <Link to="/register" className="btn-secondary landing-hero-cta w-full sm:w-auto">
+              <Link to="/register" className="btn-secondary landing-hero-cta">
                 Request access
               </Link>
             </div>
           </div>
+          <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-24" aria-hidden />
         </section>
 
         <main className="relative z-10 mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
           <section id="capabilities" className="scroll-mt-28">
             <div className="flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
               <div>
-                <h2
-                  data-grid-avoid
-                  className={cn(
-                    'text-3xl font-semibold tracking-tight text-foreground sm:text-4xl',
-                    guard,
-                  )}
-                >
+                <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                   Approvals, capacity, and evidence in one workspace
                 </h2>
               </div>
@@ -149,7 +128,7 @@ export function LandingPage() {
                     <span className="inline-flex size-10 items-center justify-center rounded-[var(--radius-inner)] bg-accent text-accent-foreground">
                       <Icon className="size-5" aria-hidden />
                     </span>
-                    <h3 data-grid-avoid className={cn('mt-4 text-lg font-semibold text-foreground', guard)}>
+                    <h3 data-grid-avoid className={cn('mt-4 text-xl font-bold tracking-tight text-foreground', guard)}>
                       {item.title}
                     </h3>
                     <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
@@ -162,11 +141,8 @@ export function LandingPage() {
           </section>
 
           <section id="modules" className="scroll-mt-28">
-            <div className="mx-auto max-w-3xl space-y-2 text-center">
-              <h2
-                data-grid-avoid
-                className={cn('text-3xl font-semibold tracking-tight text-foreground sm:text-4xl', guard)}
-              >
+            <div className="max-w-3xl space-y-2 text-left">
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Operator modules for the live fleet
               </h2>
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
@@ -184,7 +160,7 @@ export function LandingPage() {
                     <div className="relative z-[1] flex items-start gap-3">
                       <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
                       <div>
-                        <h3 data-grid-avoid className={cn('text-base font-semibold text-foreground', guard)}>
+                        <h3 data-grid-avoid className={cn('text-lg font-bold tracking-tight text-foreground', guard)}>
                           {item.title}
                         </h3>
                         <p data-grid-avoid className={cn('mt-1.5 text-sm leading-relaxed text-muted-foreground', guard)}>
@@ -203,7 +179,7 @@ export function LandingPage() {
             className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-8 shadow-card sm:p-12"
           >
             <div className="max-w-2xl">
-              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 From submit to reconcile
               </h2>
               <p data-grid-avoid className={cn('mt-2 text-sm text-muted-foreground', guard)}>
@@ -229,8 +205,8 @@ export function LandingPage() {
           </section>
 
           <section id="faq" className="scroll-mt-28 mx-auto max-w-3xl">
-            <div className="space-y-2 text-center">
-              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+            <div className="space-y-2 text-left">
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Common questions
               </h2>
             </div>
@@ -266,15 +242,15 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius)] border border-border bg-card p-10 text-center shadow-card sm:p-14">
-            <div className="mx-auto max-w-2xl space-y-4">
-              <h2 data-grid-avoid className={cn('text-3xl font-semibold tracking-tight text-foreground', guard)}>
+          <section className="rounded-[var(--radius)] border border-border bg-card p-10 shadow-card sm:p-14">
+            <div className="max-w-2xl space-y-4 text-left">
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Open the operator workspace
               </h2>
               <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
                 Sign in, open Approvals, and walk the live stage trail.
               </p>
-              <div className="flex flex-col flex-wrap justify-center gap-4 pt-2 sm:flex-row">
+              <div className="flex flex-col flex-wrap gap-4 pt-2 sm:flex-row">
                 <Link to="/login" className="btn-primary landing-hero-cta gap-2">
                   Sign in <ArrowRight className="size-5" aria-hidden />
                 </Link>

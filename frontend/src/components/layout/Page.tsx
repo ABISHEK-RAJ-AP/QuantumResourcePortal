@@ -147,9 +147,17 @@ export function EmptyState({
   )
 }
 
-export function Notice({ tone = 'critical', children }: { tone?: StatusTone; children: ReactNode }) {
+export function Notice({
+  tone = 'critical',
+  children,
+  className,
+}: {
+  tone?: StatusTone
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <Card className="flex items-start gap-3">
+    <Card className={cn('flex w-full max-w-none items-start gap-3 text-left', className)}>
       <StatusBadge tone={tone} label={tone === 'critical' ? 'Unavailable' : 'Note'} />
       <div className="text-sm text-muted-foreground">{children}</div>
     </Card>

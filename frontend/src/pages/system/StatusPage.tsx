@@ -196,7 +196,7 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
         )}
       </Card>
 
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-left text-xs text-muted-foreground">
         API documentation:{' '}
         <a className="font-medium text-primary underline-offset-4 hover:underline" href="/api/v1/docs">
           /api/v1/docs

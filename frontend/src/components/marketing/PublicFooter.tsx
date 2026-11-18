@@ -53,9 +53,9 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
       )}
       aria-label="Site footer"
     >
-      <div className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-8 lg:px-12 lg:py-16">
+      <div className="mx-auto w-full max-w-6xl px-6 py-12 text-left sm:px-8 lg:px-12 lg:py-16">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-12">
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4 text-left lg:col-span-2">
             <Link to="/" className="inline-flex items-center gap-3">
               <LogoMark className={cn('h-10 w-auto', dark && 'brightness-0 invert')} />
               <div>
@@ -74,7 +74,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-3">
+          <div className="grid grid-cols-2 gap-8 text-left sm:grid-cols-3 lg:col-span-3">
             {SECTIONS.map((section) => (
               <div key={section.title} className="space-y-3">
                 <h3
@@ -119,12 +119,12 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
 
         <div
           className={cn(
-            'mt-12 flex flex-col items-center justify-between gap-4 border-t pt-6 text-xs sm:flex-row',
+            'mt-12 flex flex-col gap-4 border-t pt-6 text-left text-xs sm:flex-row sm:items-center sm:justify-between',
             dark ? 'border-white/10 text-white/45' : 'border-border text-muted-foreground',
           )}
         >
-          <p className="text-center sm:text-start">© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:justify-end">
+          <p className="max-w-prose">© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-6 sm:justify-end">
             <a href="/#capabilities" className="font-semibold hover:underline">
               Capabilities
             </a>
