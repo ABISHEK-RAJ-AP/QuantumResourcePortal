@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from qre.core.cache import cache_health
 from qre.core.config import APP_VERSION, Settings
 
 # Decision D-13: verification/enrolment endpoints not shipped; flag stays explicit for readiness.
@@ -26,10 +27,12 @@ def build_auth_capabilities(settings: Settings) -> dict:
             "row_level_security": settings.rls_enabled,
         },
         "session": {
+            "store": "postgresql",
             "idle_minutes": settings.session_idle_min,
             "absolute_hours": settings.session_absolute_h,
             "cookie_secure": settings.cookie_secure,
         },
+        "cache": cache_health(settings),
         "roadmap": {
             "mfa_methods_planned": ["totp", "oidc", "saml"],
         },

@@ -11,7 +11,19 @@ export type AuthCapabilities = {
   self_registration: boolean
   federation: { oidc: boolean; saml: boolean; local_login: boolean }
   features: { procurement_entitlements: boolean; row_level_security: boolean }
-  session: { idle_minutes: number; absolute_hours: number; cookie_secure: boolean }
+  session: {
+    store: string
+    idle_minutes: number
+    absolute_hours: number
+    cookie_secure: boolean
+  }
+  cache: {
+    enabled: boolean
+    redis_configured: boolean
+    connected: boolean
+    backend?: string
+    namespace?: string
+  }
   roadmap?: { mfa_methods_planned?: string[] }
 }
 

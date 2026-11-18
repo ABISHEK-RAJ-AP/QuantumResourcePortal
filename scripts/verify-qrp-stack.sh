@@ -23,15 +23,27 @@ curl_json() {
   printf '%s' "$body"
 }
 
-echo "=== QRP prerequisites (Postgres, not Redis) ==="
+echo "=== QRP prerequisites ==="
 vm_postgres_ready && ok "PostgreSQL" || fail "PostgreSQL not ready — create DB per README / vm_postgres_hint in vm-setup"
+
+if grep -q '^QRE_REDIS_URL=redis://' "$ROOT/backend/.env" 2>/dev/null; then
+  port="${REDIS_PORT:-6379}"
+  if command -v redis-cli >/dev/null 2>&1; then
+    redis-cli -p "$port" ping 2>/dev/null | grep -q PONG && ok "Redis :${port}" || fail "QRE_REDIS_URL set but Redis not responding"
+  elif command -v valkey-cli >/dev/null 2>&1; then
+    valkey-cli -p "$port" ping 2>/dev/null | grep -q PONG && ok "Valkey :${port}" || fail "QRE_REDIS_URL set but Valkey not responding"
+  else
+    vm_log "SKIP Redis CLI (install redis-tools or valkey)"
+  fi
+fi
 
 echo "=== QRP API direct :${API_PORT} ==="
 vm_qrp_api_ok "$API_PORT" || fail "Port ${API_PORT} is not the QRP gateway (wrong app or API down)"
 curl_json "${API}/healthz" "healthz" >/dev/null
 curl_json "${API}/readyz" "readyz" >/dev/null
 curl_json "${API}/api/v1/auth/captcha" "auth/captcha" >/dev/null
-curl_json "${API}/api/v1/auth/capabilities" "auth/capabilities" >/dev/null
+caps="$(curl_json "${API}/api/v1/auth/capabilities" "auth/capabilities")"
+echo "$caps" | grep -q '"cache"' || fail "auth/capabilities missing cache block"
 session="$(curl_json "${API}/api/v1/auth/session" "auth/session")"
 echo "$session" | grep -q '"authenticated"' || fail "auth/session missing authenticated field"
 

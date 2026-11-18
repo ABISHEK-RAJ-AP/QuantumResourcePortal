@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     auth_lockout_minutes: int = Field(default=15, ge=1, le=24 * 60)
     captcha_enabled: bool = False  # SRS §4.2.1: CAPTCHA is deployment-configurable
 
+    # Redis / Valkey — ephemeral cache (CAPTCHA, hot reads). Sessions remain in PostgreSQL.
+    cache_enabled: bool = True
+    redis_url: str | None = None  # e.g. redis://127.0.0.1:6379/0
+    cache_namespace: str = "qre"
+
     page_size_default: int = Field(default=25, ge=1, le=200)
     page_size_max: int = Field(default=200, ge=1, le=1000)
 

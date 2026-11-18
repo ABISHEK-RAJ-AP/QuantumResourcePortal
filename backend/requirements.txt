@@ -11,3 +11,4 @@ python-ulid==4.1.0
 argon2-cffi==25.1.0      # local password hashing (LLD §4.3.6 Argon2id) — RBAC-3
 PyYAML==6.0.3            # read backend/permissions.yaml for the RBAC seed (R-18) — RBAC-3
 httpx==0.28.1            # gateway proxy to the TeleScope backend — RBAC-7f
+redis==5.2.1             # captcha + operational cache (sessions stay in PostgreSQL)

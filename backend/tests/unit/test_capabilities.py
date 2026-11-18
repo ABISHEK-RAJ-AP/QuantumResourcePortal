@@ -8,6 +8,8 @@ def test_build_auth_capabilities_lab():
     assert caps["federation"]["local_login"] is True
     assert caps["mfa_verification_available"] is False
     assert caps["password_self_service"] is False
+    assert caps["session"]["store"] == "postgresql"
+    assert "backend" in caps["cache"]
 
 
 def test_mfa_readiness_fails_when_required_without_verification():

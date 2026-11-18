@@ -48,6 +48,9 @@ function panelFrom(data: AuthCapabilities) {
         {data.federation.oidc || data.federation.saml ? 'Configured' : 'Not configured'}
       </Row>
       <Row label="Procurement module">{yesNo(data.features.procurement_entitlements)}</Row>
+      <Row label="Session store">{data.session.store ?? 'postgresql'}</Row>
+      <Row label="Redis cache">{yesNo(data.cache?.connected ?? false)}</Row>
+      <Row label="Cache backend">{data.cache?.backend ?? '—'}</Row>
       <Row label="Session idle">{data.session.idle_minutes} min</Row>
       <Row label="Session max">{data.session.absolute_hours} h</Row>
       {data.roadmap?.mfa_methods_planned?.length ? (

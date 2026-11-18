@@ -26,6 +26,10 @@ fi
 vm_ensure_venv "$ROOT"
 vm_ensure_env_files "$ROOT"
 
+# shellcheck source=scripts/vm-ensure-redis-cache.sh
+source "$ROOT/scripts/vm-ensure-redis-cache.sh"
+ensure_qre_redis_cache "$ROOT"
+
 if ! vm_postgres_ready; then
   vm_log "WARN: PostgreSQL not responding on localhost:5432"
   vm_postgres_hint
@@ -65,5 +69,5 @@ bash "$ROOT/scripts/verify-qrp-stack.sh" || vm_die "Verification failed — fix 
 
 vm_log "Portal  http://0.0.0.0:${UI_PORT}/login"
 vm_log "API     http://0.0.0.0:${API_PORT}/api/v1/docs"
-vm_log "Redis   not required for QRP"
+vm_log "Redis   ephemeral cache + CAPTCHA (sessions in PostgreSQL)"
 vm_log "Admin   admin / Admin-Strong-Pw-2026 (lab, after migrate seed — see docs/RBAC_DELIVERY.md)"

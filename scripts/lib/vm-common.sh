@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Shared VM / lab bootstrap for Quantum Resource Portal (QRP only — not Q-TeleScope).
-# QRP does not use Redis; Postgres + API :8000 + Vite :5176 are required.
+# Redis/Valkey for cache + CAPTCHA; signed-in sessions in PostgreSQL. API :8000 + Vite :5176.
 
 vm_log() { printf '\033[1;36m[qrp-vm]\033[0m %s\n' "$*"; }
 vm_die() { printf '\033[1;31m[qrp-vm]\033[0m %s\n' "$*" >&2; exit 1; }

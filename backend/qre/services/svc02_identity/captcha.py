@@ -1,30 +1,20 @@
-"""In-memory image CAPTCHA for lab deployments (SRS §4.2.1). SVG-only — no Pillow dependency."""
+"""Image CAPTCHA (SRS §4.2.1). Challenges in Redis when configured; else in-process fallback."""
 
 from __future__ import annotations
 
 import hmac
 import random
 import secrets
-import threading
-import time
 import base64
 from dataclasses import dataclass
 
+from qre.core import cache as cache_mod
+from qre.core.config import get_settings
 from qre.core.errors import FieldError, ValidationFailed
 
 CAPTCHA_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 CAPTCHA_LEN = 5
 CAPTCHA_TTL_SECONDS = 300
-
-_STORE: dict[str, dict[str, float | str]] = {}
-_LOCK = threading.Lock()
-
-
-def _cleanup() -> None:
-    now = time.time()
-    expired = [cid for cid, row in _STORE.items() if float(row["expires_at"]) < now]
-    for cid in expired:
-        _STORE.pop(cid, None)
 
 
 def _svg(code: str) -> str:
@@ -67,12 +57,16 @@ class CaptchaChallenge:
     expires_in_seconds: int
 
 
+def _captcha_key(captcha_id: str) -> str:
+    settings = get_settings()
+    return cache_mod.cache_key(settings, "captcha", captcha_id)
+
+
 def new_challenge() -> CaptchaChallenge:
     code = "".join(random.choices(CAPTCHA_CHARS, k=CAPTCHA_LEN))
     captcha_id = f"cap_{secrets.token_urlsafe(12)}"
-    with _LOCK:
-        _cleanup()
-        _STORE[captcha_id] = {"code": code, "expires_at": time.time() + CAPTCHA_TTL_SECONDS}
+    settings = get_settings()
+    cache_mod.cache_set_json(_captcha_key(captcha_id), {"code": code}, CAPTCHA_TTL_SECONDS, settings)
     return CaptchaChallenge(
         captcha_id=captcha_id,
         captcha_image=_svg(code),
@@ -88,17 +82,16 @@ def verify(captcha_id: str | None, captcha_code: str | None) -> None:
                 FieldError("captcha_code", "CAPTCHA_REQUIRED", "Enter the characters shown in the image."),
             ],
         )
-    with _LOCK:
-        _cleanup()
-        stored = _STORE.get(captcha_id)
-        if not stored:
-            raise ValidationFailed(
-                field_errors=[
-                    FieldError("captcha_id", "CAPTCHA_EXPIRED", "Challenge expired. Request a new image."),
-                ],
-            )
-        expected = str(stored["code"])
-        _STORE.pop(captcha_id, None)
+    settings = get_settings()
+    stored = cache_mod.cache_get_json(_captcha_key(captcha_id), settings)
+    if not stored or not stored.get("code"):
+        raise ValidationFailed(
+            field_errors=[
+                FieldError("captcha_id", "CAPTCHA_EXPIRED", "Challenge expired. Request a new image."),
+            ],
+        )
+    expected = str(stored["code"])
+    cache_mod.cache_delete(_captcha_key(captcha_id), settings)
     got = captcha_code.strip().upper()
     want = expected.upper()
     if len(got) != len(want) or not hmac.compare_digest(got, want):

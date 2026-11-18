@@ -71,7 +71,7 @@ Portal UI: http://127.0.0.1:5176/qrp · API: http://127.0.0.1:8000
 
 **Do not** point QRP at the Q-TeleScope API on `:8000`. QRP runs its own gateway in this repo.
 From the Q-TeleScope monorepo, use `scripts/vm-qrp-setup.sh` — it delegates to this repo's `scripts/vm-setup.sh`.
-Redis is **not** required for QRP (TeleScope may use it; QRP does not).
+**Redis/Valkey** (port 6379) is used for CAPTCHA challenges and operational cache — `bash scripts/vm-setup.sh` starts it and sets `QRE_REDIS_URL` in `backend/.env`. **Signed-in sessions** remain in **PostgreSQL** (LLD §11.3), same pattern as Q-TeleScope’s split: durable session in DB, ephemeral data in Redis.
 
 ## VM
 
