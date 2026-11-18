@@ -36,6 +36,7 @@ import { KpiStrip } from '@/components/data/KpiStrip'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { InfoTip } from '@/components/ui/InfoTip'
 import { ProjectCreateWizard } from '@/components/workflow/ProjectCreateWizard'
+import { QuotaEvaluationPanel } from '@/components/workflow/QuotaEvaluationPanel'
 import { fieldErrorClass } from '@/components/forms/FormField'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { parseForm } from '@/lib/validation/parseForm'
@@ -833,6 +834,7 @@ export function ApprovalDetailPage() {
               ]}
             >
               {tab === 'overview' && (
+                <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                   <PanelHeader title="Request" />
                   <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -876,8 +878,38 @@ export function ApprovalDetailPage() {
                       <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Package SHA-256</dt>
                       <dd className="mt-1 font-mono text-xs break-all text-muted-foreground">{text(row, 'package_sha256')}</dd>
                     </div>
+                    {(() => {
+                      const meta = (row.metadata as Row | undefined) ?? {}
+                      const shots = meta.shots ?? meta.requested_shots
+                      const qubits = meta.qubits
+                      const depth = meta.depth
+                      if (shots == null && qubits == null && depth == null) return null
+                      return (
+                        <>
+                          <div>
+                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Shots</dt>
+                            <dd className="mt-1 font-semibold tabular-nums">{shots != null ? String(shots) : '—'}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Qubits / depth</dt>
+                            <dd className="mt-1 tabular-nums">
+                              {qubits != null ? String(qubits) : '—'}
+                              {depth != null ? ` · depth ${depth}` : ''}
+                            </dd>
+                          </div>
+                          {meta.backend_hint ? (
+                            <div className="sm:col-span-2">
+                              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Backend hint</dt>
+                              <dd className="mt-1 font-mono text-xs">{String(meta.backend_hint)}</dd>
+                            </div>
+                          ) : null}
+                        </>
+                      )
+                    })()}
                   </dl>
                 </Card>
+                <QuotaEvaluationPanel query={quota} />
+                </div>
               )}
 
               {tab === 'governance' && (
@@ -904,41 +936,7 @@ export function ApprovalDetailPage() {
                       Open full policy →
                     </Link>
                   </Card>
-                  <Card>
-                    <PanelHeader
-                      title="Quota evaluation"
-                      action={
-                        <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/quotas">
-                          Ledger
-                        </Link>
-                      }
-                    />
-                    {quota.data ? (
-                      <div className="space-y-3">
-                        <StatusBadge
-                          tone={quota.data.allowed ? 'success' : 'critical'}
-                          label={quota.data.allowed ? 'Within daily shot cap' : 'Over daily shot cap'}
-                        />
-                        <dl className="grid gap-3 text-sm sm:grid-cols-3">
-                          <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Requested</dt>
-                            <dd className="mt-1 font-semibold tabular-nums">{String(quota.data.requested_shots ?? '—')}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Remaining</dt>
-                            <dd className="mt-1 font-semibold tabular-nums">{String(quota.data.remaining_shots ?? '—')}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reason</dt>
-                            <dd className="mt-1 font-mono text-xs">{text(quota.data, 'reason_code')}</dd>
-                          </div>
-                        </dl>
-                        <p className="text-xs text-muted-foreground">Daily simulation-shot window (UTC). Missing ledger rows are not treated as zero usage elsewhere.</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{quota.isError ? message(quota.error) : 'Checking the shot cap…'}</p>
-                    )}
-                  </Card>
+                  <QuotaEvaluationPanel query={quota} />
                 </div>
               )}
 
@@ -1012,20 +1010,24 @@ export function ApprovalDetailPage() {
                     <p className="text-sm text-muted-foreground">No decisions yet. First review creates the trail.</p>
                   )}
                   <ul className="divide-y divide-border/70">
-                    {history.map((record) => (
-                      <li key={String(record.record_id)} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
+                    {history.map((record, idx) => {
+                      const verb = String(record.decision || record.action || 'note')
+                      const when = record.at || record.created_at
+                      return (
+                      <li key={String(record.record_id || `${verb}-${idx}`)} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusBadge
-                            tone={stateTone(String(record.decision || ''))}
-                            label={stateLabel(String(record.decision || 'note'))}
+                            tone={stateTone(verb)}
+                            label={stateLabel(verb)}
                           />
                           <span className="text-xs text-muted-foreground">
-                            {text(record, 'actor_username')} · {text(record, 'stage_id')}
+                            {text(record, 'actor_username') || text(record, 'actor_id')} · {text(record, 'stage_id')}
+                            {when ? ` · ${formatDateTime(String(when))}` : ''}
                           </span>
                         </div>
                         <p className="text-sm">{text(record, 'comment')}</p>
                       </li>
-                    ))}
+                    )})}
                   </ul>
                 </Card>
               )}

@@ -10,7 +10,7 @@ test('overview loads governance KPIs and navigation actions', async ({ page }) =
   await page.goto('/qrp')
   await expect(page).toHaveURL(/\/qrp\/?$/)
   await expect(page.getByRole('heading', { name: 'Home' })).toBeVisible()
-  await expect(page.getByText('Shots remaining')).toBeVisible()
+  await expect(page.getByText(/Daily shot quota|shots · UTC|In queue/).first()).toBeVisible()
   await expect(page.getByText('Reconcile backlog')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Approvals' }).first()).toBeVisible()
 })
@@ -20,7 +20,7 @@ test('approvals page exposes server filter presets', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Review Queue' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Queue' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Mine' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Start demo review' }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Load demo data' }).first()).toBeVisible()
 })
 
 test('jobs page labels provider execution state', async ({ page }) => {
@@ -56,4 +56,5 @@ test('settings exposes sign out and session', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
   await expect(page.getByText(/Platform admin|Operator|admin/i).first()).toBeVisible()
+  await expect(page.getByText('Demonstration environment')).toBeVisible()
 })

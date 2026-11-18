@@ -16,6 +16,14 @@ npm run test:e2e:smoke
 
 Runs signed-in nav and workspace hub specs (desktop project only).
 
+After `make seed-demo`, also run:
+
+```bash
+npm run test:e2e -- e2e/module-detail.spec.ts
+```
+
+Covers approval **Quota evaluation** panel and job **Execution timeline** tab (skips when queue/jobs empty).
+
 ## Full gate (pre-push sprint 12)
 
 ```bash
