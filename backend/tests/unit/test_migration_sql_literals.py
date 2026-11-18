@@ -11,8 +11,11 @@ from sqlalchemy.dialects import postgresql
 
 MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations" / "versions"
 
-# JSON booleans after a colon must be escaped for op.execute() → sqlalchemy.text()
-_UNESCAPED_JSON_BOOL = re.compile(r'":(true|false)(?=[\s\'",}\]])', re.IGNORECASE)
+# JSON literals after a key colon must be escaped for op.execute() → sqlalchemy.text()
+_UNESCAPED_JSON_LITERAL = re.compile(
+    r'(?<!\\)":(?:true|false|\d+)(?=[,}\]"\s\'])',
+    re.IGNORECASE,
+)
 
 
 def _migration_sql_snippets(path: Path) -> list[str]:
@@ -32,5 +35,6 @@ def test_migration_execute_strings_compilable(revision_file: Path) -> None:
         compiled = stmt.compile(dialect=dialect)
         compiled.construct_params(compiled.params)
 
-        if revision_file.name.startswith("20261118_0010"):
-            assert _UNESCAPED_JSON_BOOL.search(snippet) is None, "escape JSON booleans as \\:true / \\:false"
+        assert _UNESCAPED_JSON_LITERAL.search(snippet) is None, (
+            "escape JSON literals in DDL defaults as \\:0 / \\:true / \\:false"
+        )

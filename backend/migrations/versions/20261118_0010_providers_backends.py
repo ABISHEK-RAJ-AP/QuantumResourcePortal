@@ -16,7 +16,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # SQLAlchemy text() treats ":false" in JSON defaults as a bind param — escape as \:false
+    # SQLAlchemy text() treats ":false", ":0", etc. in JSON defaults as bind params — escape as \:
     op.execute(
         """
         CREATE TABLE catalogue_provider (
@@ -50,7 +50,7 @@ def upgrade() -> None:
             topology_type VARCHAR(64),
             topology JSONB NOT NULL DEFAULT '{"nodes":[],"edges":[]}',
             queue_snapshot JSONB NOT NULL DEFAULT
-                '{"pending_jobs":0,"queue_condition":"idle","trend":"flat"}',
+                '{"pending_jobs"\:0,"queue_condition":"idle","trend":"flat"}',
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             CONSTRAINT pk_catalogue_backend PRIMARY KEY (tenant_id, backend_id),
