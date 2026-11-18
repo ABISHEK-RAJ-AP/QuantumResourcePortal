@@ -2,6 +2,8 @@
 
 **Purpose:** No single OSS quantum repo implements the full QRE lifecycle (project → approve → quota → reserve → dispatch → reconcile → audit). QRP composes **HPC/cloud governance UIs** with **quantum orchestration** patterns. This doc maps each QRP surface to reference projects and clone paths under `vendor-references/`.
 
+**Phase 1 research workspace (code-verified inventories, workflow mapping, roadmaps):** [`../reference-analysis/`](../reference-analysis/) — start with [`REFERENCE_REPOSITORY_INVENTORY.md`](../reference-analysis/REFERENCE_REPOSITORY_INVENTORY.md) and [`QRP_REFERENCE_RECONSTRUCTION_MASTER.md`](../product/QRP_REFERENCE_RECONSTRUCTION_MASTER.md) (canonical Cursor prompt).
+
 **QRP stack (this repo):** React 19 + Vite + TanStack Query · FastAPI + PostgreSQL + Redis · national-lab style RBAC (not multi-tenant SaaS marketing chrome).
 
 **QRP UI style (narrowing your question):** **Modern React/TypeScript ops console** (dense tables, KPI strips, breadcrumbs, contextual wizards) — not server-rendered Django admin skins. Use **both**: (a) **Docker stack** to run the integrated HPC tutorial end-to-end; (b) **shallow clones** under `vendor-references/` for grep/wireframe archaeology without forking PHP/Django into QRP.

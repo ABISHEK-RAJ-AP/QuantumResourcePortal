@@ -30,6 +30,7 @@ clone_one https://github.com/ubccr/hpc-toolset-tutorial.git "$ROOT/hpc-toolset-t
 clone_one https://github.com/LibreBooking/librebooking.git "$ROOT/librebooking"
 clone_one https://github.com/kortix-ai/CompanyOS.git "$ROOT/companyos"
 clone_one https://github.com/project-codeflare/codeflare.git "$ROOT/codeflare"
+clone_one https://github.com/project-codeflare/multi-cluster-app-dispatcher.git "$ROOT/mcad"
 clone_one https://github.com/google/quota-monitoring-solution.git "$ROOT/quota-monitoring-solution"
 clone_one https://github.com/GovTechSG/cstack-quota-monitoring.git "$ROOT/cstack-quota-monitoring"
 
