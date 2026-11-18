@@ -99,7 +99,7 @@ async def world(client, migrated_db):
                     tenant_id, provider_id, provider_name, status, integration, created_by
                 ) VALUES (
                     :t, 'p1', 'Provider One', 'active',
-                    '{"stage":"I5","manifest_registered":true}', :admin
+                    '{"stage":"I5","manifest_registered"\:true}', :admin
                 )
                 """
             ),

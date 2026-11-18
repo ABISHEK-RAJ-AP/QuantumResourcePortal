@@ -16,6 +16,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
+    # SQLAlchemy text() treats ":false" in JSON defaults as a bind param — escape as \:false
     op.execute(
         """
         CREATE TABLE catalogue_provider (
@@ -23,7 +24,7 @@ def upgrade() -> None:
             provider_id VARCHAR(128) NOT NULL,
             provider_name VARCHAR(256) NOT NULL,
             status VARCHAR(24) NOT NULL DEFAULT 'draft',
-            integration JSONB NOT NULL DEFAULT '{"stage":"I1","manifest_registered":false}',
+            integration JSONB NOT NULL DEFAULT '{"stage":"I1","manifest_registered"\:false}',
             created_by CHAR(26),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
