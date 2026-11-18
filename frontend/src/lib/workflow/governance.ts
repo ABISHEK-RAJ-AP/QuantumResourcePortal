@@ -11,7 +11,7 @@ export const GOVERNANCE_LIFECYCLE: WorkflowStep[] = [
   {
     id: 'review',
     label: 'Review',
-    detail: 'Walk policy stages, quota evaluation, and stage permissions.',
+    detail: 'Policy stages, quota check, stage permissions.',
     roles: ['Technical reviewer', 'Policy reviewer', 'Approver'],
   },
   {

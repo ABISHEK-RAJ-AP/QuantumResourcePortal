@@ -38,7 +38,10 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
     router.include_router(admin_router)     # /admin/* roles, permissions, users, memberships
     router.include_router(authz_router)     # /authz/check (RBAC-5)
     router.include_router(audit_router)     # /rbac/audit read/export/verify (RBAC-8)
-  # Governance module routes (inventory, approvals, …) are added per service slice on this same API.
+    if settings.is_lab:
+        from qre.services.workspace_lab.api import router as workspace_lab_router
+
+        router.include_router(workspace_lab_router)  # lab Home KPIs until module slices land
     return router
 
 

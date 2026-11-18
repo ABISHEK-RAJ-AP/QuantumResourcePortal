@@ -1,0 +1,1 @@
+"""Lab-only workspace summary stubs for dashboard KPIs."""

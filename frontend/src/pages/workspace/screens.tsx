@@ -314,16 +314,7 @@ export function OverviewPage() {
     ops.active_alerts,
   ])
 
-  const homeStepIndex =
-    focus.kind === 'researcher'
-      ? 0
-      : focus.kind === 'reviewer'
-        ? 1
-        : focus.kind === 'ops' || focus.kind === 'incident'
-          ? 4
-          : focus.kind === 'auditor'
-            ? 5
-            : 1
+  const labDemo = Boolean((summary.data as Row | undefined)?.demo)
 
   return (
     <Page
@@ -332,12 +323,14 @@ export function OverviewPage() {
         { label: 'Home' },
       ]}
       title="Home"
-      description="Role-aware entry to governance, capacity, and operations hubs."
-      steps={GOVERNANCE_LIFECYCLE}
-      stepIndex={homeStepIndex}
-      workflowGuide
+      description="Governance, capacity, and operations."
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
+      {labDemo ? (
+        <p className="text-xs text-muted-foreground">
+          Lab preview metrics — full module APIs ship per service slice; numbers are for walkthrough only.
+        </p>
+      ) : null}
       <OverviewKpiScroll items={kpiRail} />
       <OverviewDashboardGrid
         lens={focus.kind}
@@ -471,7 +464,6 @@ export function ApprovalsPage() {
       description="Multi-stage approvals before capacity holds or dispatch. Filter by project or open the next item in queue."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={1}
-      workflowGuide
       actions={
         nextRow?.workload_id ? (
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
@@ -778,7 +770,6 @@ export function ApprovalDetailPage() {
       }
       steps={trail.steps.length > 0 ? trail.steps : APPROVAL_PATH}
       stepIndex={row ? trail.index : governanceStepIndexForState(govState)}
-      workflowGuide
       actions={
         <span className="flex flex-wrap items-center gap-2">
           <CopyableId value={workloadId} keep={16} />
@@ -1307,7 +1298,6 @@ export function InventoryPage() {
       description="Register assets and backends before scheduling governance holds."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
-      workflowGuide
       actions={
         tab === 'catalogue' ? (
           <span className="flex flex-wrap gap-2">
@@ -1397,7 +1387,6 @@ export function ProvidersPage() {
       description="Provider manifests and integration stage — upstream of inventory and connectors."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-secondary" to="/qrp/connectors">
@@ -1598,7 +1587,6 @@ export function ProjectsPage() {
       description="Create projects, submit workloads, and track open reviews per owner."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={0}
-      workflowGuide
       actions={
         <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
           New project
@@ -1823,7 +1811,6 @@ export function PoliciesPage() {
       description="Published approval stages, permissions, and policy version tied to the review queue."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={1}
-      workflowGuide
       actions={
         <Link className="btn-primary" to="/qrp/approvals">
           Review queue
@@ -1936,7 +1923,6 @@ export function QuotasPage() {
       description="Daily shot ledger and headroom — evaluated before approve on each workload."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={2}
-      workflowGuide
       updatedAt={query.dataUpdatedAt}
     >
       {projectId ? (
@@ -2203,7 +2189,6 @@ export function ReservationsPage() {
       description="Governance holds on assets — calendar view; overlaps may need manual resolution."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/scheduling" className="btn-primary">
@@ -2410,7 +2395,6 @@ export function MeteringPage() {
       description="Connector rollups and usage samples — complements quota ledger and audit exports."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={5}
-      workflowGuide
       actions={
         <span className="flex flex-wrap items-center gap-2">
           
@@ -2568,7 +2552,6 @@ export function AuditPage() {
       description="Append-only events for approvals, inventory, quotas, dispatch, and admin actions."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={5}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
@@ -2684,7 +2667,6 @@ export function SupportPage() {
       description="Active detector rows from the fleet. Group related warnings into incidents before deep-drilling single alerts."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/incidents" className="btn-primary">

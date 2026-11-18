@@ -48,7 +48,9 @@ export function Page({
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />
         </section>
       ) : null}
-      {workflowGuide ? <WorkflowGuide step={activeStep} /> : null}
+      {workflowGuide && activeStep ? (
+        <WorkflowGuide step={activeStep} defaultOpen={false} />
+      ) : null}
       {children}
     </div>
   )

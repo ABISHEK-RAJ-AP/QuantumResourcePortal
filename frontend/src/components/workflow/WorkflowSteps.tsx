@@ -24,7 +24,6 @@ export function WorkflowSteps({
   label?: string
 }) {
   if (steps.length === 0) return null
-  const activeStep = current != null && current >= 0 && current < steps.length ? steps[current] : null
   return (
     <div className="space-y-2">
     <ol className="flex flex-wrap items-center gap-y-3" aria-label={label}>
@@ -49,6 +48,11 @@ export function WorkflowSteps({
                 'ms-2.5 truncate text-sm',
                 active ? 'font-semibold text-foreground' : done ? 'font-medium text-foreground' : 'text-muted-foreground',
               )}
+              title={
+                [step.detail, step.roles?.length ? `Roles: ${step.roles.join(', ')}` : '']
+                  .filter(Boolean)
+                  .join(' · ') || undefined
+              }
             >
               {step.label}
             </span>
@@ -65,11 +69,6 @@ export function WorkflowSteps({
         )
       })}
     </ol>
-    {activeStep?.detail ? (
-      <p className="text-sm text-muted-foreground" id="workflow-step-detail">
-        <span className="font-medium text-foreground">{activeStep.label}.</span> {activeStep.detail}
-      </p>
-    ) : null}
     </div>
   )
 }

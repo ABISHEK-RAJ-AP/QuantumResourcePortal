@@ -217,7 +217,6 @@ export function ApprovalHistoryPage() {
       description="Append-only decisions. A later decision does not rewrite an earlier one."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={5}
-      workflowGuide
       actions={
         <Link to="/qrp/approvals" className="text-sm font-medium text-primary hover:underline">
           Queue
@@ -320,7 +319,6 @@ export function ReconciliationPage() {
       description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
-      workflowGuide
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
@@ -544,7 +542,6 @@ export function SchedulingPage() {
       description={`Plan a governance hold. Calendar shows existing holds, not live provider availability. ${HOLD_VS_DISPATCH}`}
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reservations" className="btn-secondary">
@@ -862,7 +859,6 @@ export function RegisterAssetPage() {
       description="One asset, one provider, one native id."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={3}
-      workflowGuide
       actions={
         <Link to="/qrp/inventory" className="btn-secondary">
           Inventory
@@ -1215,7 +1211,6 @@ export function ProjectDetailPage() {
       description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={0}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <CopyableId value={projectId} keep={14} />
@@ -2805,7 +2800,6 @@ export function DispatchPage() {
       description={`Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs and reconciliation. ${APPROVAL_VS_DISPATCH}`}
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/reconciliation" className="btn-primary">
@@ -4161,7 +4155,6 @@ export function CentrePage() {
       description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions for this tenant."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={4}
-      workflowGuide
       actions={
         <span className="flex flex-wrap gap-2">
           <Link className="btn-primary" to="/qrp/approvals">
@@ -5048,7 +5041,6 @@ export function EvidencePage() {
       description="Point-in-time fleet snapshots for audit and compliance — distinct from the live audit event stream."
       steps={GOVERNANCE_LIFECYCLE}
       stepIndex={5}
-      workflowGuide
       actions={
         <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
           Capture snapshot
