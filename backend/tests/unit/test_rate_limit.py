@@ -4,7 +4,7 @@ from qre.core.config import Settings, Profile
 from qre.core.rate_limit import RateLimited, enforce_auth_ip_rate_limit
 
 
-def _settings(limit: int = 3) -> Settings:
+def _settings(limit: int = 5) -> Settings:
     return Settings(
         env=Profile.LAB,
         database_url="postgresql+asyncpg://u:p@localhost/qre",
@@ -16,11 +16,10 @@ def _settings(limit: int = 3) -> Settings:
 
 
 def test_rate_limit_blocks_after_limit():
-    s = _settings(3)
+    s = _settings(5)
     ip = "203.0.113.9"
-    enforce_auth_ip_rate_limit(s, ip=ip, bucket="login")
-    enforce_auth_ip_rate_limit(s, ip=ip, bucket="login")
-    enforce_auth_ip_rate_limit(s, ip=ip, bucket="login")
+    for _ in range(5):
+        enforce_auth_ip_rate_limit(s, ip=ip, bucket="login")
     try:
         enforce_auth_ip_rate_limit(s, ip=ip, bucket="login")
         raise AssertionError("expected RateLimited")
