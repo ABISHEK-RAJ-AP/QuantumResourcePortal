@@ -58,16 +58,16 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
       )}
       aria-label="Site footer"
     >
-      <div className="qrp-public-footer__wrap py-12 lg:py-16">
+      <div className="qrp-public-footer__inner">
         <div className="qrp-public-footer__grid">
           <div className="qrp-public-footer__brand space-y-4">
-            <Link to="/" className="inline-flex items-center gap-3">
-              <LogoMark className={cn('h-10 w-auto', dark && 'brightness-0 invert')} />
-              <div className="text-left">
-                <p className="type-page-title type-trim">Quantum Resource Portal</p>
-                <p className={cn('acr text-xs font-medium', dark ? 'text-white/50' : 'text-muted-foreground')}>
+            <Link to="/" className="flex items-center gap-3">
+              <LogoMark className={cn('h-10 w-auto shrink-0', dark && 'brightness-0 invert')} />
+              <div className="flex flex-col text-left">
+                <span className="text-xl font-extrabold tracking-tight">Quantum Resource Portal</span>
+                <span className={cn('acr text-xs font-semibold', dark ? 'text-white/50' : 'text-muted-foreground')}>
                   C-DAC Quantum Platform
-                </p>
+                </span>
               </div>
             </Link>
             <p className={cn('hyphenate max-w-sm text-sm leading-relaxed text-pretty', dark ? 'text-white/60' : 'text-muted-foreground')}>
@@ -82,7 +82,9 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
           <div className="qrp-public-footer__cols">
             {SECTIONS.map((section) => (
               <div key={section.title} className="space-y-3">
-                <h3 className={cn('acr text-[11px] font-bold', dark ? 'text-white/80' : 'text-foreground')}>{section.title}</h3>
+                <h3 className={cn('text-xs font-bold tracking-wider uppercase', dark ? 'text-white/80' : 'text-foreground')}>
+                  {section.title}
+                </h3>
                 <ul className="space-y-2">
                   {section.links.map((link) => (
                     <li key={link.name}>

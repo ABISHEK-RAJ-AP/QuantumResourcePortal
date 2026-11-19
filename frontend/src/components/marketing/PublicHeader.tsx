@@ -37,20 +37,22 @@ export function PublicHeader({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="qrp-public-header__bar">
+      <div className="qrp-public-header__inner">
         <div className="qrp-public-header__brand">
           <Link to="/" className="group flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
-            <LogoMark className={cn('h-11 w-auto shrink-0 transition-transform group-hover:scale-105', dark && 'brightness-0 invert')} />
-            <div className="min-w-0 text-left">
-              <p className="type-page-title type-trim truncate whitespace-nowrap">Quantum Resource Portal</p>
-              <p
+            <LogoMark className={cn('h-10 w-auto shrink-0 transition-transform group-hover:scale-105', dark && 'brightness-0 invert')} />
+            <div className="flex min-w-0 flex-col text-left">
+              <span className="truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-xl">
+                Quantum Resource Portal
+              </span>
+              <span
                 className={cn(
-                  'acr hidden truncate text-[11px] font-semibold whitespace-nowrap sm:block',
+                  'acr hidden truncate text-[10.5px] font-semibold whitespace-nowrap sm:block',
                   dark ? 'text-white/50' : 'text-muted-foreground',
                 )}
               >
                 C-DAC Governance
-              </p>
+              </span>
             </div>
           </Link>
         </div>
@@ -119,8 +121,8 @@ export function PublicHeader({ className }: { className?: string }) {
       </div>
 
       {open ? (
-        <div className={cn('border-t px-4 py-4 sm:px-6 xl:hidden', dark ? 'border-white/10' : 'border-border')}>
-          <nav className="flex flex-col gap-1 text-center" aria-label="Mobile">
+        <div className={cn('border-t px-6 py-4 sm:px-8 xl:hidden', dark ? 'border-white/10' : 'border-border')}>
+          <nav className="flex flex-col gap-1 text-left" aria-label="Mobile">
             {NAV.map((link) => (
               <a
                 key={link.label}
