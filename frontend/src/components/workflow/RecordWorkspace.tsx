@@ -33,6 +33,7 @@ export function RecordWorkspace({
   related,
   children,
   sideExtra,
+  layout = 'detail',
 }: {
   tabs: RecordTab[]
   activeTab: string
@@ -41,9 +42,16 @@ export function RecordWorkspace({
   related?: RelatedLink[]
   children: ReactNode
   sideExtra?: ReactNode
+  /** Hub/list pages: tabs + content only — no Next action / Related sidebar. */
+  layout?: 'detail' | 'hub'
 }) {
+  const hub = layout === 'hub'
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+    <div
+      className={cn(
+        hub ? 'space-y-4' : 'grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]',
+      )}
+    >
       <div className="min-w-0 space-y-4">
         <div
           className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1"
@@ -75,6 +83,7 @@ export function RecordWorkspace({
         <div role="tabpanel">{children}</div>
       </div>
 
+      {!hub ? (
       <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
         {nextAction ? (
           <Card className="space-y-3">
@@ -140,6 +149,7 @@ export function RecordWorkspace({
 
         {sideExtra}
       </aside>
+      ) : null}
     </div>
   )
 }

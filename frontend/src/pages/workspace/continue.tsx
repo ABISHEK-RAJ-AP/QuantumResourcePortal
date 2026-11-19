@@ -322,22 +322,12 @@ export function ReconciliationPage() {
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
+        layout="hub"
         tabs={[
           { id: 'work', label: 'Attempts', count: rows.length },
         ]}
         activeTab="work"
         onTabChange={() => undefined}
-        nextAction={{
-          title: unresolvedCount ? `${unresolvedCount} need reconcile` : 'Backlog clear',
-          body: 'Compare provider job observations against authorized dispatch attempts before closing.',
-          primary: { to: '/qrp/jobs', label: 'Provider jobs' },
-          secondary: { to: '/qrp/approvals', label: 'Review queue' },
-        }}
-        related={[
-          { to: '/qrp/dispatch', label: 'Dispatch ICD', hint: 'Contract reference' },
-          { to: '/qrp/jobs?tab=queues', label: 'Queue depth', hint: 'Telemetry' },
-          { to: '/qrp/audit', label: 'Audit', hint: 'Decision trail' },
-        ]}
       >
         <div className="grid gap-3 sm:grid-cols-3">
           <MetricTile label="Needs reconcile" value={unresolvedCount} hint="Authorized or unresolved" tone={unresolvedCount ? 'critical' : 'neutral'} />
@@ -3911,13 +3901,12 @@ export function JobsPage() {
       crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: tab === 'queues' ? 'Queues' : 'Jobs' }]}
       title={tab === 'queues' ? 'Queue depth' : 'Provider jobs'}
       description={
-        tab === 'queues'
-          ? 'Telemetry-backed pending counts per backend. Not governance approval state.'
-          : `Provider execution records from connected backends. ${APPROVAL_VS_DISPATCH}`
+        tab === 'queues' ? 'Pending counts per backend from queue telemetry.' : 'Provider execution records.'
       }
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
+        layout="hub"
         tabs={[
           { id: 'jobs', label: 'Jobs', count: query.isError ? undefined : all.length },
           { id: 'queues', label: 'Queues' },
@@ -3927,20 +3916,6 @@ export function JobsPage() {
           if (id === 'jobs') setSearchParams({}, { replace: true })
           else setSearchParams({ tab: id }, { replace: true })
         }}
-        nextAction={{
-          title: tab === 'queues' ? 'Jobs need backends' : 'Governance vs provider jobs',
-          body:
-            tab === 'queues'
-              ? 'Queue depth comes from telemetry samples. Approvals and dispatch reconcile live in governance workflows.'
-              : 'These rows are provider-reported execution. Submit and approve workloads before expecting aligned dispatch.',
-          primary: { to: '/qrp/approvals', label: 'Review queue' },
-          secondary: { to: '/qrp/reconciliation', label: 'Reconciliation' },
-        }}
-        related={[
-          { to: '/qrp/centre', label: 'Operations centre', hint: 'Fleet + queue snapshot' },
-          { to: '/qrp/inventory', label: 'Inventory', hint: 'Backends & assets' },
-          { to: '/qrp/reconciliation', label: 'Dispatch reconcile', hint: 'Unresolved attempts' },
-        ]}
       >
         {tab === 'queues' ? <QueuesPage embedded /> : jobsBody}
       </RecordWorkspace>

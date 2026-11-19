@@ -33,7 +33,7 @@ export function DataTable<T extends DataTableRow = DataTableRow>({
   columns,
   rows,
   emptyTitle = 'Nothing here yet',
-  emptyBody = 'Records appear when the linked service returns data for this tenant.',
+  emptyBody = '',
 }: {
   columns: DataTableColumn<T>[]
   rows: T[]

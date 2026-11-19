@@ -39,7 +39,6 @@ import { fieldErrorClass } from '@/components/forms/FormField'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { parseForm } from '@/lib/validation/parseForm'
 import { approvalDecisionSchema } from '@/lib/validation/schemas'
-import { EMPTY_SAMPLE } from '@/lib/operatorCopy'
 import {
   enrichWorkflowSteps,
   GOVERNANCE_LIFECYCLE,
@@ -1131,50 +1130,46 @@ export function InventoryPage() {
   }, [all])
   const catalogueBody = (
     <>
-      <KpiStrip>
-        <MetricTile label="Registered" value={allQuery.isError ? '—' : all.length} hint="Unfiltered catalogue" />
-        <MetricTile label="Active" value={allQuery.isError ? '—' : active} hint="Lifecycle = active" tone="success" />
-        <MetricTile label="Service / hold" value={allQuery.isError ? '—' : maintenance} hint="Maintenance or suspended" tone={maintenance ? 'warning' : 'neutral'} />
-        <MetricTile label="Providers linked" value={allQuery.isError ? '—' : providers} hint="Distinct provider_id" />
+      <KpiStrip className="sm:grid-cols-2 lg:grid-cols-4">
+        <MetricTile compact label="Registered" value={allQuery.isError ? '—' : all.length} />
+        <MetricTile compact label="Active" value={allQuery.isError ? '—' : active} tone="success" />
+        <MetricTile compact label="Service / hold" value={allQuery.isError ? '—' : maintenance} tone={maintenance ? 'warning' : 'neutral'} />
+        <MetricTile compact label="Providers" value={allQuery.isError ? '—' : providers} />
       </KpiStrip>
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Lifecycle mix" empty={allQuery.isPending || lifeChart.length === 0}>
-          {(h) =>
-            allQuery.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : lifeChart.length === 0 ? (
-              <EmptyState title="No assets" body="Register or import to populate lifecycle." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <PieChart>
-                  <Pie data={lifeChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                    {lifeChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            )
-          }
-        </ChartPanel>
-        <ChartPanel className="xl:col-span-2" title="By execution class" empty={execChart.length === 0}>
-          {(h) =>
-            execChart.length === 0 ? (
-              <EmptyState title="No execution classes" body="Empty inventory." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={execChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          }
-        </ChartPanel>
-      </div>
+      {!allQuery.isPending && all.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {lifeChart.length > 0 ? (
+            <ChartPanel title="Lifecycle mix" empty={false}>
+              {(h) => (
+                <ResponsiveContainer width="100%" height={h}>
+                  <PieChart>
+                    <Pie data={lifeChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                      {lifeChart.map((d) => (
+                        <Cell key={d.name} fill={d.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </ChartPanel>
+          ) : null}
+          {execChart.length > 0 ? (
+            <ChartPanel title="By execution class" empty={false}>
+              {(h) => (
+                <ResponsiveContainer width="100%" height={h}>
+                  <BarChart data={execChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </ChartPanel>
+          ) : null}
+        </div>
+      ) : null}
       <Card>
         <FilterBar
           options={INVENTORY_EXEC}
@@ -1204,7 +1199,7 @@ export function InventoryPage() {
           <Table
             rows={rows}
             emptyTitle="No assets"
-            emptyBody={`Register an asset or import a provider catalogue. ${EMPTY_SAMPLE}`}
+            emptyBody="Register an asset or import a catalogue."
             columns={[
               {
                 key: 'asset_id',
@@ -1269,6 +1264,7 @@ export function InventoryPage() {
       updatedAt={allQuery.dataUpdatedAt || query.dataUpdatedAt}
     >
       <RecordWorkspace
+        layout="hub"
         tabs={[
           { id: 'catalogue', label: 'Catalogue', count: allQuery.isError ? undefined : all.length },
           { id: 'pools', label: 'Pools' },
@@ -1279,17 +1275,6 @@ export function InventoryPage() {
           if (id === 'catalogue') setSearchParams({}, { replace: true })
           else setSearchParams({ tab: id }, { replace: true })
         }}
-        nextAction={{
-          title: 'Register before dispatch',
-          body: 'Catalogue assets, optional pools for grouping, backends for provider telemetry — governance still gates dispatch.',
-          primary: { to: '/qrp/inventory/new', label: 'Register asset' },
-          secondary: { to: '/qrp/providers', label: 'Providers' },
-        }}
-        related={[
-          { to: '/qrp/connectors', label: 'Connectors', hint: 'Integration stage' },
-          { to: '/qrp/jobs', label: 'Jobs & queues', hint: 'Execution + depth' },
-          { to: '/qrp/reconciliation', label: 'Reconcile', hint: 'Dispatch outcomes' },
-        ]}
       >
         {tab === 'catalogue' ? catalogueBody : null}
         {tab === 'pools' ? <PoolsPage embedded /> : null}
@@ -1353,51 +1338,36 @@ export function ProvidersPage() {
       }
       updatedAt={query.dataUpdatedAt}
     >
-      <KpiStrip>
-        <MetricTile label="Providers" value={query.isError ? '—' : all.length} hint="Catalogue rows" />
-        <MetricTile label="Active" value={query.isError ? '—' : active} hint="Status = active" tone="success" />
-        <MetricTile label="Manifest on file" value={query.isError ? '—' : withManifest} hint="integration.manifest_registered" />
-        <MetricTile label="Collector OK" value={query.isError ? '—' : collectorOk} hint="Last collector status" tone={collectorOk ? 'success' : 'neutral'} />
+      <KpiStrip className="sm:grid-cols-2 lg:grid-cols-4">
+        <MetricTile compact label="Providers" value={query.isError ? '—' : all.length} />
+        <MetricTile compact label="Active" value={query.isError ? '—' : active} tone="success" />
+        <MetricTile compact label="Manifest" value={query.isError ? '—' : withManifest} />
+        <MetricTile compact label="Collector OK" value={query.isError ? '—' : collectorOk} tone={collectorOk ? 'success' : 'neutral'} />
       </KpiStrip>
-      <div className="grid gap-4 xl:grid-cols-3">
+      {stageChart.length > 0 ? (
         <ChartPanel
           title="Integration stage"
-          empty={stageChart.length === 0}
+          empty={false}
           action={
             <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/connectors">
-              I1–I5 stages
+              Connectors
             </Link>
           }
         >
-          {(h) =>
-            stageChart.length === 0 ? (
-              <EmptyState title="No stages" body="Empty provider catalogue." />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <PieChart>
-                  <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
-                    {stageChart.map((d) => (
-                      <Cell key={d.name} fill={d.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            )
-          }
+          {(h) => (
+            <ResponsiveContainer width="100%" height={h}>
+              <PieChart>
+                <Pie data={stageChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, h * 0.28)} outerRadius={Math.max(48, h * 0.42)} paddingAngle={2}>
+                  {stageChart.map((d) => (
+                    <Cell key={d.name} fill={d.fill} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </ChartPanel>
-        <Card className="xl:col-span-2 space-y-2 text-sm">
-          <PanelHeader title="Next steps" />
-          <ol className="list-inside list-decimal space-y-1 text-muted-foreground">
-            <li>Open a provider → publish capability manifest (moves toward I2).</li>
-            <li>Confirm collector runs on Connectors (I3 evidence).</li>
-            <li>Activate or suspend from provider detail. Catalogue status is not a dispatch authorization.</li>
-          </ol>
-          <Link className="font-medium text-primary hover:underline" to="/qrp/connectors">
-            Open connectors board →
-          </Link>
-        </Card>
-      </div>
+      ) : null}
       <Card>
         <FilterBar
           options={statusOptions}
@@ -2311,7 +2281,7 @@ export function MeteringPage() {
             ) : query.isPending ? (
               <div className="h-full animate-pulse rounded-lg bg-muted" />
             ) : chart.length === 0 ? (
-              <EmptyState title="No numeric sums" body={`No rollups with sum_value in the last ${hours} h. ${EMPTY_SAMPLE}`} />
+              <EmptyState title="No numeric sums" body={`No rollups with sum_value in the last ${hours} h.`} />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
@@ -2341,7 +2311,7 @@ export function MeteringPage() {
           <Table
             rows={rows}
             emptyTitle="No meter samples"
-            emptyBody={`No rollups in the last ${hours} hours. ${EMPTY_SAMPLE}`}
+            emptyBody={`No rollups in the last ${hours} hours.`}
             columns={[
               { key: 'dimension', label: 'Dimension', sortable: true },
               { key: 'metric', label: 'Metric', sortable: true },
