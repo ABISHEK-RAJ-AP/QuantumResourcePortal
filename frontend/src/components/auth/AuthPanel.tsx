@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { AuthFridgeVisual } from '@/components/marketing/AuthFridgeVisual'
 import { PublicShell } from '@/components/marketing/PublicShell'
-import CyberMatrixHero from '@/components/ui/cyber-matrix-hero'
 
 /** Auth layout — two-column grid (Q-TeleScope auth shell pattern). */
 export function AuthPanel({
@@ -20,9 +19,8 @@ export function AuthPanel({
 }) {
   return (
     <PublicShell>
-      <div className="qrp-auth-shell relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
-        <CyberMatrixHero showDefaultContent={false} className="absolute inset-0 -z-10 min-h-full bg-surface" />
-        <div className="qrp-auth-panel craft-card auth-panel-rise w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+      <div className="qrp-auth-shell qrp-auth-shell--flat relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+        <div className="qrp-auth-panel auth-panel-rise w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             <aside className="qrp-auth-brand flex flex-col gap-4 border-b border-white/10 p-6 text-white sm:p-8 lg:col-span-5 lg:min-h-[32rem] lg:border-b-0 lg:border-e lg:border-white/10">
               <div className="flex items-center gap-3">
@@ -32,15 +30,13 @@ export function AuthPanel({
                   <p className="text-sm text-white/70">Quantum Resource Portal</p>
                 </div>
               </div>
-              <div className="qrp-auth-visual craft-inset relative min-h-[260px] flex-1 overflow-hidden">
+              <div className="qrp-auth-visual relative hidden min-h-[220px] flex-1 overflow-hidden lg:block">
                 <AuthFridgeVisual />
               </div>
               <div className="mt-auto space-y-2">
-                <h2 className="type-section-title text-white type-title-clamp">
-                  Governance-first quantum resource operations
-                </h2>
-                <p className="hyphenate max-w-[36ch] text-sm leading-relaxed text-white/60 text-pretty">
-                  Approvals, quotas, dispatch, and audit in one console.
+                <h2 className="type-section-title text-white type-title-clamp">Sign in to the governance workspace</h2>
+                <p className="hyphenate max-w-[40ch] text-sm leading-relaxed text-white/60 text-pretty">
+                  After login: open Approvals, run the lab demo trail, then quotas, dispatch, and audit exports.
                 </p>
                 <Link to="/" className="fs-link inline-flex min-h-10 items-center text-sm font-medium text-cyan-300/90 hover:text-cyan-200">
                   ← Back to home

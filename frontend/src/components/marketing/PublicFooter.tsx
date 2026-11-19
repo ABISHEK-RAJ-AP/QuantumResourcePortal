@@ -27,9 +27,9 @@ const SECTIONS: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Governance',
     links: [
-      { name: 'Approvals', to: '/qrp/approvals' },
-      { name: 'Policies', to: '/qrp/policies' },
-      { name: 'Quotas', to: '/qrp/quotas' },
+      { name: 'Approval stages', href: '/#workflow' },
+      { name: 'Module map', href: '/#modules' },
+      { name: 'Open workspace', to: '/login' },
     ],
   },
 ]

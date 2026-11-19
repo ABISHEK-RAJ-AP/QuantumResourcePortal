@@ -21,6 +21,8 @@ import { OverviewDashboardGrid } from '@/components/dashboard/OverviewDashboardG
 import { OverviewKpiScroll, type OverviewKpiItem } from '@/components/dashboard/OverviewKpiScroll'
 import { DataState } from '@/components/data/DataState'
 import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
+import { useNearestTableCaption } from '@/components/data/table-caption-context'
+import { useOptionalPageChromeTitle } from '@/components/layout/page-context'
 import { formatApiError } from '@/lib/apiMessage'
 import { formatDateTime, formatEnum, formatRole } from '@/lib/display'
 import { useDemoOperationalPolling } from '@/hooks/useDemoOperationalPolling'
@@ -96,7 +98,12 @@ export type TableColumn = DataTableColumn<Row>
 export function Table(
   props: Parameters<typeof DataTable<Row>>[0],
 ) {
-  return <DataTable {...props} />
+  const panel = useNearestTableCaption()
+  const pageTitle = useOptionalPageChromeTitle()
+  const caption =
+    props.caption ??
+    (panel ? `${panel}` : pageTitle ? `${pageTitle} listing` : undefined)
+  return <DataTable {...props} caption={caption} />
 }
 
 export function QueryBody({
@@ -1012,7 +1019,7 @@ export function ApprovalDetailPage() {
                           Reconcile
                         </Link>
                       }
-                    />
+                    >
                     <Table
                       rows={relatedAttempts.data ?? []}
                       emptyTitle="No attempts for this request"
@@ -1035,6 +1042,7 @@ export function ApprovalDetailPage() {
                         },
                       ]}
                     />
+                    </PanelHeader>
                   </Card>
                   <Card>
                     <PanelHeader
@@ -1044,7 +1052,7 @@ export function ApprovalDetailPage() {
                           All holds
                         </Link>
                       }
-                    />
+                    >
                     <Table
                       rows={(relatedReservations.data ?? []).slice(0, 8)}
                       emptyTitle="No holds on project"
@@ -1065,6 +1073,7 @@ export function ApprovalDetailPage() {
                         { key: 'resource_ref', label: 'Resource' },
                       ]}
                     />
+                    </PanelHeader>
                   </Card>
                 </div>
               )}
@@ -1927,7 +1936,7 @@ export function QuotasPage() {
             <PanelHeader
               title="By project"
               action={<span className="text-xs text-muted-foreground tabular-nums">{projects.length} rows</span>}
-            />
+            >
             <Table
               rows={projects}
               emptyTitle="No project usage in this window"
@@ -1957,12 +1966,13 @@ export function QuotasPage() {
                 { key: 'jobs', label: 'Jobs', sortable: true },
               ]}
             />
+            </PanelHeader>
           </Card>
           <Card>
             <PanelHeader
               title="Jobs in window"
               action={<span className="text-xs text-muted-foreground tabular-nums">{entries.length} rows</span>}
-            />
+            >
             <Table
               rows={entries}
               emptyTitle="No ledger entries"
@@ -1974,6 +1984,7 @@ export function QuotasPage() {
                 { key: 'created_by', label: 'By' },
               ]}
             />
+            </PanelHeader>
           </Card>
         </div>
       </QueryBody>

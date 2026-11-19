@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
+import { TableCaptionProvider } from '@/components/data/table-caption-context'
 import type { Crumb } from '@/components/layout/Breadcrumbs'
 import type { StatusTone } from '@/components/status/StatusBadge'
 import { WorkflowGuide } from '@/components/workflow/WorkflowGuide'
@@ -132,15 +133,25 @@ export function RelatedNav({ items, className }: { items: RelatedNavItem[]; clas
 export function PanelHeader({
   title,
   action,
+  children,
 }: {
   title: string
   action?: ReactNode
+  /** When set, nested tables inherit this caption unless they pass their own. */
+  children?: ReactNode
 }) {
-  return (
+  const head = (
     <div className="mb-3 flex items-center justify-between gap-3">
       <h2 className="type-section-title type-title-clamp">{title}</h2>
       {action}
     </div>
+  )
+  if (children == null) return head
+  return (
+    <TableCaptionProvider title={title}>
+      {head}
+      {children}
+    </TableCaptionProvider>
   )
 }
 

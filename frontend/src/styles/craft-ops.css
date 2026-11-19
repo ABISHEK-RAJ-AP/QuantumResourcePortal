@@ -355,7 +355,11 @@ html.dark .qrp-public-shell {
   mask-image: linear-gradient(to bottom, #000 92%, transparent);
 }
 
-.qrp-auth-panel.craft-card {
+.qrp-auth-shell--flat {
+  background: transparent;
+}
+
+.qrp-auth-panel {
   border-radius: calc(var(--radius-outer) + 0.25rem);
   overflow: hidden;
 }

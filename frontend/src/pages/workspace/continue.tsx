@@ -1344,7 +1344,7 @@ export function ProjectDetailPage() {
                               All requests
                             </button>
                           }
-                        />
+                        >
                         <QueryBody query={approvals}>
                           <Table
                             rows={approvalRows.slice(0, 5)}
@@ -1374,6 +1374,7 @@ export function ProjectDetailPage() {
                             ]}
                           />
                         </QueryBody>
+                        </PanelHeader>
                       </Card>
                       <Card className="space-y-3">
                         <PanelHeader
@@ -1383,7 +1384,7 @@ export function ProjectDetailPage() {
                               Calendar
                             </button>
                           }
-                        />
+                        >
                         {quota.isError ? (
                           <p className="text-sm text-muted-foreground">Quota ledger unavailable.</p>
                         ) : (
@@ -1419,6 +1420,7 @@ export function ProjectDetailPage() {
                             ]}
                           />
                         </QueryBody>
+                        </PanelHeader>
                       </Card>
                     </div>
                   </div>
@@ -1428,7 +1430,7 @@ export function ProjectDetailPage() {
 
             {tab === 'members' && (
               <Card className="space-y-3">
-                <PanelHeader title="Members" />
+                <PanelHeader title="Members">
                 <MemberForm projectId={projectId} />
                 <QueryBody query={members}>
                   <Table
@@ -1441,6 +1443,7 @@ export function ProjectDetailPage() {
                     ]}
                   />
                 </QueryBody>
+                </PanelHeader>
               </Card>
             )}
 
@@ -1469,7 +1472,7 @@ export function ProjectDetailPage() {
                         Queue
                       </Link>
                     }
-                  />
+                  >
                   <QueryBody query={approvals}>
                     <Table
                       rows={approvalRows}
@@ -1499,6 +1502,7 @@ export function ProjectDetailPage() {
                       ]}
                     />
                   </QueryBody>
+                  </PanelHeader>
                 </Card>
               </div>
             )}
@@ -1513,7 +1517,7 @@ export function ProjectDetailPage() {
                         Request window
                       </Link>
                     }
-                  />
+                  >
                   <QueryBody query={reservations}>
                     <Table
                       rows={reservationRows}
@@ -1542,6 +1546,7 @@ export function ProjectDetailPage() {
                       ]}
                     />
                   </QueryBody>
+                  </PanelHeader>
                 </Card>
                 <Card>
                   <PanelHeader title="Hold calendar" />
@@ -1598,7 +1603,7 @@ export function ProjectDetailPage() {
                       Audit trail
                     </Link>
                   }
-                />
+                >
                 {activity.isError ? (
                   <EmptyState title="Activity unavailable" body={message(activity.error)} />
                 ) : (
@@ -1625,6 +1630,7 @@ export function ProjectDetailPage() {
                     ]}
                   />
                 )}
+                </PanelHeader>
               </Card>
             )}
           </RecordWorkspace>
@@ -1882,7 +1888,7 @@ export function AlertDetailPage() {
                           <span className="text-xs text-muted-foreground tabular-nums">{relatedRows.length} other</span>
                         )
                       }
-                    />
+                    >
                     {related.isPending ? (
                       <div className="h-20 animate-pulse rounded-lg bg-muted" />
                     ) : relatedRows.length === 0 ? (
@@ -1933,6 +1939,7 @@ export function AlertDetailPage() {
                         ]}
                       />
                     )}
+                    </PanelHeader>
                   </Card>
 
                   {incidentId ? (
@@ -1944,7 +1951,7 @@ export function AlertDetailPage() {
                             Full incident
                           </Link>
                         }
-                      />
+                      >
                       {incident.isError ? (
                         <EmptyState title="Incident unavailable" body={message(incident.error)} />
                       ) : incident.isPending ? (
@@ -2003,6 +2010,7 @@ export function AlertDetailPage() {
                           ) : null}
                         </>
                       )}
+                      </PanelHeader>
                     </Card>
                   ) : (
                     <Notice tone="warning">Not linked to an incident yet. Grouping happens when the sync job attaches alerts.</Notice>
@@ -3212,7 +3220,7 @@ export function UsersPage() {
               SuperAdmin, PlatformAdmin, and Admin share full platform permissions. Custom roles persist in data/custom_roles.json.
             </InfoTip>
           }
-        />
+        >
         <QueryBody query={catalog}>
           <Table
             rows={roles as unknown as Row[]}
@@ -3249,6 +3257,7 @@ export function UsersPage() {
           />
         </QueryBody>
         {deleteRole.error ? <p className="mt-2 text-sm text-critical">{message(deleteRole.error)}</p> : null}
+        </PanelHeader>
       </Card>
     </Page>
   )
@@ -3639,7 +3648,7 @@ export function IncidentDetailPage() {
 
             {tab === 'alerts' && (
               <Card>
-                <PanelHeader title="Linked alerts" />
+                <PanelHeader title="Linked alerts">
                 <Table
                   rows={alerts}
                   emptyTitle="No alerts linked"
@@ -3659,12 +3668,13 @@ export function IncidentDetailPage() {
                     { key: 'message', label: 'Message' },
                   ]}
                 />
+                </PanelHeader>
               </Card>
             )}
 
             {tab === 'related' && (
               <Card className="space-y-3">
-                <PanelHeader title="Dispatch attempts on same backend" />
+                <PanelHeader title="Dispatch attempts on same backend">
                 <Table
                   rows={relatedAttempts}
                   emptyTitle="No matching attempts"
@@ -3699,6 +3709,7 @@ export function IncidentDetailPage() {
                 <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/reconciliation">
                   Open reconciliation →
                 </Link>
+                </PanelHeader>
               </Card>
             )}
 
@@ -4039,7 +4050,7 @@ export function JobDetailPage() {
             )}
             {tab === 'dispatch' && (
               <Card>
-                <PanelHeader title="Linked dispatch attempts" />
+                <PanelHeader title="Linked dispatch attempts">
                 <Table
                   rows={dispatch.data ?? []}
                   emptyTitle="No dispatch rows"
@@ -4074,6 +4085,7 @@ export function JobDetailPage() {
                     },
                   ]}
                 />
+                </PanelHeader>
               </Card>
             )}
           </RecordWorkspace>
@@ -4249,7 +4261,7 @@ export function CentrePage() {
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <PanelHeader title="Collector providers" />
+            <PanelHeader title="Collector providers">
             <Table
               rows={providers}
               emptyTitle="No collector runs"
@@ -4286,6 +4298,7 @@ export function CentrePage() {
                 },
               ]}
             />
+            </PanelHeader>
           </Card>
           <Card>
             <PanelHeader
@@ -4295,7 +4308,7 @@ export function CentrePage() {
                   Backends
                 </Link>
               }
-            />
+            >
             <Table
               rows={backendsSnap}
               emptyTitle="No snapshot"
@@ -4324,12 +4337,13 @@ export function CentrePage() {
                 },
               ]}
             />
+            </PanelHeader>
           </Card>
         </div>
 
         {classical.length > 0 && (
           <Card>
-            <PanelHeader title="Classical HPC hosts" />
+            <PanelHeader title="Classical HPC hosts">
             <p className="mb-3 text-xs text-muted-foreground">Host metrics for sim backends — not QPU cryo readings.</p>
             <Table
               rows={classical}
@@ -4368,12 +4382,13 @@ export function CentrePage() {
                 },
               ]}
             />
+            </PanelHeader>
           </Card>
         )}
 
         {incidentRows.length > 0 ? (
         <Card>
-          <PanelHeader title="Open incidents" />
+          <PanelHeader title="Open incidents">
           <Table
             rows={incidentRows}
             emptyTitle="No open incidents"
@@ -4413,6 +4428,7 @@ export function CentrePage() {
               },
             ]}
           />
+          </PanelHeader>
         </Card>
         ) : null}
       </QueryBody>

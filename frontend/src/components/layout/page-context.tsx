@@ -34,6 +34,12 @@ export function usePageChrome() {
   return ctx
 }
 
+/** Workspace shell title when inside provider; otherwise undefined (public routes). */
+export function useOptionalPageChromeTitle() {
+  const ctx = useContext(PageChromeContext)
+  return ctx?.chrome.title
+}
+
 /** Publishes title/description/freshness into the app header. No-op outside the shell provider. */
 export function useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, actions, skip }: PageChrome) {
   const ctx = useContext(PageChromeContext)

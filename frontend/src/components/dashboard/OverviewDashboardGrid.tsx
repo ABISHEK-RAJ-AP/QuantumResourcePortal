@@ -228,6 +228,7 @@ export function OverviewDashboardGrid({
             }
           >
             <DataTable
+              caption="Review queue"
               rows={recentRows.slice(0, 8)}
               emptyTitle="Queue clear"
               emptyBody="—"
@@ -272,6 +273,7 @@ export function OverviewDashboardGrid({
               <WidgetPlaceholder>Dispatch clear</WidgetPlaceholder>
             ) : (
               <DataTable
+                caption="Dispatch exceptions"
                 rows={unresolvedRows.slice(0, 6)}
                 columns={[
                   {
@@ -324,6 +326,7 @@ export function OverviewDashboardGrid({
               <Notice tone="warning">Activity n/a</Notice>
             ) : (
               <DataTable
+                caption="Recent governance decisions"
                 rows={activityRows.slice(0, 8)}
                 emptyTitle="No activity"
                 emptyBody="—"

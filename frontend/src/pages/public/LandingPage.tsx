@@ -65,7 +65,9 @@ export function LandingPage() {
         <main id="main-content" className="relative z-10 flex flex-col">
           <section className="qrp-landing-hero flex min-h-[min(88dvh,88svh,880px)] w-full flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24 lg:py-28">
             <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
-              <p className="qrp-landing-hero__eyebrow">C-DAC · Quantum Resource Portal</p>
+              <p className="qrp-landing-hero__eyebrow">
+                C-DAC · Quantum Resource Portal · <span className="text-muted-foreground">Public copy · Nov 2026</span>
+              </p>
               <h1 className="qrp-landing-hero__title type-trim text-balance">
                 Govern quantum workloads from submit to reconcile
               </h1>
