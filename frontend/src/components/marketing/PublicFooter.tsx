@@ -120,7 +120,10 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
         <div
           className={cn('qrp-public-footer__bar', dark ? 'border-white/10 text-white/45' : 'text-muted-foreground')}
         >
-          <p className="max-w-prose">© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
+          <p className="max-w-prose">
+            © {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.
+            <span className="hidden sm:inline"> · Public copy reviewed Nov 2026</span>
+          </p>
           <div className="qrp-public-footer__bar-links">
             {LEGAL_LINKS.map((link) => (
               <Link key={link.name} to={link.to!} className={cn('fs-link font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>

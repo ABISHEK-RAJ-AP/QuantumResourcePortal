@@ -2,7 +2,7 @@
 
 **Method:** [frontend-design-audit](https://github.com/mistyhx/frontend-design-audit) (15 principles, severity 0–4)  
 **Scope:** All routed pages — code review + shared chrome (2026-11-19)  
-**Vendored skill:** `tools/frontend-design-audit/`  
+**Vendored skills:** `tools/frontend-design-audit/` · `tools/unslop/` ([unslop audit](UNSLOP_AUDIT.md))  
 **Fix commit:** same branch as this report
 
 ### Summary

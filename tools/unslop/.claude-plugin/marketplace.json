@@ -1,0 +1,6 @@
+{
+  "name": "heydamir",
+  "description": "A Claude skill that turns vibecoded, AI-looking UI into a designed interface",
+  "owner": { "name": "Damir Sokolovsky" },
+  "plugins": [{ "name": "unslop", "source": "./", "description": "Turns vibecoded, AI-looking UI into a designed interface with its own character" }]
+}
