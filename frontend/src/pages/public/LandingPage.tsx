@@ -22,17 +22,14 @@ const guard =
 
 const CAPABILITIES = [
   {
-    icon: Shield,
     title: 'Govern workloads',
     body: 'Multi-stage approvals, quotas, and policy trails without inventing missing evidence.',
   },
   {
-    icon: Server,
     title: 'Operate the fleet',
     body: 'Backends, queues, incidents, and jobs in one workspace for the active institution.',
   },
   {
-    icon: ScrollText,
     title: 'Keep an audit trail',
     body: 'Reservations, metering, evidence snapshots, and activity stay readable for review.',
   },
@@ -116,27 +113,19 @@ export function LandingPage() {
               </p>
             </div>
             <div className="mt-10 grid gap-5 md:grid-cols-3">
-              {CAPABILITIES.map((item) => {
-                const Icon = item.icon
-                return (
-                  <article
-                    key={item.title}
-                    className={cn(
-                      'relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card',
-                    )}
-                  >
-                    <span className="inline-flex size-10 items-center justify-center rounded-[var(--radius-inner)] bg-accent text-accent-foreground">
-                      <Icon className="size-5" aria-hidden />
-                    </span>
-                    <h3 data-grid-avoid className={cn('mt-4 text-xl font-bold tracking-tight text-foreground', guard)}>
-                      {item.title}
-                    </h3>
-                    <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
-                      {item.body}
-                    </p>
-                  </article>
-                )
-              })}
+              {CAPABILITIES.map((item) => (
+                <article
+                  key={item.title}
+                  className="relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card"
+                >
+                  <h3 data-grid-avoid className={cn('text-xl font-bold tracking-tight text-foreground', guard)}>
+                    {item.title}
+                  </h3>
+                  <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
+                    {item.body}
+                  </p>
+                </article>
+              ))}
             </div>
           </section>
 
@@ -242,17 +231,21 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius)] border border-border bg-card p-10 shadow-card sm:p-14">
-            <div className="max-w-2xl space-y-4 text-left">
+          <section
+            id="get-started"
+            className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-10 text-center shadow-card sm:p-14"
+          >
+            <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4">
               <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Open the operator workspace
               </h2>
-              <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
+              <p data-grid-avoid className={cn('text-base text-muted-foreground text-pretty', guard)}>
                 Sign in, open Approvals, and walk the live stage trail.
               </p>
-              <div className="flex flex-col flex-wrap gap-4 pt-2 sm:flex-row">
-                <Link to="/login" className="btn-primary landing-hero-cta gap-2">
-                  Sign in <ArrowRight className="size-5" aria-hidden />
+              <div className="mt-2 flex w-full flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">
+                <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
+                  Sign in
+                  <ArrowRight className="size-5" aria-hidden />
                 </Link>
                 <Link to="/register" className="btn-secondary landing-hero-cta">
                   Request access
