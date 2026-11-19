@@ -1,0 +1,146 @@
+/* Public landing — ops restraint (Q-TeleScope parity, anti template-card stacking) */
+
+.qrp-landing-main {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1.5rem;
+  padding-block: 1rem 6rem;
+}
+
+@media (min-width: 640px) {
+  .qrp-landing-main {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .qrp-landing-main {
+    padding-inline: 3rem;
+  }
+}
+
+.qrp-landing-main > section + section {
+  margin-top: 7rem;
+}
+
+.qrp-landing-section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-alpha, var(--border));
+  text-align: left;
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .qrp-landing-section-head--split {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+}
+
+.qrp-landing-kicker {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--info-text);
+}
+
+.qrp-landing-panel {
+  border: 1px solid var(--border-alpha, var(--border));
+  border-radius: var(--radius-outer, 0.75rem);
+  background: var(--card);
+  padding: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .qrp-landing-panel {
+    padding: 2rem;
+  }
+}
+
+/* Flat tiles — one border, no multiply overlay */
+.qrp-landing-tile {
+  border: 1px solid var(--border-alpha, var(--border));
+  border-radius: var(--radius-inner, 0.5rem);
+  background: var(--card);
+  padding: 1.25rem 1.5rem;
+}
+
+.qrp-landing-tile--lead {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+}
+
+.qrp-landing-steps {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .qrp-landing-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .qrp-landing-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.qrp-landing-step {
+  border-inline-start: 2px solid var(--primary);
+  padding-inline-start: 1rem;
+}
+
+.qrp-landing-module-list {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--border-alpha, var(--border));
+  border-radius: var(--radius-inner);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .qrp-landing-module-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.qrp-landing-module-row {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-alpha, var(--border));
+  text-align: left;
+}
+
+.qrp-landing-module-row:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .qrp-landing-module-row:nth-last-child(-n + 2) {
+    border-bottom: none;
+  }
+
+  .qrp-landing-module-row:nth-child(odd) {
+    border-inline-end: 1px solid var(--border-alpha, var(--border));
+  }
+}
+
+.qrp-landing-bg-grid {
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qrp-landing-bg-grid {
+    display: none;
+  }
+}

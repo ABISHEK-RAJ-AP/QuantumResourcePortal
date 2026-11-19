@@ -15,6 +15,7 @@
 @import './motion-ops.css';
 @import './craft-ops.css';
 @import './public-layout.css';
+@import './public-landing.css';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
@@ -1320,12 +1321,11 @@ html:not(.dark) .cyber-matrix-spot {
 
 /* Public landing — hero scale aligned with Q-TeleScope */
 .qrp-landing-hero__eyebrow {
-  margin: 0 0 1.25rem;
-  font-size: clamp(0.8125rem, 1.1vw + 0.4rem, 1rem);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--info);
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
 }
 
 .qrp-landing-hero__title {
@@ -1350,10 +1350,10 @@ html:not(.dark) .cyber-matrix-spot {
 }
 
 .qrp-landing-section__title {
-  font-size: clamp(1.75rem, 2.5vw + 0.75rem, 2.75rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: var(--foreground);
 }
 

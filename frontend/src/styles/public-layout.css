@@ -140,17 +140,7 @@
   }
 }
 
-.qrp-landing-section-head {
-  text-align: center;
-  align-items: center;
-}
-
-@media (min-width: 768px) {
-  .qrp-landing-section-head {
-    text-align: left;
-    align-items: flex-end;
-  }
-}
+/* Section heads: left-aligned (hero stays centered in public-landing.css / hero block) */
 
 .qrp-landing-hero {
   text-align: center;

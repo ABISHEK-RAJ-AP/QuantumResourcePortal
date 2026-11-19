@@ -121,6 +121,12 @@
 
 ---
 
+## Anti–vibe-coded pass (2026-11-19)
+
+Landing rework per StyleMole-style signals: dropped nested `craft-card` stacks and duplicate CTA band; flat tiles + module table; left-aligned main column; quieter grid; product-specific copy; one dominant capability tile.
+
+---
+
 ## Re-run audit
 
 ```bash

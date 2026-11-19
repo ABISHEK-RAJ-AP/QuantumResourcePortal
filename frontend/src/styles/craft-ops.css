@@ -377,28 +377,6 @@ html.dark .qrp-public-shell {
   border-color: var(--border-alpha);
 }
 
-.qrp-landing-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--brand-gradient-multiply);
-  mix-blend-mode: multiply;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-.qrp-landing-band {
-  border-radius: var(--radius-outer);
-  border: 1px solid var(--border-alpha);
-  background: var(--card);
-  box-shadow: var(--shadow-card);
-}
-
-.qrp-landing-step {
-  border-radius: var(--radius-inner);
-}
-
 .qrp-landing-hero__title,
 .qrp-landing-section__title {
   text-wrap: balance;
