@@ -19,8 +19,8 @@ export function PublicShell({
   return (
     <div
       className={cn(
-        'relative flex min-h-svh flex-col',
-        dark ? 'bg-[#0b1220] text-white' : 'bg-surface text-foreground',
+        'qrp-public-shell relative flex min-h-svh flex-col',
+        dark ? 'bg-background text-white' : 'bg-surface text-foreground',
         className,
       )}
     >

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Boxes,
@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   LogOut,
   Scale,
-  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   RefreshCw,
@@ -19,7 +18,6 @@ import {
   Settings2,
   Shield,
   Siren,
-  Sun,
   Users,
 } from 'lucide-react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
@@ -36,6 +34,7 @@ import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { NotificationHost } from '@/components/notifications/NotificationHost'
 import { QrpQuickActionDock } from '@/components/shell/QrpQuickActionDock'
 import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutControls'
+import { ThemeIconToggle } from '@/components/theme/ThemeIconToggle'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useAuth } from '@/auth/hooks'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
@@ -117,38 +116,6 @@ function initials(name: string) {
   if (parts.length === 0) return '?'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
-}
-
-function ThemeIconToggle({ dark, onToggle, label }: { dark: boolean; onToggle: () => void; label: string }) {
-  const [swapping, setSwapping] = useState(false)
-  const timer = useRef<number | null>(null)
-  useEffect(
-    () => () => {
-      if (timer.current != null) window.clearTimeout(timer.current)
-    },
-    [],
-  )
-  return (
-    <button
-      type="button"
-      className={cn(
-        'qrp-icon-swap grid size-9 place-items-center rounded-lg border border-input hover:bg-accent',
-        swapping && 'is-swapping',
-      )}
-      aria-label={label}
-      title={label}
-      onClick={() => {
-        setSwapping(true)
-        onToggle()
-        if (timer.current != null) window.clearTimeout(timer.current)
-        timer.current = window.setTimeout(() => setSwapping(false), 160)
-      }}
-    >
-      <span className="qrp-icon-swap__icon">
-        {dark ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
-      </span>
-    </button>
-  )
 }
 
 function ShellInner() {

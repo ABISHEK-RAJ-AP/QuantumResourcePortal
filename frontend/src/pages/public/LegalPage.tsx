@@ -8,8 +8,8 @@ export function PrivacyPage() {
   return (
     <PublicShell>
       <main className="mx-auto max-w-2xl px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Privacy (draft)</h1>
-        <Card className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+        <h1 className="type-page-title type-trim">Privacy (draft)</h1>
+        <Card className="hyphenate mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
           <p>
             <strong className="text-foreground">Quantum Resource Portal</strong> stores account identifiers, role
             assignments, governance and operational records you enter, and audit events. Sessions use HTTP-only cookies;
@@ -36,8 +36,8 @@ export function TermsPage() {
   return (
     <PublicShell>
       <main className="mx-auto max-w-2xl px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Terms of use (draft)</h1>
-        <Card className="mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
+        <h1 className="type-page-title type-trim">Terms of use (draft)</h1>
+        <Card className="hyphenate mt-4 space-y-3 text-sm leading-relaxed text-muted-foreground">
           <p>
             Use this portal only if you are authorised by your organisation. Do not share credentials. Operational actions
             are logged to the audit trail.

@@ -1084,8 +1084,8 @@ html:not(.dark) .cyber-matrix-spot {
   min-height: 3.25rem;
   margin-top: 0.75rem;
   padding: 0.85rem 0.85rem 0.65rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-alpha, var(--border));
+  border-radius: var(--radius-inner, var(--radius));
   background: var(--card);
   color: var(--card-foreground);
 }

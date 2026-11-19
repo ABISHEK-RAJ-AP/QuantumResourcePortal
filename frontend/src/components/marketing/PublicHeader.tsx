@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react'
+import { ArrowRight, Menu, X } from 'lucide-react'
 
 import { LogoMark } from '@/components/brand/LogoMark'
+import { ThemeIconToggle } from '@/components/theme/ThemeIconToggle'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { cn } from '@/lib/utils'
 
@@ -41,12 +42,12 @@ export function PublicHeader({ className }: { className?: string }) {
           <Link to="/" className="group flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
             <LogoMark className={cn('h-11 w-auto shrink-0 transition-transform group-hover:scale-105', dark && 'brightness-0 invert')} />
             <div className="min-w-0">
-              <p className="truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-xl">
+              <p className="type-page-title type-trim truncate whitespace-nowrap">
                 Quantum Resource Portal
               </p>
               <p
                 className={cn(
-                  'hidden truncate text-[11px] font-semibold tracking-wider uppercase whitespace-nowrap sm:block',
+                  'acr hidden truncate text-[11px] font-semibold whitespace-nowrap sm:block',
                   dark ? 'text-white/50' : 'text-muted-foreground',
                 )}
               >
@@ -77,15 +78,13 @@ export function PublicHeader({ className }: { className?: string }) {
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center justify-end gap-2">
-          <button
-            type="button"
+          <ThemeIconToggle
+            dark={dark}
+            onToggle={toggleTheme}
+            label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
             className={iconBtn}
-            aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={dark ? 'Light theme' : 'Dark theme'}
-            onClick={toggleTheme}
-          >
-            {dark ? <Sun className="size-4 text-amber-300" /> : <Moon className="size-4" />}
-          </button>
+            sunClassName="text-amber-300"
+          />
 
           <Link
             to="/login"

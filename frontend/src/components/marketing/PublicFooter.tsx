@@ -59,13 +59,13 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
             <Link to="/" className="inline-flex items-center gap-3">
               <LogoMark className={cn('h-10 w-auto', dark && 'brightness-0 invert')} />
               <div>
-                <p className="text-lg font-semibold tracking-tight">Quantum Resource Portal</p>
-                <p className={cn('text-xs font-medium', dark ? 'text-white/50' : 'text-muted-foreground')}>
+                <p className="type-page-title type-trim">Quantum Resource Portal</p>
+                <p className={cn('acr text-xs font-medium', dark ? 'text-white/50' : 'text-muted-foreground')}>
                   C-DAC Quantum Platform
                 </p>
               </div>
             </Link>
-            <p className={cn('max-w-sm text-sm leading-relaxed', dark ? 'text-white/60' : 'text-muted-foreground')}>
+            <p className={cn('hyphenate max-w-sm text-sm leading-relaxed text-pretty', dark ? 'text-white/60' : 'text-muted-foreground')}>
               Institution-wide governance for quantum workloads: multi-stage approvals, quotas, fleet operations, and
               audit evidence.
             </p>
@@ -79,7 +79,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
               <div key={section.title} className="space-y-3">
                 <h3
                   className={cn(
-                    'text-[11px] font-bold tracking-[0.14em] uppercase',
+                    'acr text-[11px] font-bold',
                     dark ? 'text-white/80' : 'text-foreground',
                   )}
                 >
@@ -92,7 +92,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
                         <Link
                           to={link.to}
                           className={cn(
-                            'text-sm transition',
+                            'fs-link text-sm transition',
                             dark ? 'text-white/55 hover:text-white' : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -102,7 +102,7 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
                         <a
                           href={link.href}
                           className={cn(
-                            'text-sm transition',
+                            'fs-link text-sm transition',
                             dark ? 'text-white/55 hover:text-white' : 'text-muted-foreground hover:text-foreground',
                           )}
                         >

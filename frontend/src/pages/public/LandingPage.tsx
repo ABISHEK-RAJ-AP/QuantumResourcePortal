@@ -76,15 +76,15 @@ export function LandingPage() {
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="z-0 opacity-90" ambient={1} maxLit={96} reach={2.2} />
-        <section className="qrp-landing-hero relative z-10 flex min-h-[min(92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
+        <section className="qrp-landing-hero relative z-10 flex min-h-[min(92dvh,92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
           <div className="fade-up pointer-events-auto mx-auto w-full max-w-6xl">
-            <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow', guard)}>
+            <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow acr', guard)}>
               C-DAC · Quantum platform
             </p>
-            <h1 data-grid-avoid className={cn('qrp-landing-hero__title text-balance', guard)}>
+            <h1 data-grid-avoid className={cn('qrp-landing-hero__title type-trim text-balance', guard)}>
               Quantum Resource Portal
             </h1>
-            <p data-grid-avoid className={cn('qrp-landing-hero__lead mx-auto max-w-3xl text-pretty', guard)}>
+            <p data-grid-avoid className={cn('qrp-landing-hero__lead hyphenate mx-auto max-w-3xl text-pretty', guard)}>
               Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
             <div className="mt-10 flex flex-col flex-wrap justify-center gap-4 sm:flex-row">
@@ -108,20 +108,24 @@ export function LandingPage() {
                   Approvals, capacity, and evidence in one workspace
                 </h2>
               </div>
-              <p data-grid-avoid className={cn('max-w-md text-sm leading-relaxed text-muted-foreground', guard)}>
-                Approvals, capacity, fleet posture, and evidence for the active tenant — aligned to G1–G3.
+              <p data-grid-avoid className={cn('hyphenate max-w-md text-sm leading-relaxed text-muted-foreground', guard)}>
+                Approvals, capacity, fleet posture, and evidence for the active tenant — aligned to{' '}
+                <abbr className="acr" title="Governance stages">
+                  G1–G3
+                </abbr>
+                .
               </p>
             </div>
             <div className="mt-10 grid gap-5 md:grid-cols-3">
               {CAPABILITIES.map((item) => (
                 <article
                   key={item.title}
-                  className="relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card"
+                  className="craft-card qrp-landing-card relative overflow-hidden p-6"
                 >
-                  <h3 data-grid-avoid className={cn('text-xl font-bold tracking-tight text-foreground', guard)}>
+                  <h3 data-grid-avoid className={cn('type-section-title type-title-clamp text-foreground', guard)}>
                     {item.title}
                   </h3>
-                  <p data-grid-avoid className={cn('mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
+                  <p data-grid-avoid className={cn('hyphenate mt-2 text-sm leading-relaxed text-muted-foreground', guard)}>
                     {item.body}
                   </p>
                 </article>
@@ -134,7 +138,7 @@ export function LandingPage() {
               <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Operator modules for the live fleet
               </h2>
-              <p data-grid-avoid className={cn('text-base text-muted-foreground', guard)}>
+              <p data-grid-avoid className={cn('hyphenate text-base text-muted-foreground text-pretty', guard)}>
                 Operator surfaces for governance, capacity, and fleet oversight.
               </p>
             </div>
@@ -144,15 +148,15 @@ export function LandingPage() {
                 return (
                   <article
                     key={item.title}
-                    className="relative overflow-hidden rounded-[var(--radius)] border border-border bg-card p-6 shadow-card"
+                    className="craft-card qrp-landing-card relative overflow-hidden p-6"
                   >
                     <div className="relative z-[1] flex items-start gap-3">
-                      <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-                      <div>
-                        <h3 data-grid-avoid className={cn('text-lg font-bold tracking-tight text-foreground', guard)}>
+                      <Icon className="mt-0.5 size-5 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />
+                      <div className="min-w-0">
+                        <h3 data-grid-avoid className={cn('type-section-title type-title-clamp text-foreground', guard)}>
                           {item.title}
                         </h3>
-                        <p data-grid-avoid className={cn('mt-1.5 text-sm leading-relaxed text-muted-foreground', guard)}>
+                        <p data-grid-avoid className={cn('hyphenate mt-1.5 text-sm leading-relaxed text-muted-foreground', guard)}>
                           {item.body}
                         </p>
                       </div>
@@ -165,13 +169,13 @@ export function LandingPage() {
 
           <section
             id="workflow"
-            className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-8 shadow-card sm:p-12"
+            className="craft-card qrp-landing-band scroll-mt-28 p-8 sm:p-12"
           >
             <div className="max-w-2xl">
-              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title type-trim', guard)}>
                 From submit to reconcile
               </h2>
-              <p data-grid-avoid className={cn('mt-2 text-sm text-muted-foreground', guard)}>
+              <p data-grid-avoid className={cn('hyphenate mt-2 text-sm text-muted-foreground', guard)}>
                 Real stage trail — submission, review, dispatch, evidence.
               </p>
             </div>
@@ -179,13 +183,13 @@ export function LandingPage() {
               {WORKFLOW.map((step) => (
                 <div
                   key={step.n}
-                  className="relative overflow-hidden rounded-[var(--radius-inner)] border border-border bg-surface p-6"
+                  className="craft-inset qrp-landing-step relative overflow-hidden bg-surface p-6"
                 >
                   <span className="text-base font-semibold tabular-nums text-primary">{step.n}</span>
-                  <h3 data-grid-avoid className={cn('mt-3 text-lg font-semibold text-foreground', guard)}>
+                  <h3 data-grid-avoid className={cn('type-section-title mt-3 text-foreground', guard)}>
                     {step.title}
                   </h3>
-                  <p data-grid-avoid className={cn('mt-2 text-xs leading-relaxed text-muted-foreground', guard)}>
+                  <p data-grid-avoid className={cn('hyphenate mt-2 text-xs leading-relaxed text-muted-foreground', guard)}>
                     {step.body}
                   </p>
                 </div>
@@ -210,7 +214,7 @@ export function LandingPage() {
                       onClick={() => setOpenFaq(open ? -1 : idx)}
                       aria-expanded={open}
                     >
-                      <span data-grid-avoid className={guard}>
+                      <span data-grid-avoid className={cn('type-title-clamp', guard)}>
                         {item.q}
                       </span>
                       <ChevronDown
@@ -221,7 +225,7 @@ export function LandingPage() {
                       />
                     </button>
                     {open && (
-                      <p data-grid-avoid className={cn('pb-6 text-sm leading-relaxed text-muted-foreground', guard)}>
+                      <p data-grid-avoid className={cn('hyphenate pb-6 text-sm leading-relaxed text-muted-foreground', guard)}>
                         {item.a}
                       </p>
                     )}
@@ -233,13 +237,13 @@ export function LandingPage() {
 
           <section
             id="get-started"
-            className="scroll-mt-28 rounded-[var(--radius)] border border-border bg-card p-10 text-center shadow-card sm:p-14"
+            className="craft-card qrp-landing-band scroll-mt-28 p-10 text-center sm:p-14"
           >
             <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4">
-              <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
+              <h2 data-grid-avoid className={cn('qrp-landing-section__title type-trim', guard)}>
                 Open the operator workspace
               </h2>
-              <p data-grid-avoid className={cn('text-base text-muted-foreground text-pretty', guard)}>
+              <p data-grid-avoid className={cn('hyphenate text-base text-muted-foreground text-pretty', guard)}>
                 Sign in, open Approvals, and walk the live stage trail.
               </p>
               <div className="mt-2 flex w-full flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">

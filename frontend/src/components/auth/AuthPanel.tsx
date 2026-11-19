@@ -22,9 +22,9 @@ export function AuthPanel({
     <PublicShell>
       <div className="qrp-auth-shell relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
         <CyberMatrixHero showDefaultContent={false} className="absolute inset-0 -z-10 min-h-full bg-surface" />
-        <div className="qrp-auth-panel auth-panel-rise w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
+        <div className="qrp-auth-panel craft-card auth-panel-rise w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-raised">
           <div className="grid grid-cols-1 lg:grid-cols-12">
-            <aside className="qrp-auth-brand flex flex-col gap-4 border-b border-border bg-[#070b14] p-6 text-white sm:p-8 lg:col-span-5 lg:min-h-[32rem] lg:border-b-0 lg:border-e">
+            <aside className="qrp-auth-brand flex flex-col gap-4 border-b border-white/10 p-6 text-white sm:p-8 lg:col-span-5 lg:min-h-[32rem] lg:border-b-0 lg:border-e lg:border-white/10">
               <div className="flex items-center gap-3">
                 <LogoMark className="h-10 w-auto brightness-0 invert" />
                 <div>
@@ -32,17 +32,17 @@ export function AuthPanel({
                   <p className="text-sm text-white/70">Quantum Resource Portal</p>
                 </div>
               </div>
-              <div className="relative min-h-[260px] flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#070b14]">
+              <div className="qrp-auth-visual craft-inset relative min-h-[260px] flex-1 overflow-hidden">
                 <AuthFridgeVisual />
               </div>
               <div className="mt-auto space-y-2">
-                <h2 className="text-lg font-semibold leading-snug tracking-tight sm:text-xl">
+                <h2 className="type-section-title text-white type-title-clamp">
                   Governance-first quantum resource operations
                 </h2>
-                <p className="max-w-[36ch] text-sm leading-relaxed text-white/60">
+                <p className="hyphenate max-w-[36ch] text-sm leading-relaxed text-white/60 text-pretty">
                   Approvals, quotas, dispatch, and audit in one console.
                 </p>
-                <Link to="/" className="inline-flex min-h-10 items-center text-sm font-medium text-cyan-300/90 hover:text-cyan-200">
+                <Link to="/" className="fs-link inline-flex min-h-10 items-center text-sm font-medium text-cyan-300/90 hover:text-cyan-200">
                   ← Back to home
                 </Link>
               </div>
@@ -50,9 +50,9 @@ export function AuthPanel({
             <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7">
               <div className="mx-auto w-full max-w-md space-y-6">
                 <header>
-                  <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[1.65rem]">{title}</h1>
+                  <h1 className="type-page-title type-trim text-balance">{title}</h1>
                   {subtitle ? (
-                    <p className="mt-2 text-base leading-relaxed text-muted-foreground">{subtitle}</p>
+                    <p className="qrp-page-desc hyphenate mt-2 text-base">{subtitle}</p>
                   ) : null}
                 </header>
                 {children}
@@ -76,26 +76,26 @@ export function AuthFooterLinks({
   const links: ReactNode[] = []
   if (showForgot) {
     links.push(
-      <Link key="forgot" className="font-semibold text-primary hover:underline" to="/forgot-password">
+      <Link key="forgot" className="fs-link font-semibold text-primary" to="/forgot-password">
         Forgot password
       </Link>,
     )
   }
   if (showRegister) {
     links.push(
-      <Link key="register" className="font-semibold text-primary hover:underline" to="/register">
+      <Link key="register" className="fs-link font-semibold text-primary" to="/register">
         Request access
       </Link>,
     )
   }
   links.push(
-    <Link key="privacy" className="font-semibold text-primary hover:underline" to="/legal/privacy">
+    <Link key="privacy" className="fs-link font-semibold text-primary" to="/legal/privacy">
       Privacy
     </Link>,
-    <Link key="terms" className="font-semibold text-primary hover:underline" to="/legal/terms">
+    <Link key="terms" className="fs-link font-semibold text-primary" to="/legal/terms">
       Terms
     </Link>,
-    <Link key="home" className="font-semibold text-primary hover:underline" to="/">
+    <Link key="home" className="fs-link font-semibold text-primary" to="/">
       Home
     </Link>,
   )
