@@ -20,7 +20,7 @@ test('approvals page exposes server filter presets', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Review Queue' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Queue' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Mine' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Load demo data' }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'New project' }).first()).toBeVisible()
 })
 
 test('jobs page labels provider execution state', async ({ page }) => {

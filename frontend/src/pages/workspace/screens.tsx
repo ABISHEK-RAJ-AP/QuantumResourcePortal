@@ -23,9 +23,7 @@ import { DataState } from '@/components/data/DataState'
 import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
 import { formatApiError } from '@/lib/apiMessage'
 import { formatDateTime, formatEnum, formatRole } from '@/lib/display'
-import { seedPortalDemo } from '@/api/seedDemo'
 import { useDemoOperationalPolling } from '@/hooks/useDemoOperationalPolling'
-import { demoActionsAllowed } from '@/lib/demo'
 import { policyDisplayName, policyVersion, stagePermission } from '@/lib/qreFields'
 import { scopedApprovalsPath } from '@/lib/projectScope'
 import { cn } from '@/lib/utils'
@@ -378,7 +376,6 @@ function approvalsPath(filter: string, projectId?: string) {
 }
 
 export function ApprovalsPage() {
-  const client = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const projectId = searchParams.get('project_id')?.trim() || ''
   const filterParam = searchParams.get('filter')
@@ -406,12 +403,6 @@ export function ApprovalsPage() {
   const query = useQuery({
     queryKey: ['approvals', filter, projectId],
     queryFn: async () => asList(await qre<unknown>(approvalsPath(filter, projectId || undefined))),
-  })
-  const seed = useMutation({
-    mutationFn: seedPortalDemo,
-    onSuccess: () => {
-      void client.invalidateQueries()
-    },
   })
   const counts = (summary.data?.counts as Row | undefined) ?? {}
   const rows = (query.data ?? []).filter((row) => {
@@ -448,10 +439,6 @@ export function ApprovalsPage() {
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
             Open {shortId(String(nextRow.workload_id), 8)}
           </Link>
-        ) : demoActionsAllowed ? (
-          <button type="button" className="btn-secondary" disabled={seed.isPending} onClick={() => seed.mutate()}>
-            {seed.isPending ? 'Loading demo…' : 'Load demo data'}
-          </button>
         ) : (
           <Link className="btn-secondary" to="/qrp/projects">
             New project
@@ -492,13 +479,9 @@ export function ApprovalsPage() {
           <MetricTile label="Mine" value={filter === 'mine' ? rows.length : '→'} />
         </button>
       </KpiStrip>
-      <ChartPanel title="Stages" empty={summary.isError || stageChart.every((d) => d.value === 0)}>
-        {(h) =>
-          summary.isError ? (
-            <EmptyState title="Summary unavailable" body={message(summary.error)} />
-          ) : stageChart.every((d) => d.value === 0) ? (
-            <EmptyState title="No request volume" body="Submit from a project." />
-          ) : (
+      {!summary.isPending && !summary.isError && stageChart.some((d) => d.value > 0) ? (
+        <ChartPanel title="Stages" empty={false}>
+          {(h) => (
             <ResponsiveContainer width="100%" height={h}>
               <BarChart data={stageChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
@@ -511,10 +494,9 @@ export function ApprovalsPage() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          )
-        }
-      </ChartPanel>
-      {seed.error && <Notice>{message(seed.error)}</Notice>}
+          )}
+        </ChartPanel>
+      ) : null}
       <Card>
         <FilterBar
           options={APPROVAL_FILTERS}
@@ -529,23 +511,15 @@ export function ApprovalsPage() {
           {rows.length === 0 ? (
             <EmptyState
               title="No approvals"
-              body={
-                search.trim()
-                  ? 'No rows match search.'
-                  : 'Submit a workload from a project, or load the PostgreSQL demo dataset (Settings or Load demo).'
-              }
+              body={search.trim() ? 'No rows match search.' : 'Submit a workload from a project.'}
               action={
                 search.trim() ? (
                   <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
                     Clear search
                   </button>
-                ) : demoActionsAllowed ? (
-                  <button type="button" className="btn-primary" disabled={seed.isPending} onClick={() => seed.mutate()}>
-                    {seed.isPending ? 'Loading demo…' : 'Load demo data'}
-                  </button>
                 ) : (
                   <Link className="btn-primary" to="/qrp/projects">
-                    Create a project
+                    Open projects
                   </Link>
                 )
               }
@@ -1605,7 +1579,7 @@ export function ProjectsPage() {
             <Table
               rows={rows}
               emptyTitle="No projects"
-              emptyBody="Create a project to own workloads and reservations."
+              emptyBody=""
               columns={[
                 {
                   key: 'name',
@@ -1662,7 +1636,15 @@ export function ProjectsPage() {
               ]}
             />
           ) : rows.length === 0 ? (
-            <EmptyState title="No projects" body="Create a project to own workloads and reservations." />
+            <EmptyState
+              title="No projects"
+              body=""
+              action={
+                <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
+                  New project
+                </button>
+              }
+            />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {rows.map((row) => (
