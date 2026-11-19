@@ -9,6 +9,7 @@ export type AuthCapabilities = {
   mfa_enrollment_available: boolean
   password_self_service: boolean
   self_registration: boolean
+  organization_registration?: boolean
   federation: { oidc: boolean; saml: boolean; local_login: boolean }
   features: {
     procurement_entitlements: boolean

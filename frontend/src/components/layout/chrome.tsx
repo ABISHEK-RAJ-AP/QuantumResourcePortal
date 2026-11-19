@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Boxes,
+  Building2,
   CalendarClock,
   ChevronDown,
   ClipboardList,
-  Activity,
   Gauge,
   LayoutDashboard,
   LogOut,
@@ -26,7 +26,7 @@ import type { LucideIcon } from 'lucide-react'
 import { asList, qre } from '@/api/qre'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { DataFreshness } from '@/components/data/DataFreshness'
-import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
+import { Breadcrumbs, splitPageCrumbs } from '@/components/layout/Breadcrumbs'
 import { PageChromeProvider, usePageChrome } from '@/components/layout/page-context'
 import { A11yPreheader } from '@/components/shell/A11yPreheader'
 import { GovernNotificationSync } from '@/components/notifications/GovernNotificationSync'
@@ -37,6 +37,7 @@ import { WorkspaceLayoutControls } from '@/components/shell/WorkspaceLayoutContr
 import { ThemeIconToggle } from '@/components/theme/ThemeIconToggle'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { useAuth } from '@/auth/hooks'
+import { useEnsureDemoData } from '@/hooks/useEnsureDemoData'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
 import { formatPrincipalId, formatRole } from '@/lib/display'
 import { cn } from '@/lib/utils'
@@ -84,12 +85,15 @@ const NAV: {
     ],
   },
   {
-    label: 'Admin',
+    label: 'Organization',
     items: [
-      { to: '/qrp/admin/users', label: 'Access', icon: Users, perm: 'user:read' },
-      { to: '/qrp/settings', label: 'Settings', icon: Settings2 },
-      { to: '/system/status', label: 'Platform status', icon: Activity },
+      { to: '/qrp/organization', label: 'Organization', icon: Building2, end: true },
+      { to: '/qrp/admin/users', label: 'People & access', icon: Users, perm: 'user:read' },
     ],
+  },
+  {
+    label: 'Admin',
+    items: [{ to: '/qrp/settings', label: 'Settings', icon: Settings2 }],
   },
 ]
 
@@ -133,6 +137,7 @@ function ShellInner() {
   const { chrome } = usePageChrome()
   const { theme, toggleTheme } = useTheme()
   const prefs = useWorkspacePrefs()
+  useEnsureDemoData()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const saved = loadOpen()
@@ -192,15 +197,23 @@ function ShellInner() {
   }
   const roleLabel = user?.role ?? 'Operator'
   const displayName =
-    authUser?.principal_id && authUser.principal_id.length <= 20 && !/^usr_[a-z0-9]+$/i.test(authUser.principal_id)
+    authUser?.display_name?.trim() ||
+    authUser?.username?.trim() ||
+    (authUser?.principal_id && authUser.principal_id.length <= 20 && !/^usr_[a-z0-9]+$/i.test(authUser.principal_id)
       ? authUser.principal_id
-      : roleLabel
-  const showRoleSubline = roleLabel.toLowerCase() !== displayName.toLowerCase()
+      : roleLabel)
+  const orgLabel = authUser?.tenant_name || authUser?.tenant_code
+  const showRoleSubline = Boolean(orgLabel) || roleLabel.toLowerCase() !== displayName.toLowerCase()
 
   async function logout() {
     await authLogout()
     navigate('/login')
   }
+
+  const pageTitle = chrome.title || 'Workspace'
+  const { navCrumbs, kicker } = splitPageCrumbs(chrome.crumbs, pageTitle)
+  const headerEyebrow = chrome.eyebrow ?? kicker
+  const hasHeaderActions = Boolean(chrome.actions)
 
   return (
     <div className="flex min-h-0 w-full flex-1 bg-surface text-foreground">
@@ -334,7 +347,16 @@ function ShellInner() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{displayName}</p>
                     {showRoleSubline ? (
-                      <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {orgLabel ? (
+                          <>
+                            <span className="font-medium text-foreground/80">{orgLabel}</span>
+                            <span className="text-muted-foreground"> · {roleLabel}</span>
+                          </>
+                        ) : (
+                          roleLabel
+                        )}
+                      </p>
                     ) : null}
                   </div>
                 </div>
@@ -354,24 +376,32 @@ function ShellInner() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="qrp-app-page-head sticky top-8 z-10 border-b border-border/80 bg-card/90 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4">
-          <div className="qrp-page-header__row">
+          <div className={cn('qrp-page-header__row', !hasHeaderActions && 'qrp-page-header__row--no-mid')}>
             <div className="qrp-page-header__main min-w-0">
-              {chrome.crumbs && chrome.crumbs.length > 0 ? (
-                <Breadcrumbs items={chrome.crumbs} />
-              ) : chrome.eyebrow ? (
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
+              {navCrumbs.length > 0 ? (
+                <Breadcrumbs items={navCrumbs} />
+              ) : headerEyebrow ? (
+                <p className="page-header__kicker text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                  {headerEyebrow}
+                </p>
               ) : null}
-              <h1 className="type-page-title type-trim type-title-clamp">{chrome.title || 'Workspace'}</h1>
+              <h1 className="type-page-title type-trim type-title-clamp">{pageTitle}</h1>
               {chrome.description ? (
                 <p className="qrp-page-desc type-desc-clamp hyphenate mt-0.5">{chrome.description}</p>
               ) : null}
             </div>
-            {chrome.actions ? (
+            {hasHeaderActions ? (
               <div className="qrp-page-header__actions flex flex-wrap items-center justify-center gap-2">{chrome.actions}</div>
-            ) : (
-              <div className="qrp-page-header__actions" aria-hidden />
-            )}
+            ) : null}
             <div className="qrp-page-header__trailing flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {orgLabel ? (
+                <span
+                  className="hidden max-w-[10rem] truncate rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium sm:inline"
+                  title={orgLabel}
+                >
+                  {orgLabel}
+                </span>
+              ) : null}
               <DataFreshness updatedAt={chrome.updatedAt} />
               <div className="flex flex-wrap items-center gap-2">
                 <NotificationBell />
@@ -405,7 +435,9 @@ function ShellInner() {
           data-kpi={prefs.kpiLayout}
           tabIndex={-1}
         >
-          <Outlet />
+          <div className="page-stack">
+            <Outlet />
+          </div>
         </div>
       </div>
       <NotificationHost />

@@ -1,0 +1,129 @@
+/**
+ * Q-TeleScope `/app` density + Cert Studio auth/register patterns (reference-only; no vendor assets).
+ * See docs/quality/QTELESCOPE_CERT_STUDIO_COMPARISON.md (Q-TeleScope repo).
+ */
+
+:root {
+  --font-size-body: 0.9375rem; /* 15px — ops readability */
+  --line-height-body: 1.5;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --toolbar-control-min-h: 2.35rem;
+}
+
+/* Q-TeleScope page-container analogue */
+.page-stack {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  width: 100%;
+  max-width: 88rem; /* ~1408px */
+  margin-inline: auto;
+}
+
+.page-stack .data-table th,
+.page-stack .data-table td,
+.page-stack table.text-sm td,
+.page-stack table.text-sm th {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+.shell-canvas[data-density='comfortable'] .data-table th,
+.shell-canvas[data-density='comfortable'] .data-table td {
+  padding-block: 0.65rem;
+}
+
+/* Cert Studio registration step indicator */
+.cert-register-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cert-register-steps__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: var(--card);
+}
+
+.cert-register-steps__item.is-active {
+  border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+  background: color-mix(in oklch, var(--primary) 8%, var(--card));
+  color: var(--primary);
+}
+
+.cert-register-steps__item.is-done {
+  color: var(--foreground);
+}
+
+.cert-register-steps__dot {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.cert-register-steps__item.is-active .cert-register-steps__dot {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.cert-register-steps__label {
+  white-space: nowrap;
+}
+
+/* Toolbar / filter bar — Q-TeleScope page-toolbar-unified min heights */
+.page-stack .btn-primary,
+.page-stack .btn-secondary,
+.page-stack .field-input,
+.page-stack select.field-input {
+  min-height: var(--toolbar-control-min-h);
+}
+
+.page-stack .FilterBar button,
+.page-stack .filter-bar button {
+  min-height: 2rem;
+}
+
+/* System notice pages (access denied, etc.) */
+.qrp-system-notice {
+  margin-inline: auto;
+  max-width: 28rem;
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.qrp-system-notice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  color: var(--destructive);
+}
+
+.qrp-system-notice__title {
+  font-size: clamp(1.125rem, 1rem + 0.35vw, 1.35rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}

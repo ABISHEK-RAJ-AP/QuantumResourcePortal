@@ -67,9 +67,6 @@ export function AccountSecurity() {
         <Link className="font-medium text-primary hover:underline" to="/qrp/audit">
           Audit trail
         </Link>
-        <Link className="font-medium text-primary hover:underline" to="/system/status">
-          Platform status
-        </Link>
         <Link className="font-medium text-primary hover:underline" to="/legal/privacy">
           Privacy
         </Link>

@@ -17,6 +17,7 @@ from qre.core.deps import db_session, get_ctx, require_permission
 from qre.core.rate_limit import enforce_auth_ip_rate_limit
 from qre.services.svc02_identity import captcha as captcha_svc
 from qre.services.svc02_identity.capabilities import build_auth_capabilities
+from qre.services.svc02_identity.org_register import OrgRegisterIn, OrgRegistrationDisabled, register_organization
 from qre.services.svc02_identity.service import (
     AuthInvalidCredentials,
     LoginSuccess,
@@ -48,6 +49,20 @@ class LoginOut(BaseModel):
     status: str
     principal: PrincipalOut
     csrf_token: str
+
+
+class RegisterOrganizationIn(BaseModel):
+    model_config = {"extra": "forbid"}
+    tenant_code: str = Field(min_length=2, max_length=32)
+    tenant_name: str = Field(min_length=2, max_length=200)
+    admin_username: str = Field(min_length=3, max_length=128)
+    admin_display_name: str = Field(min_length=1, max_length=200)
+    email: str | None = Field(default=None, max_length=254)
+    password: str = Field(min_length=12, max_length=256)
+    confirm_password: str = Field(min_length=12, max_length=256)
+    org_kind: str | None = Field(default=None, max_length=64)
+    captcha_id: str | None = None
+    captcha_code: str | None = None
 
 
 class PasswordResetIn(BaseModel):
@@ -96,6 +111,53 @@ async def auth_captcha(request: Request) -> dict:
         "captcha_id": challenge.captcha_id,
         "captcha_image": challenge.captcha_image,
         "expires_in_seconds": challenge.expires_in_seconds,
+    }
+
+
+@router.post("/auth/register-organization", status_code=201)
+async def auth_register_organization(
+    body: RegisterOrganizationIn,
+    request: Request,
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    """Create a new organization (tenant) and its first administrator — lab or QRE_ORG_SELF_REGISTER."""
+    settings = request.app.state.settings
+    enforce_auth_ip_rate_limit(settings, ip=_client_ip(request), bucket="login")
+    if not settings.org_self_register_enabled:
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=403,
+            detail="Organization self-registration is disabled on this deployment.",
+        )
+    if settings.captcha_enabled:
+        captcha_svc.verify(body.captcha_id, body.captcha_code)
+    try:
+        result = await register_organization(
+            session,
+            settings,
+            OrgRegisterIn(
+                tenant_code=body.tenant_code.strip(),
+                tenant_name=body.tenant_name.strip(),
+                admin_username=body.admin_username.strip().lower(),
+                admin_display_name=body.admin_display_name.strip(),
+                password=body.password,
+                confirm_password=body.confirm_password,
+                email=body.email.strip() if body.email else None,
+                org_kind=body.org_kind,
+            ),
+        )
+    except OrgRegistrationDisabled:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail="Organization self-registration is disabled.")
+    await session.commit()
+    return {
+        "status": "ORG_REGISTERED",
+        "tenant_id": result.tenant_id,
+        "tenant_code": result.tenant_code,
+        "admin_username": result.admin_username,
+        "created_tenant": result.created_tenant,
     }
 
 
@@ -178,11 +240,29 @@ async def _me_payload(session: AsyncSession, ctx: TenantContext) -> dict:
             {"t": ctx.tenant_id, "p": ctx.principal_id},
         )
     ).scalars().all()
+    user_row = (
+        await session.execute(
+            text(
+                "SELECT username, display_name FROM app_user WHERE user_id = :u AND home_tenant_id = :t"
+            ),
+            {"u": ctx.principal_id, "t": ctx.tenant_id},
+        )
+    ).mappings().first()
+    tenant_row = (
+        await session.execute(
+            text("SELECT code, name FROM tenant WHERE tenant_id = :t"),
+            {"t": ctx.tenant_id},
+        )
+    ).mappings().first()
     return {
         "authenticated": True,
         "principal_id": ctx.principal_id,
         "principal_type": ctx.principal_type,
         "tenant_id": ctx.tenant_id,
+        "tenant_code": tenant_row["code"] if tenant_row else None,
+        "tenant_name": tenant_row["name"] if tenant_row else None,
+        "username": user_row["username"] if user_row else None,
+        "display_name": user_row["display_name"] if user_row else None,
         "roles": list(roles),
         "permissions": sorted(ctx.permissions()),
     }
@@ -228,6 +308,30 @@ async def me(
     session: AsyncSession = Depends(db_session),
 ) -> dict:
     return await _me_payload(session, ctx)
+
+
+@router.get("/me/organization")
+async def me_organization(
+    ctx: TenantContext = Depends(get_ctx),
+    session: AsyncSession = Depends(db_session),
+) -> dict:
+    """Organization (tenant) profile for the active session — Cert Studio ``/v1/orgs/me`` analogue."""
+    from sqlalchemy import text
+
+    row = (
+        await session.execute(
+            text("SELECT tenant_id, code, name, status FROM tenant WHERE tenant_id = :t"),
+            {"t": ctx.tenant_id},
+        )
+    ).mappings().first()
+    if not row:
+        return {"tenant_id": ctx.tenant_id, "code": None, "name": None, "status": None}
+    return {
+        "tenant_id": row["tenant_id"],
+        "code": row["code"],
+        "name": row["name"],
+        "status": row["status"],
+    }
 
 
 @router.get("/auth/csrf")

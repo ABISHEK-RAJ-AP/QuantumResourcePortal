@@ -130,6 +130,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.db = Database(settings)
         log.info("api starting", extra={"env": settings.env.value, "version": APP_VERSION})
+        if settings.is_lab and settings.auto_seed_demo:
+            try:
+                async with app.state.db.sessionmaker() as session:
+                    from qre.seed.auto import run_auto_seed_demo
+
+                    await session.run_sync(lambda conn: run_auto_seed_demo(conn, settings))
+                    await session.commit()
+            except Exception:
+                log.warning("startup demo seed could not run (is PostgreSQL up?)", exc_info=True)
         tick_task: asyncio.Task | None = None
 
         async def _simulation_loop() -> None:

@@ -5,6 +5,24 @@ export type Crumb = {
   to?: string
 }
 
+/** Q-TeleScope PageHeader.splitBreadcrumbs — avoid duplicating the terminal crumb in the H1. */
+export function splitPageCrumbs(crumbs: Crumb[] | undefined, title?: string): { navCrumbs: Crumb[]; kicker: string | null } {
+  if (!crumbs?.length) return { navCrumbs: [], kicker: null }
+  const withLink = crumbs.filter((c) => c.to)
+  if (withLink.length > 0) {
+    const navCrumbs = crumbs.filter((c, i) => Boolean(c.to) && i < crumbs.length - 1)
+    if (navCrumbs.length > 0) return { navCrumbs, kicker: null }
+  }
+  const last = crumbs[crumbs.length - 1]
+  if (crumbs.length >= 2 && last.label === title) {
+    return { navCrumbs: [], kicker: crumbs[0]?.label ?? null }
+  }
+  if (crumbs.length === 1 && crumbs[0].label !== title) {
+    return { navCrumbs: [], kicker: crumbs[0].label }
+  }
+  return { navCrumbs: [], kicker: null }
+}
+
 /** Cert Studio–style trail: Workspace / Review Queue / id */
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   if (!items.length) return null

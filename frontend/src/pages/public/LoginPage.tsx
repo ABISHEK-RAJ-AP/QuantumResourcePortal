@@ -16,11 +16,25 @@ import { loginSchema } from '@/lib/validation/schemas'
 
 const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
 
+type LoginLocationState = {
+  from?: string
+  registeredOrg?: string
+  registeredUser?: string
+  accessRequest?: boolean
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
-  const from = safeReturnPath((location.state as { from?: string } | null)?.from)
+  const locState = (location.state as LoginLocationState | null) ?? {}
+  const from = safeReturnPath(locState.from)
+  const registeredNotice =
+    locState.registeredOrg && locState.registeredUser
+      ? `Organization “${locState.registeredOrg}” is ready. Sign in as ${locState.registeredUser}.`
+      : locState.accessRequest
+        ? 'Sign in after your organization administrator has created your account.'
+        : ''
   const captchaEnabled = useAuthCaptchaRequired()
 
   const [username, setUsername] = useState('')
@@ -29,7 +43,7 @@ export function LoginPage() {
   const [captchaCode, setCaptchaCode] = useState('')
   const [captchaOn, setCaptchaOn] = useState(false)
   const [fields, setFields] = useState<Record<string, string>>({})
-  const [banner, setBanner] = useState('')
+  const [banner, setBanner] = useState(registeredNotice)
   const [busy, setBusy] = useState(false)
 
   async function doLogin(user: string, pass: string) {
@@ -80,7 +94,7 @@ export function LoginPage() {
   return (
     <AuthPanel
       title="Sign in"
-      subtitle="Use your portal credentials"
+      subtitle="Sign in to your organization workspace with portal credentials."
       footer={
         <div className="space-y-3">
           <AuthFooterLinks showForgot showRegister />

@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import * as rbac from '@/api/rbac'
-import { Card, EmptyState, Notice, Page } from '@/components/layout/Page'
+import { PaginatedSlice } from '@/components/data/PaginatedSlice'
+import { Card, EmptyState, Notice, Page, RelatedNav } from '@/components/layout/Page'
 
 export function PermissionsPage() {
   const permissions = useQuery({ queryKey: ['permissions'], queryFn: rbac.listPermissions })
@@ -21,8 +22,13 @@ export function PermissionsPage() {
 
   return (
     <Page
+      crumbs={[
+        { label: 'Organization', to: '/qrp/organization' },
+        { label: 'People & access', to: '/qrp/admin/users' },
+        { label: 'Permissions' },
+      ]}
       title="Permissions"
-      description="The permission catalogue is read-only. Grant permissions by editing a role."
+      description="Organization capability catalogue (read-only). Grant permissions by editing a custom role."
     >
       <Card>
         <input
@@ -37,35 +43,48 @@ export function PermissionsPage() {
       ) : Object.keys(byModule).length === 0 ? (
         <EmptyState title="No permissions" body="Nothing matches your search." />
       ) : (
-        Object.entries(byModule).map(([module, perms]) => (
-          <Card key={module} className="space-y-2">
-            <h2 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-              {module}
-            </h2>
-            <table className="w-full text-left text-sm">
-              <tbody>
-                {perms.map((p) => (
-                  <tr key={p.code} className="border-b border-border/60 last:border-0">
-                    <td className="py-2 pr-3 font-mono text-xs">{p.code}</td>
-                    <td className="py-2 pr-3">{p.name}</td>
-                    <td className="py-2 pr-3">
-                      {p.is_privileged && (
-                        <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">
-                          privileged
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2 text-xs text-muted-foreground">
-                      {(p.roles ?? []).join(', ') || '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        ))
+        <PaginatedSlice items={Object.entries(byModule)} pageSize={6}>
+          {(entries) => (
+            <div className="grid gap-3 lg:grid-cols-2">
+              {entries.map(([module, perms]) => (
+                <Card key={module} className="space-y-2">
+                  <h2 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                    {module}
+                  </h2>
+                  <table className="w-full text-left text-sm">
+                    <tbody>
+                      {perms.map((p) => (
+                        <tr key={p.code} className="border-b border-border/60 last:border-0">
+                          <td className="py-2 pr-3 font-mono text-xs">{p.code}</td>
+                          <td className="py-2 pr-3">{p.name}</td>
+                          <td className="py-2 pr-3">
+                            {p.is_privileged && (
+                              <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] text-warning">
+                                privileged
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 text-xs text-muted-foreground">
+                            {(p.roles ?? []).join(', ') || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+              ))}
+            </div>
+          )}
+        </PaginatedSlice>
       )}
       <PermissionNote />
+      <RelatedNav
+        items={[
+          { to: '/qrp/admin/users?tab=roles', label: 'Roles' },
+          { to: '/qrp/admin/users', label: 'People & access' },
+          { to: '/qrp/organization', label: 'Organization hub' },
+        ]}
+      />
     </Page>
   )
 }
@@ -76,7 +95,7 @@ function PermissionNote() {
   if (dismissed) return null
   return (
     <Notice tone="info">
-      The permission catalogue is fixed by the platform. Roles decide who holds each permission.{' '}
+      The permission catalogue is fixed by the platform. Organization roles decide who holds each permission.{' '}
       <button type="button" className="font-medium underline" onClick={() => setDismissed(true)}>
         Got it
       </button>

@@ -59,9 +59,7 @@ export function Page({
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return (
-    <section className={cn('craft-card rounded-xl border border-border bg-card p-4 shadow-card', className)}>{children}</section>
-  )
+  return <section className={cn('craft-card rounded-xl border border-border bg-card p-5 sm:p-6', className)}>{children}</section>
 }
 
 export function MetricTile({
@@ -70,6 +68,8 @@ export function MetricTile({
   hint,
   tone = 'neutral',
   compact = false,
+  to,
+  onClick,
   className,
 }: {
   label: string
@@ -77,6 +77,9 @@ export function MetricTile({
   hint?: string
   tone?: 'neutral' | 'primary' | 'success' | 'warning' | 'critical'
   compact?: boolean
+  /** When set, tile is a full-surface link (keyboard + pointer). */
+  to?: string
+  onClick?: () => void
   className?: string
 }) {
   const toneClass =
@@ -89,45 +92,53 @@ export function MetricTile({
           : tone === 'critical'
             ? 'border-critical/25 bg-critical-soft/35'
             : ''
-  return (
-    <Card
-      className={cn(
-        'metric-tile relative overflow-hidden',
-        compact ? 'max-h-[4.75rem] py-2.5' : 'py-4',
-        toneClass,
-        className,
-      )}
-    >
-      <p className={cn('acr font-semibold text-muted-foreground', compact ? 'text-[10px]' : 'text-[11px]')}>
+  const shellClass = cn(
+    'craft-card metric-tile relative block w-full overflow-hidden rounded-xl border border-border bg-card',
+    compact ? 'min-h-[5.5rem] px-4 py-3 sm:px-5' : 'px-5 py-4 sm:px-6 sm:py-5',
+    (to || onClick) &&
+      'cursor-pointer transition-[border-color,box-shadow,transform] duration-150 hover:border-primary/35 hover:shadow-md hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary/55',
+    toneClass,
+    className,
+  )
+  const body = (
+    <>
+      <p className={cn('acr font-semibold text-muted-foreground', compact ? 'text-[11px]' : 'text-xs')}>
         {label}
       </p>
-      <p className={cn('font-semibold tracking-tight tabular-nums', compact ? 'mt-0.5 text-xl leading-none' : 'mt-2 text-3xl')}>
+      <p
+        className={cn(
+          'font-semibold tracking-tight tabular-nums text-foreground',
+          compact ? 'mt-1 text-2xl leading-none' : 'mt-2 text-3xl sm:text-[2rem]',
+        )}
+      >
         {value == null || value === '' ? '—' : String(value)}
       </p>
       {hint && !compact ? <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p> : null}
-    </Card>
+    </>
   )
+  const aria = `${label}: ${value == null || value === '' ? 'no value' : String(value)}`
+  if (to) {
+    return (
+      <Link to={to} className={cn(shellClass, 'text-inherit no-underline')} aria-label={aria}>
+        {body}
+      </Link>
+    )
+  }
+  if (onClick) {
+    return (
+      <button type="button" className={cn(shellClass, 'text-start')} onClick={onClick} aria-label={aria}>
+        {body}
+      </button>
+    )
+  }
+  return <section className={shellClass}>{body}</section>
 }
 
 export type RelatedNavItem = { to: string; label: string; hint?: string }
 
-/** TeleScope-style related pages — text links, not secondary button rows. */
-export function RelatedNav({ items, className }: { items: RelatedNavItem[]; className?: string }) {
-  if (!items.length) return null
-  return (
-    <nav className={cn('page-related-nav', className)} aria-label="Related pages">
-      <span className="page-related-nav__label">Related</span>
-      <ul className="page-related-nav__list">
-        {items.map((item) => (
-          <li key={item.to}>
-            <Link className="fs-link" to={item.to} title={item.hint}>
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
+/** Retired — cross-page related links removed from workspace chrome. */
+export function RelatedNav(_props: { items: RelatedNavItem[]; className?: string }) {
+  return null
 }
 
 export function PanelHeader({

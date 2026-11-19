@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 const NAV = [
   { label: 'Capabilities', href: '/#capabilities' },
-  { label: 'Modules', href: '/#modules' },
+  { label: 'Modules', href: '/#features' },
   { label: 'Workflow', href: '/#workflow' },
   { label: 'FAQ', href: '/#faq' },
 ]
@@ -23,6 +23,8 @@ export function PublicHeader({ className }: { className?: string }) {
 
   const onLogin = pathname.startsWith('/login')
   const onRegister = pathname.startsWith('/register')
+  const authSurface =
+    pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password')
 
   const iconBtn = cn(
     'grid size-9 shrink-0 place-items-center rounded-lg border transition',
@@ -57,22 +59,24 @@ export function PublicHeader({ className }: { className?: string }) {
           </Link>
         </div>
 
-        <nav className="qrp-public-header__nav" aria-label="Page sections">
-          {NAV.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className={cn(
-                'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
-                dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-              )}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
+        {!authSurface ? (
+          <nav className="qrp-public-header__nav" aria-label="Page sections">
+            {NAV.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className={cn(
+                  'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
+                  dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                )}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        ) : null}
 
-        <div className="qrp-public-header__actions">
+        <div className="qrp-public-header__actions qrp-public-header__actions--cluster">
           <ThemeIconToggle
             dark={dark}
             onToggle={toggleTheme}
@@ -84,7 +88,7 @@ export function PublicHeader({ className }: { className?: string }) {
           <Link
             to="/login"
             className={cn(
-              'hidden rounded-lg px-3.5 py-2 text-sm font-semibold whitespace-nowrap md:inline-flex',
+              'qrp-public-header__signin hidden min-h-10 items-center rounded-lg px-3.5 text-sm font-semibold whitespace-nowrap md:inline-flex',
               onLogin
                 ? dark
                   ? 'bg-white/15 text-white'
@@ -99,12 +103,11 @@ export function PublicHeader({ className }: { className?: string }) {
           <Link
             to="/register"
             className={cn(
-              'fs-link hidden whitespace-nowrap px-2 py-2 text-sm font-semibold md:inline-flex',
-              dark ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-foreground',
-              onRegister && 'text-primary',
+              'btn-primary landing-hero-cta hidden min-h-10 items-center justify-center px-4 text-sm font-semibold whitespace-nowrap md:inline-flex',
+              onRegister && 'ring-2 ring-primary/40',
             )}
           >
-            Request access
+            Register
           </Link>
 
           <button
@@ -137,7 +140,7 @@ export function PublicHeader({ className }: { className?: string }) {
                 Sign in
               </Link>
               <Link to="/register" className="fs-link px-3 py-2 text-center text-sm font-semibold" onClick={() => setOpen(false)}>
-                Request access
+                Register organization
               </Link>
             </div>
           </nav>

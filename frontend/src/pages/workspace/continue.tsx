@@ -15,8 +15,6 @@ import {
 
 import { asList, qre, qreDownload, text } from '@/api/qre'
 import { CopyableId } from '@/components/data/CopyableId'
-import { DeploymentCapabilitiesPanel } from '@/components/deployment/DeploymentCapabilitiesPanel'
-import { DemoEnvironmentPanel } from '@/components/shell/DemoEnvironmentPanel'
 import { useDemoOperationalPolling } from '@/hooks/useDemoOperationalPolling'
 import { ReservationCalendar } from '@/components/data/ReservationCalendar'
 import { ChartPanel } from '@/components/data/ChartPanel'
@@ -39,14 +37,12 @@ import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ExecutionTimeline } from '@/components/workflow/ExecutionTimeline'
+import { AssetRegisterWorkflow } from '@/components/workflow/AssetRegisterWorkflow'
 import { WorkloadSubmitWizard } from '@/components/workflow/WorkloadSubmitWizard'
-import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
 import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { parseForm } from '@/lib/validation/parseForm'
 import {
-  assetImportSchema,
-  assetRegisterSchema,
   poolCreateSchema,
   projectMemberSchema,
   reservationHoldSchema,
@@ -54,7 +50,6 @@ import {
 } from '@/lib/validation/schemas'
 import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
-import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
 import { formatDateTime, formatEnum } from '@/lib/display'
 import {
@@ -122,7 +117,7 @@ export function AssetDetailPage() {
         { label: shortId(assetId, 12) },
       ]}
       title={row ? stateLabel(state) : 'Asset'}
-      description={`Registry id ${shortId(assetId, 14)}. Lifecycle moves only along allowed transitions.`}
+      description={`Organization asset ${shortId(assetId, 14)} — lifecycle moves only along allowed transitions.`}
       steps={LIFECYCLE}
       stepIndex={lifecycleIndex(state)}
       actions={
@@ -154,6 +149,7 @@ export function AssetDetailPage() {
             related={[
               { to: '/qrp/scheduling', label: 'Request hold', hint: 'Governance window' },
               { to: '/qrp/jobs', label: 'Provider jobs', hint: 'Execution sample' },
+              { to: '/qrp/organization', label: 'Organization', hint: 'Identity & people' },
               ...(row.provider_id ? [{ to: `/qrp/providers/${row.provider_id}`, label: 'Provider record' }] : []),
             ]}
           >
@@ -201,6 +197,13 @@ export function AssetDetailPage() {
           </RecordWorkspace>
         )}
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/reservations', label: 'Reservations' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -217,7 +220,7 @@ export function ApprovalHistoryPage() {
         { label: 'Decision history' },
       ]}
       title="Approval history"
-      description="Append-only decisions. A later decision does not rewrite an earlier one."
+      description="Organization approval decisions — append-only; a later decision does not rewrite an earlier one."
       actions={
         <Link to="/qrp/approvals" className="text-sm font-medium text-primary hover:underline">
           Queue
@@ -245,6 +248,13 @@ export function ApprovalHistoryPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/audit', label: 'Audit trail' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -320,7 +330,7 @@ export function ReconciliationPage() {
         { label: 'Reconciliation' },
       ]}
       title="Reconciliation"
-      description="Record provider outcome for dispatch attempts."
+      description="Organization dispatch reconciliation — record provider outcomes for authorized attempts."
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
@@ -360,8 +370,8 @@ export function ReconciliationPage() {
             emptyTitle="No attempts"
             emptyBody={
               filter === 'unresolved'
-                ? 'No authorized or unresolved attempts. Attempts appear after approve → authorize → record attempt.'
-                : 'Dispatch attempts appear after authorisation.'
+                ? 'No authorized or unresolved attempts for this organization. Flow: approve → authorize → record attempt.'
+                : 'Organization dispatch attempts appear after authorisation.'
             }
             columns={[
               {
@@ -449,6 +459,13 @@ export function ReconciliationPage() {
         </QueryBody>
       </Card>
       </RecordWorkspace>
+      <RelatedNav
+        items={[
+          { to: '/qrp/dispatch', label: 'Dispatch' },
+          { to: '/qrp/jobs', label: 'Provider jobs' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
       {confirmDialog}
     </Page>
   )
@@ -537,7 +554,7 @@ export function SchedulingPage() {
         { label: 'Request window' },
       ]}
       title="Request reservation window"
-      description="Plan a governance hold window."
+      description="Organization governance hold — reserve a capacity window on a project asset after approval."
     >
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
@@ -642,6 +659,7 @@ export function SchedulingPage() {
         items={[
           { to: '/qrp/reservations', label: 'Reservation calendar' },
           { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -662,7 +680,7 @@ export function SlaPage() {
         { label: 'SLA' },
       ]}
       title="Service levels"
-      description="Formal SLA targets, breach prediction, and credits are not implemented in this release."
+      description="Organization SLA targets — formal breach prediction and credits are not implemented in this release."
       updatedAt={meter.dataUpdatedAt}
     >
       <KpiStrip className="sm:grid-cols-3">
@@ -672,7 +690,7 @@ export function SlaPage() {
       </KpiStrip>
       <Card className="text-sm leading-relaxed text-muted-foreground">
         <p>
-          Use Metering for connector usage samples and Incidents for operational exceptions. Do not infer SLA compliance from
+          Use Metering for organization usage rollups and Incidents for operational exceptions. Do not infer SLA compliance from
           empty charts; missing telemetry is reported as unavailable, not as 100% availability.
         </p>
       </Card>
@@ -680,6 +698,7 @@ export function SlaPage() {
         items={[
           { to: '/qrp/metering', label: 'Metering' },
           { to: '/qrp/incidents', label: 'Incidents' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -699,7 +718,7 @@ export function NotificationsPage() {
         { label: 'Notifications' },
       ]}
       title="Notifications"
-      description="In-app notices and governance sync."
+      description="In-app notices for your organization — governance queue sync and header bell delivery."
       actions={
         <button
           type="button"
@@ -720,13 +739,15 @@ export function NotificationsPage() {
         <MetricTile label="Delivery" value="In-app" hint="Email and webhooks are server-configured" />
       </KpiStrip>
       <Card className="text-sm text-muted-foreground">
-        Open the notification panel from the bell in the header, or use Approval history and Audit for durable records.
+        Open the notification panel from the bell in the header. Approval history and Audit retain durable records for all
+        organization members with access.
       </Card>
       <RelatedNav
         items={[
           { to: '/qrp/audit', label: 'Audit log' },
           { to: '/qrp/approvals/history', label: 'Approval history' },
           { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -746,7 +767,7 @@ export function EntitlementsPage() {
         { label: 'Entitlements' },
       ]}
       title="Entitlements"
-      description="Contract SKUs are outside QRP; capacity uses the quota ledger."
+      description="Organization capacity — daily quota ledger, not external contract SKUs."
       actions={
         <Link className="btn-primary" to="/qrp/quotas">
           Quotas
@@ -765,14 +786,15 @@ export function EntitlementsPage() {
         />
       </KpiStrip>
       <Card className="text-sm text-muted-foreground">
-        Contract entitlements and provider SKU grants are maintained outside QRP. Capacity enforcement for approvals uses the quota
-        ledger and project-scoped reservations.
+        Contract entitlements and provider SKU grants are maintained outside QRP. Capacity enforcement for this organization uses
+        the quota ledger and project-scoped reservations.
       </Card>
       <RelatedNav
         items={[
           { to: '/qrp/quotas', label: 'Quotas' },
-          { to: '/qrp/admin/users', label: 'Users & roles' },
+          { to: '/qrp/admin/users', label: 'People & access' },
           { to: '/qrp/reservations', label: 'Reservations' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -788,7 +810,7 @@ export function OnboardingPage() {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/providers' }, { label: 'Onboarding' }]}
       title="Provider onboarding board"
-      description="Stage codes from the connector catalogue. Open a provider to publish a manifest and activate."
+      description="Organization provider onboarding — stage codes from the connector catalogue; open a provider to publish a manifest and activate."
     >
       <Card>
         <QueryBody query={query}>
@@ -818,191 +840,21 @@ export function OnboardingPage() {
         items={[
           { to: '/qrp/providers', label: 'Providers' },
           { to: '/qrp/connectors', label: 'Connectors' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
   )
 }
 
+/** Asset registration — Method → Details → Review → Complete (replaces separate new/import pages). */
 export function RegisterAssetPage() {
-  const [form, setForm] = useState({
-    provider_id: '',
-    native_asset_id: '',
-    asset_class: '',
-    execution_class: 'simulated',
-  })
-  const [created, setCreated] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const save = useMutation({
-    mutationFn: (payload: typeof form) =>
-      qre<Row>('/inventory/assets', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: (row) => setCreated(String(row.asset_id || 'created')),
-  })
-  return (
-    <Page
-      crumbs={[
-        { label: 'Resources', to: '/qrp/inventory' },
-        { label: 'Register asset' },
-      ]}
-      title="Register asset"
-      description="One asset, one provider, one native id."
-      actions={
-        <Link to="/qrp/inventory" className="fs-link text-sm">
-          Inventory
-        </Link>
-      }
-    >
-      <Card>
-        <form
-          className="grid gap-3 sm:grid-cols-2"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault()
-            setFieldErrors({})
-            const parsed = parseForm(assetRegisterSchema, form)
-            if (!parsed.ok) {
-              setFieldErrors(parsed.fieldErrors)
-              return
-            }
-            save.mutate(form)
-          }}
-        >
-          <FormField label="Provider id" htmlFor="asset-provider" error={fieldErrors.provider_id}>
-            <input
-              id="asset-provider"
-              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.provider_id)))}
-              value={form.provider_id}
-              onChange={(e) => setForm({ ...form, provider_id: e.target.value })}
-            />
-          </FormField>
-          <FormField label="Native asset id" htmlFor="asset-native" error={fieldErrors.native_asset_id}>
-            <input
-              id="asset-native"
-              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.native_asset_id)))}
-              value={form.native_asset_id}
-              onChange={(e) => setForm({ ...form, native_asset_id: e.target.value })}
-            />
-          </FormField>
-          <FormField label="Asset class" htmlFor="asset-class" error={fieldErrors.asset_class}>
-            <input
-              id="asset-class"
-              className={cn(fieldClass, fieldErrorClass(Boolean(fieldErrors.asset_class)))}
-              value={form.asset_class}
-              placeholder="QPU"
-              onChange={(e) => setForm({ ...form, asset_class: e.target.value })}
-            />
-          </FormField>
-          <FormField label="Execution" htmlFor="asset-exec">
-            <select
-              id="asset-exec"
-              className={fieldClass}
-              value={form.execution_class}
-              onChange={(e) => setForm({ ...form, execution_class: e.target.value })}
-            >
-              <option value="simulated">simulated</option>
-              <option value="hardware">hardware</option>
-            </select>
-          </FormField>
-          <div>
-            <button type="submit" className={buttonClass} disabled={save.isPending}>
-              Register
-            </button>
-            {created && <p className="mt-2 text-sm text-success-text">Registered {created}</p>}
-            {save.error && <p className="mt-2 text-sm text-critical">{message(save.error)}</p>}
-          </div>
-        </form>
-      </Card>
-    </Page>
-  )
+  return <AssetRegisterWorkflow />
 }
 
+/** @deprecated Route redirects to register workflow; export kept for router compatibility. */
 export function ImportAssetsPage() {
-  const [providerId, setProviderId] = useState('')
-  const [csv, setCsv] = useState('native_asset_id,asset_class,execution_class\n')
-  const [result, setResult] = useState<Row | null>(null)
-  const run = useMutation({
-    mutationFn: () =>
-      qre<Row>('/inventory/imports', {
-        method: 'POST',
-        body: JSON.stringify({ provider_id: providerId, csv_text: csv }),
-      }),
-    onSuccess: (body) => setResult(body),
-  })
-  const errors = Array.isArray(result?.errors) ? (result.errors as Row[]) : []
-  const [importFields, setImportFields] = useState<Record<string, string>>({})
-  return (
-    <Page
-      crumbs={[
-        { label: 'Resources', to: '/qrp/inventory' },
-        { label: 'Import assets' },
-      ]}
-      title="Import assets"
-      description="CSV columns: native_asset_id, asset_class, execution_class. A bad row commits nothing."
-      actions={
-        <Link to="/qrp/inventory" className="fs-link text-sm">
-          Inventory
-        </Link>
-      }
-    >
-      <Card>
-        <form
-          className="grid gap-3"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault()
-            setImportFields({})
-            const parsed = parseForm(assetImportSchema, { provider_id: providerId, csv })
-            if (!parsed.ok) {
-              setImportFields(parsed.fieldErrors)
-              return
-            }
-            run.mutate()
-          }}
-        >
-          <FormField label="Provider id" htmlFor="import-provider" error={importFields.provider_id}>
-            <input
-              id="import-provider"
-              className={cn(fieldClass, fieldErrorClass(Boolean(importFields.provider_id)))}
-              value={providerId}
-              onChange={(e) => setProviderId(e.target.value)}
-            />
-          </FormField>
-          <FormField label="CSV" htmlFor="import-csv" error={importFields.csv}>
-            <textarea
-              id="import-csv"
-              rows={8}
-              className={cn(fieldClass, 'font-mono text-xs', fieldErrorClass(Boolean(importFields.csv)))}
-              value={csv}
-              onChange={(e) => setCsv(e.target.value)}
-            />
-          </FormField>
-          <div>
-            <button type="submit" className={buttonClass} disabled={run.isPending}>
-              Commit import
-            </button>
-            {run.error && <p className="mt-2 text-sm text-critical">{message(run.error)}</p>}
-          </div>
-        </form>
-        {result && (
-          <p className="mt-3 text-sm">
-            {result.committed ? `Committed ${String(result.created)} assets.` : 'Not committed.'}
-          </p>
-        )}
-        {errors.length > 0 && (
-          <ul className="mt-2 text-sm text-critical">
-            {errors.map((err, i) => (
-              <li key={i}>
-                Row {String(err.row ?? '—')}: {String(err.detail)}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </Page>
-  )
+  return <AssetRegisterWorkflow />
 }
 
 function MemberForm({ projectId }: { projectId: string }) {
@@ -1169,7 +1021,7 @@ export function ProjectDetailPage() {
         ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={projectName}
-      description="Members, requests, holds, and quota for this project."
+      description="Research project inside your organization — members, requests, holds, and quota drill-down."
       actions={
         <span className="flex flex-wrap items-center gap-3">
           <CopyableId value={projectId} keep={14} />
@@ -1780,8 +1632,8 @@ export function AlertDetailPage() {
       title={row ? String(row.alert_type || 'Alert') : 'Alert'}
       description={
         row
-          ? `${String(row.message || '')} · Detected ${formatAlertAge(row.detected_at)} · ${String(row.resource_id || '')}`
-          : `Alert ${shortId(alertId, 12)}`
+          ? `${String(row.message || '')} · Detected ${formatAlertAge(row.detected_at)} · Org-visible on shared fabric`
+          : `Organization alert ${shortId(alertId, 12)}`
       }
       crumbs={[
         { label: 'Operations', to: '/qrp/support' },
@@ -2031,7 +1883,7 @@ export function AlertDetailPage() {
                     <ol className="list-decimal space-y-2 ps-4 text-sm text-muted-foreground">
                       <li>Confirm reading vs threshold above (source: alert detector).</li>
                       <li>Check sibling alerts on the same backend via the incident group.</li>
-                      <li>Acknowledge to claim ownership, then add investigation notes.</li>
+                      <li>Acknowledge to claim ownership for your organization, then add investigation notes.</li>
                       <li>Resolve only when the condition is cleared or accepted with a note.</li>
                     </ol>
                     <div className="flex flex-col gap-2 border-t border-border pt-3 text-sm">
@@ -2126,6 +1978,14 @@ export function AlertDetailPage() {
           )}
         </QueryBody>
       )}
+      <RelatedNav
+        items={[
+          { to: '/qrp/support', label: 'Alert queue' },
+          { to: '/qrp/incidents', label: 'Incidents' },
+          { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2228,7 +2088,7 @@ export function PoolsPage({ embedded = false }: { embedded?: boolean }) {
           <Table
             rows={rows}
             emptyTitle="No pools"
-            emptyBody="Create a pool, then add inventory members."
+            emptyBody="Create an organization pool, then add registered inventory members."
             columns={[
               {
                 key: 'name',
@@ -2257,10 +2117,18 @@ export function PoolsPage({ embedded = false }: { embedded?: boolean }) {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Pools' }]}
       title="Resource pools"
+      description="Organization virtual pools — group registered assets for scheduling and policy without reserving capacity."
       actions={headerAction}
       updatedAt={query.dataUpdatedAt}
     >
       {body}
+      <RelatedNav
+        items={[
+          { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/scheduling', label: 'Scheduling' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2316,7 +2184,7 @@ export function ProviderDetailPage() {
         { label: String(row?.provider_name || shortId(providerId, 12)) },
       ]}
       title={String(row?.provider_name || providerId)}
-      description="Publish a capability manifest, then set the provider active or suspended."
+      description="Organization onboarding for a platform provider — publish a capability manifest, then set active or suspended."
       steps={[
         { id: 'register', label: 'Register' },
         { id: 'manifest', label: 'Manifest' },
@@ -2352,6 +2220,7 @@ export function ProviderDetailPage() {
               { to: '/qrp/inventory', label: 'Inventory', hint: 'Assets on this provider' },
               { to: '/qrp/connectors', label: 'Connectors', hint: text(integration, 'stage') },
               { to: '/qrp/jobs', label: 'Provider jobs', hint: 'Execution sample' },
+              { to: '/qrp/organization', label: 'Organization', hint: 'Tenant identity' },
             ]}
           >
             {tab === 'overview' && (
@@ -2444,7 +2313,7 @@ export function PoolDetailPage() {
   return (
     <Page
       title={String(query.data?.name || poolId)}
-      description="Add a registered asset. Membership does not reserve the asset."
+      description="Organization pool — add a registered asset. Membership does not reserve the asset."
       actions={
         <Link to="/qrp/pools" className="text-sm font-medium text-primary hover:underline">
           All pools
@@ -2486,6 +2355,13 @@ export function PoolDetailPage() {
           />
         </Card>
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/pools', label: 'All pools' },
+          { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2585,7 +2461,7 @@ export function ConnectorsPage({ embedded = false }: { embedded?: boolean }) {
           <Table
             rows={rows}
             emptyTitle="No connectors"
-            emptyBody="Connector rows mirror the provider catalogue."
+            emptyBody="Connector rows mirror providers your organization can dispatch against."
             columns={[
               {
                 key: 'provider_name',
@@ -2653,10 +2529,17 @@ export function ConnectorsPage({ embedded = false }: { embedded?: boolean }) {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/providers' }, { label: 'Connectors' }]}
       title="Connectors"
-      description="Connector integration stage and maturity."
+      description="Organization connector catalogue — integration stage, collector health, and dispatch readiness."
       updatedAt={query.dataUpdatedAt}
     >
       {body}
+      <RelatedNav
+        items={[
+          { to: '/qrp/providers', label: 'Providers' },
+          { to: '/qrp/dispatch', label: 'Dispatch' },
+          { to: '/qrp/metering', label: 'Metering' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2719,7 +2602,7 @@ export function DispatchPage() {
         { label: 'Dispatch' },
       ]}
       title="Dispatch & Jobs"
-      description="Dispatch attempts and ICD contract."
+      description="Organization dispatch attempts and ICD contract — separate governance approval from provider jobs."
       actions={
         unresolved > 0 ? (
           <Link to="/qrp/reconciliation" className="btn-primary">
@@ -2768,7 +2651,7 @@ export function DispatchPage() {
             <ChartPanel title="Attempt state mix" empty={stateChart.length === 0}>
               {(h) =>
                 stateChart.length === 0 ? (
-                  <EmptyState title="No attempts yet" body="Attempts appear after approve → authorize → record attempt." />
+                  <EmptyState title="No attempts yet" body="Organization attempts appear after approve → authorize → record attempt." />
                 ) : (
                   <ResponsiveContainer width="100%" height={h}>
                     <PieChart>
@@ -2799,7 +2682,7 @@ export function DispatchPage() {
               }
             />
             <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
-              <li>Approve workload on Review Queue (governance only).</li>
+              <li>Approve workload on Review Queue (organization governance only).</li>
               <li>Confirm reservation / eligibility, then authorise dispatch.</li>
               <li>Record durable attempt before connector call.</li>
               <li>Reconcile outcome — never blind retry ambiguous calls.</li>
@@ -2836,7 +2719,7 @@ export function DispatchPage() {
             <Table
               rows={filteredAttempts}
               emptyTitle="No attempts"
-              emptyBody="Dispatch attempts appear after authorisation and record-attempt."
+              emptyBody="Organization dispatch attempts appear after authorisation and record-attempt."
               columns={[
                 {
                   key: 'attempt_id',
@@ -2956,6 +2839,7 @@ export function DispatchPage() {
           { to: '/qrp/jobs', label: 'Provider jobs' },
           { to: '/qrp/reconciliation', label: 'Reconciliation' },
           { to: '/qrp/connectors', label: 'Connectors' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -3202,7 +3086,7 @@ export function UsersPage() {
           <Table
             rows={rows}
             emptyTitle="No users"
-            emptyBody="Directory empty for this tenant."
+            emptyBody="Directory empty for this organization."
             columns={[
               {
                 key: 'username',
@@ -3340,7 +3224,7 @@ export function IncidentsPage() {
     <Page
       crumbs={[{ label: 'Operations', to: '/qrp/centre' }, { label: 'Incidents' }]}
       title="Incidents"
-      description="Exception cases with lifecycle and ownership."
+      description="Organization exception cases — lifecycle, ownership, and linked fleet alerts."
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3351,14 +3235,14 @@ export function IncidentsPage() {
         <MetricTile
           label="Linked alerts"
           value={query.isError ? '—' : alertTotal || alertSummary.data?.active}
-          hint={alertSummary.isError ? 'From incident rows' : `${String(alertSummary.data?.active ?? '—')} active fleet-wide`}
+          hint={alertSummary.isError ? 'From incident rows' : `${String(alertSummary.data?.active ?? '—')} active (org-visible sample)`}
           tone="warning"
         /></KpiStrip>
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartPanel title="By severity" empty={severityChart.length === 0}>
           {(h) =>
             severityChart.length === 0 ? (
-              <EmptyState title="No incidents" body="Cases appear when triage opens an incident." />
+              <EmptyState title="No incidents" body="Organization cases appear when triage opens an incident." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <PieChart>
@@ -3404,7 +3288,7 @@ export function IncidentsPage() {
           <Table
             rows={rows}
             emptyTitle="No incidents"
-            emptyBody={search || status !== 'all' ? 'No rows match filters.' : 'Incidents appear when triage opens a case.'}
+            emptyBody={search || status !== 'all' ? 'No rows match filters.' : 'Organization incidents appear when triage opens a case.'}
             columns={[
               {
                 key: 'title',
@@ -3462,6 +3346,7 @@ export function IncidentsPage() {
           { to: '/qrp/centre', label: 'Operations centre' },
           { to: '/qrp/support', label: 'Active alerts' },
           { to: '/qrp/jobs', label: 'Jobs & queues' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -3524,7 +3409,7 @@ export function IncidentDetailPage() {
         ? 'Start investigation'
         : 'Acknowledge / triage'
   const nextBody = resolved
-    ? 'Review evidence and audit. Reopen only if policy allows.'
+    ? 'Review evidence and organization audit. Reopen only if policy allows.'
     : 'Capture notes, link affected jobs/attempts, then advance status. Acknowledge ≠ resolve.'
 
   return (
@@ -3770,6 +3655,7 @@ export function IncidentDetailPage() {
           { to: '/qrp/incidents', label: 'All incidents' },
           { to: '/qrp/support', label: 'Alerts' },
           { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
       {confirmDialog}
@@ -3844,7 +3730,7 @@ export function JobsPage() {
         <ChartPanel title="Status mix" empty={statusChart.length === 0}>
           {(h) =>
             statusChart.length === 0 ? (
-              <EmptyState title="No jobs" body="Empty provider sample." />
+              <EmptyState title="No jobs" body="No provider jobs in this organization sample — submit workloads and dispatch after approval." />
             ) : (
               <ResponsiveContainer width="100%" height={h}>
                 <PieChart>
@@ -3943,7 +3829,9 @@ export function JobsPage() {
       crumbs={[{ label: 'Compute', to: '/qrp/jobs' }, { label: tab === 'queues' ? 'Queues' : 'Jobs' }]}
       title={tab === 'queues' ? 'Queue depth' : 'Provider jobs'}
       description={
-        tab === 'queues' ? 'Pending counts per backend from queue telemetry.' : 'Provider execution records.'
+        tab === 'queues'
+          ? 'Platform queue depth per backend — org-visible telemetry sample.'
+          : 'Provider execution records attributed to your organization tenant.'
       }
       updatedAt={query.dataUpdatedAt}
     >
@@ -3966,6 +3854,7 @@ export function JobsPage() {
           { to: '/qrp/centre', label: 'Operations centre' },
           { to: '/qrp/dispatch', label: 'Dispatch' },
           { to: '/qrp/backends', label: 'Backends' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -4003,7 +3892,7 @@ export function JobDetailPage() {
         ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={status ? stateLabel(status) : 'Provider job'}
-      description={`Provider execution ${shortId(jobId, 14)}.`}
+      description={`Organization-attributed provider execution ${shortId(jobId, 14)}.`}
       actions={<CopyableId value={jobId} keep={16} />}
       updatedAt={query.dataUpdatedAt}
     >
@@ -4086,7 +3975,7 @@ export function JobDetailPage() {
                 <Table
                   rows={dispatch.data ?? []}
                   emptyTitle="No dispatch rows"
-                  emptyBody="Attempts appear when reconcile links external_job_id to this provider job."
+                  emptyBody="Organization dispatch attempts appear when reconcile links external_job_id to this provider job."
                   columns={[
                     {
                       key: 'attempt_id',
@@ -4123,6 +4012,14 @@ export function JobDetailPage() {
           </RecordWorkspace>
         )}
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/jobs', label: 'All jobs' },
+          { to: '/qrp/dispatch', label: 'Dispatch' },
+          { to: '/qrp/reconciliation', label: 'Reconciliation' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -4204,7 +4101,7 @@ export function CentrePage() {
         { label: 'Operations centre' },
       ]}
       title="Operations Centre"
-      description="Fleet posture, queue depth, dispatch pressure, and open exceptions."
+      description="Organization operations posture — fleet health, queue depth, reconcile backlog, and open exceptions."
       actions={headerActions}
       updatedAt={query.dataUpdatedAt}
     >
@@ -4470,6 +4367,7 @@ export function CentrePage() {
           { to: '/qrp/jobs', label: 'Jobs & queues' },
           { to: '/qrp/incidents', label: 'Incidents' },
           { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -4535,7 +4433,7 @@ export function BackendsPage({ embedded = false }: { embedded?: boolean }) {
           <Table
             rows={rows}
             emptyTitle="No backends"
-            emptyBody="Catalogue empty for this filter."
+            emptyBody="Platform catalogue empty for this filter — backends are org-visible on the shared fabric."
             columns={[
               {
                 key: 'backend_name',
@@ -4607,10 +4505,18 @@ export function BackendsPage({ embedded = false }: { embedded?: boolean }) {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Backends' }]}
       title="Backends"
-      description="Catalogue and fleet backends."
+      description="Organization-visible platform backend catalogue — queue telemetry and operational status."
       updatedAt={query.dataUpdatedAt}
     >
       {body}
+      <RelatedNav
+        items={[
+          { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/jobs?tab=queues', label: 'Queues' },
+          { to: '/qrp/support', label: 'Alerts' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -4674,7 +4580,7 @@ export function BackendDetailPage() {
   return (
     <Page
       title={String(backend.data?.backend_name || backendId)}
-      description="Backend catalogue and queue telemetry."
+      description="Organization-visible backend — catalogue posture, queue telemetry, and topology health."
       actions={<CopyableId value={backendId} keep={14} />}
       updatedAt={backend.dataUpdatedAt || queue.dataUpdatedAt}
     >
@@ -4795,6 +4701,7 @@ export function BackendDetailPage() {
           { to: '/qrp/backends', label: 'All backends' },
           { to: '/qrp/jobs?tab=queues', label: 'Queues' },
           { to: '/qrp/support', label: 'Alerts' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -5088,7 +4995,7 @@ export function EvidencePage() {
         { label: 'Evidence' },
       ]}
       title="Evidence"
-      description="Point-in-time operational snapshots."
+      description="Organization operational snapshots — point-in-time captures for incidents and audit."
       actions={
         <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
           Capture snapshot
@@ -5144,7 +5051,7 @@ export function EvidencePage() {
           <Table
             rows={rows}
             emptyTitle="No snapshots"
-            emptyBody="Capture a snapshot for the supported fleet/backend scope."
+            emptyBody="Capture a snapshot for your organization's fleet or backend scope."
             columns={[
               { key: 'label', label: 'Label' },
               {
@@ -5186,63 +5093,14 @@ export function EvidencePage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/incidents', label: 'Incidents' },
+          { to: '/qrp/audit', label: 'Audit trail' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
 
-export function SettingsPage() {
-  const navigate = useNavigate()
-  const { logout } = useAuth()
-  const boundary = useQuery({
-    queryKey: ['institution-boundary'],
-    queryFn: () => qre<Row>('/governance/institution-boundary'),
-    retry: false,
-  })
-  const fed = (boundary.data?.federation as Row | undefined) ?? {}
-  return (
-    <Page
-      crumbs={[{ label: 'Admin' }, { label: 'Settings' }]}
-      title="Settings"
-      description="Account, demonstration tools, and platform health."
-      actions={
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => {
-            void logout()
-            navigate('/login')
-          }}
-        >
-          Sign out
-        </button>
-      }
-    >
-      <div className="grid gap-4 xl:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <AccountSecurity />
-          <DemoEnvironmentPanel />
-          <DeploymentCapabilitiesPanel compact />
-          <Card className="space-y-2 text-sm">
-            <PanelHeader title="Institution" />
-            <QueryBody query={boundary} compactLoading notReportedTitle="Boundary unavailable">
-              {boundary.data ? (
-                <p className="text-muted-foreground">
-                  {text(fed, 'local_site_name')} · tenant{' '}
-                  <CopyableId value={String(boundary.data.active_tenant_id || '')} keep={12} />
-                </p>
-              ) : null}
-            </QueryBody>
-          </Card>
-        </div>
-        <Card className="space-y-2 p-0 overflow-hidden">
-          <div className="border-b border-border px-4 py-3">
-            <PanelHeader title="Platform health" />
-          </div>
-          <div className="px-2 pb-4">
-            <StatusPage framed />
-          </div>
-        </Card>
-      </div>
-    </Page>
-  )
-}

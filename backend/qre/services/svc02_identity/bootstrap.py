@@ -44,6 +44,7 @@ def bootstrap_admin(
     admin_username: str,
     password: str,
     email: str | None = None,
+    display_name: str | None = None,
 ) -> BootstrapResult:
     code = tenant_code.strip()
     username = admin_username.strip().lower()
@@ -109,7 +110,7 @@ def bootstrap_admin(
             """
         ),
         {"id": user_id, "tid": tenant_id, "u": username,
-         "email": email or f"{username}@{code}.local", "dn": "Platform Administrator"},
+         "email": email or f"{username}@{code}.local", "dn": (display_name or "Platform Administrator").strip()},
     )
     conn.execute(
         text("INSERT INTO user_credential (user_id, password_hash) VALUES (:id, :h)"),

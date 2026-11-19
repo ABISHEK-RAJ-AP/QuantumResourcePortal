@@ -4,16 +4,13 @@ import { Link } from 'react-router'
 
 export function AccessDeniedPage({ permission }: { permission?: string }) {
   return (
-    <main
-      id="main-content"
-      className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center gap-4 text-center"
-    >
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-critical/10 text-critical">
+    <main id="main-content" className="qrp-system-notice flex min-h-[50vh] flex-col items-center justify-center gap-4">
+      <span className="qrp-system-notice__icon">
         <ShieldAlert className="h-7 w-7" aria-hidden />
       </span>
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Access denied</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <h1 className="qrp-system-notice__title">Access denied</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           You do not have permission to view this page.
           {permission ? (
             <>
@@ -21,12 +18,18 @@ export function AccessDeniedPage({ permission }: { permission?: string }) {
               It requires <span className="font-mono text-foreground">{permission}</span>.
             </>
           ) : null}{' '}
-          If you believe you should have access, ask a platform administrator to grant it.
+          Ask your <Link className="font-medium text-primary hover:underline" to="/qrp/organization?tab=people">organization administrator</Link>{' '}
+          to grant access.
         </p>
       </div>
-      <Link to="/qrp" className="btn-primary px-4 py-2 text-sm">
-        Back to Home
-      </Link>
+      <div className="flex flex-wrap justify-center gap-2">
+        <Link to="/qrp" className="btn-primary text-sm">
+          Back to Home
+        </Link>
+        <Link to="/qrp/settings" className="btn-ghost text-sm">
+          Settings
+        </Link>
+      </div>
     </main>
   )
 }

@@ -65,7 +65,7 @@ export function QuotaEvaluationPanel({
                   }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Tenant daily shot ledger (UTC). Approval quota stage uses this evaluate endpoint.</p>
+              <p className="text-xs text-muted-foreground">Organization daily shot ledger (UTC). Approval quota stage uses this evaluate endpoint.</p>
             </div>
           ) : null}
         </div>

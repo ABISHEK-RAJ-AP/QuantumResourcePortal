@@ -1,270 +1,111 @@
 /**
- * Users & role assignment (RBAC-6, screen D). Lists users, shows their active memberships, and lets
- * an authorised admin grant or revoke roles. Anti-escalation and last-admin rules are enforced by
- * the backend; denied actions surface their reason.
+ * Access hub (Cert Studio pattern): Users · Roles · Permissions catalogue.
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { useMemo } from 'react'
+import { useSearchParams } from 'react-router'
+import { BookOpen, Shield, Users } from 'lucide-react'
 
-import { ApiError } from '@/api/client'
-import * as rbac from '@/api/rbac'
+import { AccessCataloguePanel } from '@/components/admin/AccessCataloguePanel'
+import { AccessRoleMatrix } from '@/components/admin/AccessRoleMatrix'
+import { AccessRolesPanel } from '@/components/admin/AccessRolesPanel'
+import { AccessUsersPanel } from '@/components/admin/AccessUsersPanel'
 import { PermissionGate } from '@/auth/PermissionGate'
-import { DataState } from '@/components/data/DataState'
-import { FormField, fieldErrorClass } from '@/components/forms/FormField'
-import { Card, Notice, Page } from '@/components/layout/Page'
-import { parseForm } from '@/lib/validation/parseForm'
-import { membershipGrantSchema } from '@/lib/validation/schemas'
+import { useAuth } from '@/auth/hooks'
+import { Card, Page, RelatedNav } from '@/components/layout/Page'
 import { cn } from '@/lib/utils'
-import { formatApiError } from '@/lib/apiMessage'
-import { StatusBadge } from '@/components/status/StatusBadge'
+
+import '@/styles/access-workspace.css'
+
+type AccessTab = 'users' | 'roles' | 'catalogue'
+
+const TABS: { id: AccessTab; label: string; icon: typeof Users; perm?: string }[] = [
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'roles', label: 'Roles', icon: Shield, perm: 'role:read' },
+  { id: 'catalogue', label: 'Permissions', icon: BookOpen, perm: 'permission:read' },
+]
+
+function tabFromParam(raw: string | null): AccessTab {
+  if (raw === 'roles' || raw === 'catalogue') return raw
+  return 'users'
+}
 
 export function UsersAdminPage() {
-  const client = useQueryClient()
-  const users = useQuery({ queryKey: ['users'], queryFn: rbac.listUsers })
-  const memberships = useQuery({ queryKey: ['memberships'], queryFn: () => rbac.listMemberships() })
-  const roles = useQuery({ queryKey: ['roles'], queryFn: rbac.listRoles })
-  const [error, setError] = useState('')
+  const { permissions } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = tabFromParam(searchParams.get('tab'))
 
-  const byUser = useMemo(() => {
-    const map: Record<string, rbac.Membership[]> = {}
-    for (const m of memberships.data ?? []) (map[m.principal_id] ??= []).push(m)
-    return map
-  }, [memberships.data])
+  const visibleTabs = useMemo(
+    () => TABS.filter((t) => !t.perm || permissions.has(t.perm)),
+    [permissions],
+  )
 
-  const revoke = useMutation({
-    mutationFn: (membershipId: string) => rbac.revokeMembership(membershipId),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['memberships'] })
-      void client.invalidateQueries({ queryKey: ['roles'] })
-    },
-    onError: (e) => setError(e instanceof ApiError ? e.detail : 'Could not revoke role'),
-  })
+  const setTab = (id: AccessTab) => {
+    const params = new URLSearchParams(searchParams)
+    if (id === 'users') params.delete('tab')
+    else params.set('tab', id)
+    setSearchParams(params, { replace: true })
+  }
 
   return (
     <Page
       crumbs={[
-        { label: 'Admin', to: '/qrp/settings' },
-        { label: 'Users & roles' },
+        { label: 'Organization', to: '/qrp/organization' },
+        { label: 'People & access' },
       ]}
-      title="Users & roles"
-      description="Assign and revoke roles. Scope and escalation rules are enforced by the server."
+      title="People & access"
+      description="Organization member directory, roles, and permission catalogue (Cert Studio Organisation → People)."
     >
-      {error && <Notice tone="critical">{error}</Notice>}
-      {memberships.isError ? (
-        <Notice tone="warning">
-          Could not load role assignments: {formatApiError(memberships.error)}. User list may be incomplete.
-          <button type="button" className="btn-ghost mt-2 text-sm" onClick={() => void memberships.refetch()}>
-            Retry assignments
-          </button>
-        </Notice>
-      ) : null}
-      {roles.isError ? (
-        <Notice tone="warning">
-          Could not load role catalogue: {formatApiError(roles.error)}. Grant form may be limited.
-          <button type="button" className="btn-ghost mt-2 text-sm" onClick={() => void roles.refetch()}>
-            Retry roles
-          </button>
-        </Notice>
-      ) : null}
-
-      <PermissionGate permission="membership:admin">
-        <GrantForm
-          users={users.data ?? []}
-          roles={roles.isError ? [] : (roles.data ?? [])}
-          onError={setError}
-          onDone={() => {
-            void client.invalidateQueries({ queryKey: ['memberships'] })
-            void client.invalidateQueries({ queryKey: ['roles'] })
-          }}
-        />
-      </PermissionGate>
-
-      <Card>
-        <DataState
-          pending={users.isPending}
-          error={users.error ?? undefined}
-          onRetry={users.isError ? () => void users.refetch() : undefined}
-          empty={(users.data ?? []).length === 0}
-          emptyTitle="No users"
-          emptyBody="Create users to assign roles."
-          compactLoading
-        >
-          <div className="scroll-bar-hidden overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
-                  <th className="px-3 py-2.5 font-semibold">User</th>
-                  <th className="px-3 py-2.5 font-semibold">Status</th>
-                  <th className="px-3 py-2.5 font-semibold">Roles</th>
-                  <th className="px-3 py-2.5 font-semibold" />
-                </tr>
-              </thead>
-              <tbody>
-                {(users.data ?? []).map((u) => (
-                  <tr key={u.user_id} className="border-b border-border/70 last:border-0 align-top">
-                    <td className="px-3 py-2.5">
-                      <span className="flex flex-col">
-                        <span className="font-medium">{u.username}</span>
-                        <span className="text-xs text-muted-foreground">{u.display_name}</span>
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <StatusBadge tone={u.status === 'ACTIVE' ? 'success' : 'warning'} label={u.status} />
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {(byUser[u.user_id] ?? []).length === 0 ? (
-                        <span className="text-muted-foreground">None</span>
-                      ) : (
-                        <ul className="space-y-1">
-                          {(byUser[u.user_id] ?? []).map((m) => (
-                            <li key={m.membership_id} className="flex items-center gap-2">
-                              <span className="font-mono text-xs">
-                                {m.role}
-                                {m.scope_type !== 'TENANT' && (
-                                  <span className="text-muted-foreground"> · {m.scope_type.toLowerCase()}</span>
-                                )}
-                              </span>
-                              <PermissionGate permission="membership:admin">
-                                <button
-                                  type="button"
-                                  className="text-xs text-critical hover:underline"
-                                  onClick={() => revoke.mutate(m.membership_id)}
-                                >
-                                  revoke
-                                </button>
-                              </PermissionGate>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <Link to={`/qrp/admin/users/${u.user_id}`} className="btn-ghost text-xs">
-                        Permissions
-                      </Link>
-                    </td>
-                  </tr>
+      <div className="qrp-access qrp-settings">
+        <div className="qrp-settings__shell">
+          <aside className="qrp-settings__sidebar max-md:w-full">
+            <Card className="p-1">
+              <nav className="qrp-settings__nav" aria-label="Access sections">
+                {visibleTabs.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={cn('qrp-settings__nav-btn', tab === id && 'is-active')}
+                    aria-current={tab === id ? 'page' : undefined}
+                    onClick={() => setTab(id)}
+                  >
+                    <Icon className="size-4 shrink-0 opacity-80" aria-hidden />
+                    {label}
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </nav>
+            </Card>
+          </aside>
+
+          <div className="min-w-0 space-y-4">
+            {tab === 'users' ? (
+              <>
+                <PermissionGate permission="role:read">
+                  <AccessRoleMatrix />
+                </PermissionGate>
+                <AccessUsersPanel />
+              </>
+            ) : null}
+            {tab === 'roles' ? (
+              <PermissionGate permission="role:read">
+                <AccessRolesPanel />
+              </PermissionGate>
+            ) : null}
+            {tab === 'catalogue' ? (
+              <PermissionGate permission="permission:read">
+                <AccessCataloguePanel />
+              </PermissionGate>
+            ) : null}
           </div>
-        </DataState>
-      </Card>
+        </div>
+      </div>
+      <RelatedNav
+        items={[
+          { to: '/qrp/organization', label: 'Organization hub' },
+          { to: '/qrp/audit', label: 'Audit trail' },
+          { to: '/qrp/settings', label: 'Settings' },
+          { to: '/qrp/profile', label: 'My profile' },
+        ]}
+      />
     </Page>
-  )
-}
-
-function GrantForm({
-  users,
-  roles,
-  onError,
-  onDone,
-}: {
-  users: rbac.AppUser[]
-  roles: rbac.Role[]
-  onError: (m: string) => void
-  onDone: () => void
-}) {
-  const [principalId, setPrincipalId] = useState('')
-  const [roleCode, setRoleCode] = useState('')
-  const [scopeId, setScopeId] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-
-  const role = roles.find((r) => r.code === roleCode)
-  const needsScope = role && role.assignable_scope !== 'TENANT'
-
-  const grant = useMutation({
-    mutationFn: () =>
-      rbac.grantMembership({
-        principal_id: principalId,
-        role_code: roleCode,
-        scope_type: role?.assignable_scope ?? 'TENANT',
-        scope_id: needsScope ? scopeId : null,
-      }),
-    onSuccess: () => {
-      setPrincipalId('')
-      setRoleCode('')
-      setScopeId('')
-      onDone()
-    },
-    onError: (e) => onError(e instanceof ApiError ? e.detail : 'Could not grant role'),
-  })
-
-  return (
-    <Card className="space-y-3">
-      <h2 className="text-base font-semibold">Assign a role</h2>
-      <form
-        className="flex flex-wrap items-end gap-2"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault()
-          onError('')
-          setFieldErrors({})
-          const parsed = parseForm(membershipGrantSchema, {
-            principal_id: principalId,
-            role_code: roleCode,
-            scope_type: role?.assignable_scope ?? 'TENANT',
-            scope_id: scopeId,
-          })
-          if (!parsed.ok) {
-            setFieldErrors(parsed.fieldErrors)
-            if (parsed.formError) onError(parsed.formError)
-            return
-          }
-          grant.mutate()
-        }}
-      >
-        <FormField label="User" htmlFor="grant-user" error={fieldErrors.principal_id}>
-          <select
-            id="grant-user"
-            className={cn('field-input min-w-48', fieldErrorClass(Boolean(fieldErrors.principal_id)))}
-            value={principalId}
-            onChange={(e) => setPrincipalId(e.target.value)}
-          >
-            <option value="">Select…</option>
-            {users.map((u) => (
-              <option key={u.user_id} value={u.user_id}>
-                {u.username}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Role" htmlFor="grant-role" error={fieldErrors.role_code}>
-          <select
-            id="grant-role"
-            className={cn('field-input min-w-48', fieldErrorClass(Boolean(fieldErrors.role_code)))}
-            value={roleCode}
-            onChange={(e) => setRoleCode(e.target.value)}
-          >
-            <option value="">Select…</option>
-            {roles
-              .filter((r) => r.status === 'ACTIVE')
-              .map((r) => (
-                <option key={r.role_id} value={r.code}>
-                  {r.code} ({r.assignable_scope})
-                </option>
-              ))}
-          </select>
-        </FormField>
-        {needsScope ? (
-          <FormField
-            label={role?.assignable_scope === 'PROJECT' ? 'Project id' : 'Provider id'}
-            htmlFor="grant-scope"
-            error={fieldErrors.scope_id}
-          >
-            <input
-              id="grant-scope"
-              className={cn('field-input font-mono', fieldErrorClass(Boolean(fieldErrors.scope_id)))}
-              value={scopeId}
-              onChange={(e) => setScopeId(e.target.value)}
-            />
-          </FormField>
-        ) : null}
-        <button type="submit" className="btn-primary px-3 py-2 text-sm" disabled={grant.isPending}>
-          {grant.isPending ? 'Granting…' : 'Grant role'}
-        </button>
-      </form>
-    </Card>
   )
 }

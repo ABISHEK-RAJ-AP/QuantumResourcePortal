@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { cn } from '@/lib/utils'
-import { Card, PanelHeader, RelatedNav } from '@/components/layout/Page'
+import { Card, PanelHeader } from '@/components/layout/Page'
 
 export type RecordTab = {
   id: string
@@ -30,7 +30,7 @@ export function RecordWorkspace({
   activeTab,
   onTabChange,
   nextAction,
-  related,
+  related: _related,
   children,
   sideExtra,
   layout = 'detail',
@@ -42,7 +42,7 @@ export function RecordWorkspace({
   related?: RelatedLink[]
   children: ReactNode
   sideExtra?: ReactNode
-  /** Hub/list pages: tabs + content only — no Next action / Related sidebar. */
+  /** Hub/list pages: tabs + content only — no Next action sidebar. */
   layout?: 'detail' | 'hub'
 }) {
   const hub = layout === 'hub'
@@ -125,12 +125,6 @@ export function RecordWorkspace({
                 </button>
               ) : null}
             </div>
-          </Card>
-        ) : null}
-
-        {related && related.length > 0 ? (
-          <Card className="pt-3 pb-2">
-            <RelatedNav items={related.map((item) => ({ to: item.to, label: item.label, hint: item.hint }))} />
           </Card>
         ) : null}
 

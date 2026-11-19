@@ -6,7 +6,7 @@ import { Link } from 'react-router'
 import { ApiError } from '@/api/client'
 import * as rbac from '@/api/rbac'
 import { PermissionGate } from '@/auth/PermissionGate'
-import { Card, EmptyState, Notice, Page } from '@/components/layout/Page'
+import { Card, EmptyState, Notice, Page, RelatedNav } from '@/components/layout/Page'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 
@@ -30,11 +30,12 @@ export function RolesPage() {
   return (
     <Page
       crumbs={[
-        { label: 'Admin', to: '/qrp/settings' },
+        { label: 'Organization', to: '/qrp/organization' },
+        { label: 'People & access', to: '/qrp/admin/users?tab=roles' },
         { label: 'Roles' },
       ]}
       title="Roles"
-      description="System roles are fixed; create tenant roles from the permission catalogue."
+      description="System roles are fixed; create organization-specific roles from the permission catalogue."
       actions={
         <PermissionGate permission="role:create">
           <Link to="/qrp/admin/roles/new" className="btn-primary px-3 py-2 text-sm">
@@ -50,7 +51,7 @@ export function RolesPage() {
         ) : roles.isError ? (
           <Notice tone="critical">Could not load roles.</Notice>
         ) : (roles.data ?? []).length === 0 ? (
-          <EmptyState title="No roles" body="Create a role to get started." />
+          <EmptyState title="No roles" body="Create an organization-scoped role from the permission catalogue." />
         ) : (
           <div className="scroll-bar-hidden overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -135,6 +136,13 @@ export function RolesPage() {
           </div>
         )}
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/admin/users', label: 'People & access' },
+          { to: '/qrp/organization', label: 'Organization hub' },
+          { to: '/qrp/audit', label: 'Audit trail' },
+        ]}
+      />
       {confirmDialog}
     </Page>
   )

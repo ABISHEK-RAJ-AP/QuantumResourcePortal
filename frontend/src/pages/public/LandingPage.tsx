@@ -1,7 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronDown,
+  ClipboardCheck,
+  Gauge,
+  ScrollText,
+  FileStack,
+  BarChart3,
+  Boxes,
+  Users,
+  Send,
+  Shield,
+  type LucideIcon,
+} from 'lucide-react'
 
+import { LandingChrome } from '@/components/marketing/LandingChrome'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import { GridPulse } from '@/components/ui/grid-pulse'
 import { useTheme } from '@/components/theme/ThemeProvider'
@@ -9,174 +23,239 @@ import { cn } from '@/lib/utils'
 
 const CAPABILITIES = [
   {
+    icon: ClipboardCheck,
     title: 'Stage-gated approvals',
-    body: 'Multi-step review with quota evaluation before authorise — decisions stay on the audit trail.',
+    body: 'Multi-step review with organization quota evaluation before authorise. Every decision is on the audit trail.',
+    span: 2 as const,
   },
   {
+    icon: Gauge,
     title: 'Capacity you can explain',
-    body: 'Daily shot ledger, reservations, and metering rollups for the active institution.',
+    body: 'Daily shot ledger, reservations, and org-wide metering rollups.',
   },
   {
+    icon: ScrollText,
     title: 'Evidence on demand',
-    body: 'Append-only governance events, dispatch attempts, and exports operators can hand to auditors.',
+    body: 'Governance events, dispatch attempts, and exports your auditors can verify.',
   },
 ]
 
-const MODULES = [
-  { title: 'Approvals', body: 'Open queue, stage history, quota gate at decide.' },
-  { title: 'Quotas & metering', body: 'Ledger, caps, connector rollups.' },
-  { title: 'Inventory & pools', body: 'Assets, virtual pools, provider manifests.' },
-  { title: 'Projects & access', body: 'Membership, roles, project-scoped requests.' },
-  { title: 'Dispatch reconcile', body: 'G3 attempt ledger for authorise and reconcile outcomes.' },
-  { title: 'Audit & evidence', body: 'Governance events, snapshots, verification.' },
+const FEATURES = [
+  { icon: FileStack, title: 'Approvals', body: 'Org review queue, stage history, quota gate at decide.' },
+  { icon: BarChart3, title: 'Quotas & metering', body: 'Organization ledger, caps, usage rollups.' },
+  { icon: Boxes, title: 'Inventory & pools', body: 'Fleet catalogue, pools, provider manifests.' },
+  { icon: Users, title: 'Organization & projects', body: 'People & access, roles, project-scoped workloads.' },
+  { icon: Send, title: 'Dispatch reconcile', body: 'Attempt ledger for authorise and reconcile outcomes.' },
+  { icon: Shield, title: 'Audit & evidence', body: 'Append-only governance events and exports.' },
 ]
 
-const WORKFLOW = [
-  { title: 'Submit', body: 'Package a workload from an approved project and submit for review.' },
-  { title: 'Review', body: 'Technical and operations stages follow published policy.' },
-  { title: 'Authorise', body: 'Quota passes; decisions advance the request.' },
-  { title: 'Reconcile', body: 'Dispatch attempts and outcomes land on the audit trail.' },
+const WORKFLOW_STEPS = [
+  { n: '01', title: 'Register', body: 'Create your organization and first administrator, then invite members.' },
+  { n: '02', title: 'Submit', body: 'Open a research project and submit a workload to the org review queue.' },
+  { n: '03', title: 'Review', body: 'Policy stages run at organization scope; quota must pass before authorise.' },
+  { n: '04', title: 'Reconcile', body: 'Dispatch attempts and outcomes land on the org audit trail.' },
 ]
 
 const FAQ = [
   {
     q: 'What is the Quantum Resource Portal?',
-    a: 'C-DAC’s governance workspace for quantum workloads: approvals, capacity, fleet operations, and evidence for one institution at a time.',
+    a: 'CDAC-operated platform: each customer organization gets an isolated tenant with projects, approvals, quotas, inventory, and audit exports.',
   },
   {
     q: 'How do I start a review?',
-    a: 'Sign in, open Approvals, and submit or open a workload on your project policy stages.',
+    a: 'Sign in to your organization, open Approvals, and submit or decide workloads on your project policy stages.',
   },
   {
     q: 'Where is procurement?',
-    a: 'Procurement is not in this release. Register inventory and track capacity in the quota ledger.',
+    a: 'Procurement is not in this release. Register platform inventory and track capacity in the organization quota ledger.',
   },
 ]
+
+function BentoCard({
+  icon: Icon,
+  title,
+  body,
+  span,
+}: {
+  icon: LucideIcon
+  title: string
+  body: string
+  span?: 1 | 2
+}) {
+  return (
+    <article
+      className={cn(
+        'landing-bento__card qrp-landing-tile--grid group',
+        span === 2 && 'landing-bento__card--span-2',
+      )}
+    >
+      <Icon className="qrp-landing-tile__icon" aria-hidden />
+      <h3 className="qrp-landing-tile__title">{title}</h3>
+      <p className="qrp-landing-tile__body">{body}</p>
+    </article>
+  )
+}
 
 export function LandingPage() {
   const { theme } = useTheme()
   const dark = theme === 'dark'
   const [openFaq, setOpenFaq] = useState(0)
+  const mainRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const root = mainRef.current
+    if (!root) return undefined
+    const nodes = root.querySelectorAll('.qrp-landing-reveal')
+    if (!nodes.length) return undefined
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduce) {
+      nodes.forEach((n) => n.classList.add('is-visible'))
+      return undefined
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add('is-visible')
+        })
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+    )
+    nodes.forEach((n) => io.observe(n))
+    return () => io.disconnect()
+  }, [])
 
   return (
     <PublicShell>
+      <LandingChrome />
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="qrp-landing-bg-grid absolute inset-0 z-0" cell={40} ambient={0.45} maxLit={36} reach={1.5} />
-        <main id="main-content" className="relative z-10 flex flex-col">
-          <section className="qrp-landing-hero flex min-h-[min(72dvh,720px)] w-full flex-col items-center justify-center px-6 py-14 text-center sm:px-10 sm:py-20 lg:py-24">
-            <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
-              <p className="qrp-landing-hero__eyebrow">C-DAC · Quantum Resource Portal</p>
-              <h1 className="qrp-landing-hero__title type-trim text-balance">
-                Govern workloads from submit to reconcile
-              </h1>
-              <p className="qrp-landing-hero__lead hyphenate mx-auto max-w-xl text-pretty">
-                Approvals, quotas, fleet, dispatch, and audit exports for one institution.
-              </p>
-              <div className="qrp-landing-hero__actions mt-10">
-                <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
-                  Sign in
-                  <ArrowRight className="size-5" aria-hidden />
-                </Link>
+        <section className="qrp-landing-hero relative z-10 flex min-h-[min(88dvh,880px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
+          <p className="qrp-landing-hero__eyebrow">Quantum Resource Portal</p>
+          <h1 className="qrp-landing-hero__title type-trim text-balance max-w-5xl">
+            Quantum resource governance for{' '}
+            <span className="qrp-landing-hero__accent">every organization on the platform</span>
+          </h1>
+          <p className="qrp-landing-hero__lead hyphenate mx-auto mt-8 max-w-3xl text-pretty">
+            CDAC operates the shared provider fabric; your org gets isolated projects, approvals, quotas, metering, and
+            audit exports — Cert Studio–grade access and Q-TeleScope–grade ops density.
+          </p>
+          <div className="qrp-landing-hero__actions mt-12">
+            <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
+              Sign in
+              <ArrowRight className="size-5" aria-hidden />
+            </Link>
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Need an account?{' '}
+            <Link to="/register" className="fs-link font-semibold text-primary">
+              Register your organization
+            </Link>
+          </p>
+          <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-32" aria-hidden />
+        </section>
+
+        <main id="main-content" ref={mainRef} className="qrp-landing-main relative z-10 space-y-24 pb-24 lg:space-y-28">
+          <section id="capabilities" className="scroll-mt-28 qrp-landing-reveal">
+            <div className="qrp-landing-section-head qrp-landing-section-head--split">
+              <div>
+                <span className="qrp-landing-kicker qrp-landing-kicker--accent">Console</span>
+                <h2 className="qrp-landing-section__title mt-1">What you get</h2>
               </div>
-              <p className="mt-5 text-sm text-muted-foreground">
-                Need an account?{' '}
-                <Link to="/register" className="fs-link font-semibold text-primary">
-                  Request access
-                </Link>
+              <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+                Per-organization policy stages, capacity ledgers, and exportable records — Q-TeleScope ops density.
               </p>
             </div>
-            <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-24" aria-hidden />
+            <div className="landing-bento mt-10">
+              {CAPABILITIES.map((item) => (
+                <BentoCard key={item.title} {...item} />
+              ))}
+            </div>
           </section>
 
-          <div className="qrp-landing-main space-y-0">
-            <section id="capabilities" className="scroll-mt-28">
-              <div className="qrp-landing-section-head">
-                <h2 className="qrp-landing-section__title">What operators run here</h2>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                  Request, review, authorise, and reconcile with exportable records.
-                </p>
-              </div>
-              <div className="mt-8 flex flex-col gap-3">
-                <article className="qrp-landing-tile qrp-landing-tile--lead">
-                  <h3 className="text-lg font-semibold tracking-tight text-foreground">{CAPABILITIES[0].title}</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{CAPABILITIES[0].body}</p>
+          <section id="features" className="scroll-mt-28 qrp-landing-reveal">
+            <div className="mx-auto max-w-3xl space-y-2 text-center">
+              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Modules</span>
+              <h2 className="qrp-landing-section__title">Approvals, quotas, audit</h2>
+              <p className="text-base text-muted-foreground">Fleet inventory, dispatch, and project access.</p>
+            </div>
+            <div className="landing-bento mt-12">
+              {FEATURES.map((item) => (
+                <BentoCard key={item.title} {...item} />
+              ))}
+            </div>
+          </section>
+
+          <section id="workflow" className="qrp-landing-workflow scroll-mt-28 qrp-landing-reveal p-8 sm:p-12">
+            <div className="max-w-2xl">
+              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Workflow</span>
+              <h2 className="qrp-landing-section__title mt-1">From request to audit</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Submit, review, authorise, then reconcile dispatch.</p>
+            </div>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {WORKFLOW_STEPS.map((s) => (
+                <article key={s.n} className="qrp-landing-tile qrp-landing-tile--step">
+                  <span className="qrp-landing-tile__step">{s.n}</span>
+                  <h3 className="qrp-landing-tile__title">{s.title}</h3>
+                  <p className="qrp-landing-tile__body">{s.body}</p>
                 </article>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {CAPABILITIES.slice(1).map((item) => (
-                    <article key={item.title} className="qrp-landing-tile">
-                      <h3 className="text-base font-semibold tracking-tight text-foreground">{item.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </section>
+              ))}
+            </div>
+          </section>
 
-            <section id="modules" className="scroll-mt-28">
-              <div className="qrp-landing-section-head max-w-3xl">
-                <h2 className="qrp-landing-section__title">Workspace routes</h2>
-              </div>
-              <div className="mt-8 qrp-landing-module-list">
-                {MODULES.map((item) => (
-                  <div key={item.title} className="qrp-landing-module-row">
-                    <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.body}</p>
+          <section id="faq" className="scroll-mt-28 qrp-landing-reveal mx-auto max-w-3xl">
+            <div className="space-y-2 text-center">
+              <span className="qrp-landing-kicker qrp-landing-kicker--accent">FAQ</span>
+              <h2 className="qrp-landing-section__title">Questions</h2>
+            </div>
+            <div className="mt-10 divide-y divide-border border-y border-border">
+              {FAQ.map((item, idx) => {
+                const open = openFaq === idx
+                const answerId = `faq-answer-${idx}`
+                return (
+                  <div key={item.q}>
+                    <button
+                      type="button"
+                      className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      onClick={() => setOpenFaq(open ? -1 : idx)}
+                      aria-expanded={open}
+                      aria-controls={answerId}
+                    >
+                      <span className="type-title-clamp">{item.q}</span>
+                      <ChevronDown
+                        className={cn(
+                          'size-5 shrink-0 text-muted-foreground transition-transform duration-200',
+                          open && 'rotate-180 text-primary',
+                        )}
+                      />
+                    </button>
+                    {open ? (
+                      <p id={answerId} className="hyphenate pb-6 text-sm leading-relaxed text-muted-foreground">
+                        {item.a}
+                      </p>
+                    ) : null}
                   </div>
-                ))}
-              </div>
-            </section>
+                )
+              })}
+            </div>
+          </section>
 
-            <section id="workflow" className="scroll-mt-28">
-              <div className="qrp-landing-section-head max-w-2xl">
-                <h2 className="qrp-landing-section__title">From submit to reconcile</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Stages follow policy configured for your institution.</p>
+          <section className="qrp-landing-cta qrp-landing-reveal p-10 text-center sm:p-14">
+            <div className="mx-auto max-w-2xl space-y-4">
+              <h2 className="qrp-landing-section__title">Open the workspace</h2>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Sign in to your organization workspace, or register a new org on lab deployments.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 pt-4">
+                <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
+                  Sign in
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
+                <Link to="/register" className="btn-secondary landing-hero-cta inline-flex items-center gap-2">
+                  Register organization
+                </Link>
               </div>
-              <div className="mt-8 qrp-landing-steps">
-                {WORKFLOW.map((step) => (
-                  <div key={step.title} className="qrp-landing-step">
-                    <h3 className="text-base font-semibold text-foreground">{step.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section id="faq" className="scroll-mt-28 max-w-3xl">
-              <div className="qrp-landing-section-head border-b-0 pb-0">
-                <h2 className="qrp-landing-section__title">Before you sign in</h2>
-              </div>
-              <div className="mt-6 divide-y divide-border border-y border-border">
-                {FAQ.map((item, idx) => {
-                  const open = openFaq === idx
-                  const answerId = `faq-answer-${idx}`
-                  return (
-                    <div key={item.q}>
-                      <button
-                        type="button"
-                        className="flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                        onClick={() => setOpenFaq(open ? -1 : idx)}
-                        aria-expanded={open}
-                        aria-controls={answerId}
-                      >
-                        <span className="type-title-clamp">{item.q}</span>
-                        <ChevronDown
-                          className={cn(
-                            'size-5 shrink-0 text-muted-foreground transition-transform',
-                            open && 'rotate-180 text-primary',
-                          )}
-                        />
-                      </button>
-                      {open ? (
-                        <p id={answerId} className="hyphenate pb-5 text-sm leading-relaxed text-muted-foreground">
-                          {item.a}
-                        </p>
-                      ) : null}
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          </div>
+            </div>
+          </section>
         </main>
       </div>
     </PublicShell>

@@ -36,6 +36,14 @@ sudo -u postgres psql -c "CREATE DATABASE qre_test OWNER qre_app;"
 make setup        # venv + pip install, npm ci, creates backend/.env
 make migrate      # alembic upgrade head
 
+Bootstrap your lab tenant once (if login has no users yet), then load demo rows — or rely on `QRE_AUTO_SEED_DEMO=true` when the API starts:
+
+```bash
+cd backend && QRE_ENV=lab .venv/bin/python -m qre bootstrap --tenant-code CDAC --tenant-name "C-DAC Chennai" \
+  --admin-username admin --admin-display-name "Platform Admin" --password 'choose-a-strong-password'
+make seed-demo    # optional manual re-load; idempotent
+```
+
 If migration **0010** failed halfway (`catalogue_provider` exists, `catalogue_backend` missing), `git pull` then:
 
 ```bash

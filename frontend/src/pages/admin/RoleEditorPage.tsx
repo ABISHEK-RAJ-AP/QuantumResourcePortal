@@ -10,12 +10,17 @@ import { ApiError } from '@/api/client'
 import * as rbac from '@/api/rbac'
 import { FieldAlert } from '@/components/auth/FormAlerts'
 import { FormField, fieldErrorClass } from '@/components/forms/FormField'
-import { Card, Notice, Page } from '@/components/layout/Page'
+import { Card, Notice, Page, RelatedNav } from '@/components/layout/Page'
 import { parseForm } from '@/lib/validation/parseForm'
 import { roleCreateSchema, roleEditSchema } from '@/lib/validation/schemas'
 import { cn } from '@/lib/utils'
 
 const SCOPES = ['TENANT', 'PROJECT', 'PROVIDER'] as const
+const SCOPE_LABELS: Record<(typeof SCOPES)[number], string> = {
+  TENANT: 'Organization',
+  PROJECT: 'Research project',
+  PROVIDER: 'Provider',
+}
 
 export function RoleEditorPage() {
   const { roleId } = useParams()
@@ -117,12 +122,13 @@ export function RoleEditorPage() {
   return (
     <Page
       crumbs={[
-        { label: 'Admin', to: '/qrp/settings' },
-        { label: 'Roles', to: '/qrp/admin/roles' },
+        { label: 'Organization', to: '/qrp/organization' },
+        { label: 'People & access', to: '/qrp/admin/users?tab=roles' },
+        { label: 'Roles', to: '/qrp/admin/users?tab=roles' },
         { label: isNew ? 'New role' : readOnly ? 'View role' : 'Edit role' },
       ]}
       title={isNew ? 'New role' : readOnly ? 'Role (system)' : 'Edit role'}
-      description="Choose a scope and the permissions this role grants, grouped by module."
+      description="Organization role — choose scope (organization, project, or provider) and permissions, grouped by module."
     >
       {error && <Notice tone="critical">{error}</Notice>}
       {readOnly && (
@@ -151,7 +157,7 @@ export function RoleEditorPage() {
             >
               {SCOPES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {SCOPE_LABELS[s]}
                 </option>
               ))}
             </select>
@@ -245,6 +251,13 @@ export function RoleEditorPage() {
           </button>
         </div>
       )}
+      <RelatedNav
+        items={[
+          { to: '/qrp/admin/users?tab=roles', label: 'All roles' },
+          { to: '/qrp/admin/users', label: 'People & access' },
+          { to: '/qrp/organization', label: 'Organization hub' },
+        ]}
+      />
     </Page>
   )
 }

@@ -11,7 +11,7 @@ const SECTIONS: { title: string; links: FooterLink[] }[] = [
     links: [
       { name: 'Overview', to: '/' },
       { name: 'Capabilities', href: '/#capabilities' },
-      { name: 'Modules', href: '/#modules' },
+      { name: 'Modules', href: '/#features' },
       { name: 'Sign in', to: '/login' },
     ],
   },
@@ -21,14 +21,13 @@ const SECTIONS: { title: string; links: FooterLink[] }[] = [
       { name: 'Workflow', href: '/#workflow' },
       { name: 'FAQ', href: '/#faq' },
       { name: 'Register', to: '/register' },
-      { name: 'Platform status', to: '/system/status' },
     ],
   },
   {
     title: 'Governance',
     links: [
       { name: 'Approval stages', href: '/#workflow' },
-      { name: 'Module map', href: '/#modules' },
+      { name: 'Module map', href: '/#features' },
       { name: 'Open workspace', to: '/login' },
     ],
   },
@@ -135,9 +134,6 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
             </a>
             <Link to="/login" className={cn('font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
               Sign in
-            </Link>
-            <Link to="/system/status" className={cn('font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
-              Status
             </Link>
           </div>
         </div>

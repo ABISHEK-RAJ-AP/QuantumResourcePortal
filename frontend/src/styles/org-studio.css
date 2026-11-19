@@ -1,0 +1,39 @@
+/**
+ * Organization hub — Cert Studio `org-section-*` visual language (subset).
+ */
+
+.org-section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+}
+
+.org-section-card {
+  border: 1px solid color-mix(in oklch, var(--primary) 10%, var(--border));
+  border-radius: var(--radius-lg, 0.75rem);
+  background: color-mix(in oklch, var(--card) 94%, var(--accent));
+  padding: clamp(1.25rem, 2vw, 1.5rem);
+  box-shadow: var(--shadow-card, 0 1px 2px rgb(23 32 51 / 0.04));
+}
+
+.org-section-card__head {
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.org-section-card__title {
+  margin: 0;
+  font-size: var(--type-section, 1.0625rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.org-section-card__lead {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.org-glass {
+  backdrop-filter: blur(6px);
+}

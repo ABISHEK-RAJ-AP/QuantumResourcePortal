@@ -19,7 +19,7 @@ export function ForgotPasswordPage() {
       footer={<AuthFooterLinks showRegister />}
     >
       <p className="text-base leading-relaxed text-muted-foreground">
-        Self-service email reset is not enabled on this deployment. Contact your platform administrator for a reset token,
+        Self-service email reset is not enabled on this deployment. Contact your organization administrator for a reset token,
         then use Set new password with that token. Image verification below matches the sign-in flow when self-service is
         turned on later.
       </p>

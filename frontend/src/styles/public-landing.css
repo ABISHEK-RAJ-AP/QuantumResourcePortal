@@ -1,4 +1,65 @@
-/* Public landing — ops restraint (Q-TeleScope parity, anti template-card stacking) */
+/* Public landing — Q-TeleScope marketing parity */
+
+@media (prefers-reduced-motion: no-preference) {
+  .qrp-landing-reveal {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+
+  .qrp-landing-reveal.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.qrp-landing-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.qrp-landing-scroll-progress__bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: var(--primary);
+  transition: transform 0.12s ease-out;
+}
+
+.qrp-landing-back-top {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--foreground) 12%, transparent);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.qrp-landing-back-top:hover {
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qrp-landing-back-top:hover {
+    transform: none;
+  }
+}
 
 .qrp-landing-main {
   margin-inline: auto;
@@ -50,11 +111,15 @@
 }
 
 .qrp-landing-kicker {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: normal;
-  text-transform: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--muted-foreground);
+}
+
+.qrp-landing-kicker--accent {
+  color: var(--primary);
 }
 
 .qrp-landing-panel {
@@ -70,17 +135,128 @@
   }
 }
 
-/* Flat tiles — one border, no multiply overlay */
 .qrp-landing-tile {
-  border: 1px solid var(--border-alpha, var(--border));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
   border-radius: var(--radius-inner, 0.5rem);
-  background: var(--card);
-  padding: 1.25rem 1.5rem;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  padding: 1.35rem 1.25rem 1.2rem;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.qrp-landing-tile--lead {
-  border-color: color-mix(in srgb, var(--primary) 18%, var(--border));
-  background: var(--card);
+.qrp-landing-tile--grid:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+  box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qrp-landing-tile--grid:hover {
+    transform: none;
+  }
+}
+
+.qrp-landing-tile__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.85rem;
+  color: var(--primary);
+}
+
+.qrp-landing-tile__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.qrp-landing-tile__body {
+  margin: 0.55rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.qrp-landing-tile__step {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+/* Cert Studio landing-bento (marketing only) */
+.landing-bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .landing-bento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.landing-bento__card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: clamp(1.25rem, 2.5vw, 1.5rem);
+  background: color-mix(in srgb, var(--card) 96%, var(--accent));
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing-bento__card:hover {
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+    box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--primary) 22%, transparent);
+    transform: translateY(-2px);
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-bento__card--span-2 {
+    grid-column: span 2;
+  }
+}
+
+.landing-bento__card .qrp-landing-tile__icon {
+  margin-bottom: 0.75rem;
+}
+
+.qrp-landing-workflow {
+  border-radius: var(--radius-outer, 0.75rem);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 8%, transparent),
+    transparent 38%
+  );
+}
+
+.qrp-landing-cta {
+  border-radius: var(--radius-outer, 0.75rem);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--primary) 10%, transparent),
+    transparent 50%
+  );
 }
 
 .qrp-landing-steps {

@@ -8,10 +8,8 @@ from qre.core.config import APP_VERSION, Settings
 # Decision D-13: verification/enrolment endpoints not shipped; flag stays explicit for readiness.
 MFA_VERIFICATION_AVAILABLE = False
 PASSWORD_SELF_SERVICE_AVAILABLE = False
-SELF_REGISTRATION_AVAILABLE = False
-
-
 def build_auth_capabilities(settings: Settings) -> dict:
+    self_registration = settings.org_self_register_enabled
     return {
         "version": APP_VERSION,
         "profile": settings.env.value,
@@ -20,7 +18,8 @@ def build_auth_capabilities(settings: Settings) -> dict:
         "mfa_verification_available": MFA_VERIFICATION_AVAILABLE,
         "mfa_enrollment_available": False,
         "password_self_service": PASSWORD_SELF_SERVICE_AVAILABLE,
-        "self_registration": SELF_REGISTRATION_AVAILABLE,
+        "self_registration": self_registration,
+        "organization_registration": self_registration,
         "federation": {"oidc": False, "saml": False, "local_login": True},
         "features": {
             "procurement_entitlements": settings.feature_svc05_enabled,

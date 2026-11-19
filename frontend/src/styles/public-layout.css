@@ -52,6 +52,14 @@
   gap: 0.5rem;
 }
 
+.qrp-public-header__actions--cluster {
+  gap: 0.625rem;
+}
+
+.qrp-public-header__signin {
+  align-self: center;
+}
+
 /* Footer — Q-TeleScope: left-aligned blocks; copyright left / links right */
 .qrp-public-footer__inner {
   width: 100%;
@@ -186,7 +194,7 @@
 }
 
 .qrp-auth-form-footer {
-  text-align: center;
+  text-align: left;
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
@@ -195,7 +203,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem 1rem;
-  text-align: center;
+  text-align: left;
 }

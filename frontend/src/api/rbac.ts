@@ -10,6 +10,10 @@ export interface Me {
   authenticated: boolean
   principal_id: string | null
   tenant_id: string | null
+  tenant_code?: string | null
+  tenant_name?: string | null
+  username?: string | null
+  display_name?: string | null
   roles: string[]
   permissions: string[]
 }

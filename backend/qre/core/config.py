@@ -77,6 +77,12 @@ class Settings(BaseSettings):
 
     feature_svc05_enabled: bool = False  # Procurement & Entitlements — Pending Approval (OI-01)
     rls_enabled: bool = False  # PostgreSQL RLS second layer — Pending Approval (PD-44)
+    # Lab: allow stepped /register to create a new tenant + first org admin (Cert Studio pattern).
+    org_self_register_enabled: bool = False
+
+    # Lab demo dataset (PostgreSQL) — see qre/seed/seed_demo.py
+    auto_seed_demo: bool = True
+    demo_tenant_code: str = "CDAC"
 
     error_type_base: str = "https://qre.cdac.in/errors/"  # placeholder base URI (LLD §10.2)
 
@@ -109,7 +115,11 @@ class Settings(BaseSettings):
         # Lab profile: CAPTCHA on for demos (SRS §4.2.1); production uses QRE_CAPTCHA_ENABLED.
         if self.is_lab:
             self.captcha_enabled = True
+            if not self.org_self_register_enabled:
+                self.org_self_register_enabled = True
         if self.env is Profile.PRODUCTION:
+            if self.auto_seed_demo:
+                raise ValueError("QRE_AUTO_SEED_DEMO must be false in production")
             # LLD §13.9: production requires explicit MFA setting, TLS DB URL and CORS list.
             problems = []
             if "mfa_required" not in self.model_fields_set:

@@ -206,7 +206,7 @@ const Widget = memo(function Widget({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', visualDuration: 0.5, bounce: 0.1, delay }}
-        className={`relative isolate flex h-full w-full flex-col overflow-hidden rounded-[var(--widget-radius)] bg-card text-card-foreground ring-inset transition-shadow duration-300 ${
+        className={`craft-card relative isolate flex h-full w-full flex-col overflow-hidden rounded-[var(--widget-radius)] bg-card text-card-foreground ring-inset transition-shadow duration-300 ${
           landed ? 'ring-2 ring-foreground/25' : 'ring-1 ring-border'
         }`}
         style={{ clipPath: 'inset(0 round var(--widget-radius))' }}

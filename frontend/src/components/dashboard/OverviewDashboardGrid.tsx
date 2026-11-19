@@ -229,6 +229,7 @@ export function OverviewDashboardGrid({
           >
             <DataTable
               caption="Review queue"
+              paginate={false}
               rows={recentRows.slice(0, 8)}
               emptyTitle="Queue clear"
               emptyBody="—"
@@ -274,6 +275,7 @@ export function OverviewDashboardGrid({
             ) : (
               <DataTable
                 caption="Dispatch exceptions"
+                paginate={false}
                 rows={unresolvedRows.slice(0, 6)}
                 columns={[
                   {
@@ -327,6 +329,7 @@ export function OverviewDashboardGrid({
             ) : (
               <DataTable
                 caption="Recent governance decisions"
+                paginate={false}
                 rows={activityRows.slice(0, 8)}
                 emptyTitle="No activity"
                 emptyBody="—"
@@ -365,7 +368,7 @@ export function OverviewDashboardGrid({
       className="overview-dashboard-grid"
       items={widgetItems}
       maxColumns={4}
-      cellSize={292}
+      cellSize={320}
       gap={12}
       radius={12}
       editable

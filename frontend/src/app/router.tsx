@@ -13,7 +13,6 @@ import {
   DispatchPage,
   EntitlementsPage,
   NotificationsPage,
-  ImportAssetsPage,
   IncidentDetailPage,
   IncidentsPage,
   JobDetailPage,
@@ -25,7 +24,6 @@ import {
   RegisterAssetPage,
   ReconciliationPage,
   SchedulingPage,
-  SettingsPage,
   SlaPage,
 } from '@/pages/workspace/continue'
 import {
@@ -50,7 +48,6 @@ import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
 import { MfaPage } from '@/pages/public/MfaPage'
 import { PrivacyPage, TermsPage } from '@/pages/public/LegalPage'
-import { StatusPage } from '@/pages/system/StatusPage'
 import { RouteError } from '@/components/routing/RouteError'
 import { ProtectedRoute } from '@/auth/ProtectedRoute'
 import { useAuth } from '@/auth/hooks'
@@ -60,6 +57,8 @@ import { PermissionsPage } from '@/pages/admin/PermissionsPage'
 import { UsersAdminPage } from '@/pages/admin/UsersAdminPage'
 import { UserPermissionsPage } from '@/pages/admin/UserPermissionsPage'
 import { ProfilePage } from '@/pages/system/ProfilePage'
+import { SettingsPage } from '@/pages/system/SettingsPage'
+import { OrganizationHubPage } from '@/pages/organization/OrganizationHubPage'
 import { AccessDeniedPage } from '@/pages/system/AccessDeniedPage'
 
 function PublicOnly({ children }: { children: ReactNode }) {
@@ -121,16 +120,20 @@ export const router = createBrowserRouter([
           { path: '/qrp/pools', element: <Navigate to="/qrp/inventory?tab=pools" replace /> },
           { path: '/qrp/connectors', element: <ConnectorsPage /> },
           { path: '/qrp/evidence', element: <Navigate to="/qrp/audit" replace /> },
-          { path: '/qrp/admin/roles', element: <Navigate to="/qrp/admin/users" replace /> },
-          { path: '/qrp/admin/permissions', element: <Navigate to="/qrp/admin/users" replace /> },
+          { path: '/qrp/admin/roles', element: <Navigate to="/qrp/admin/users?tab=roles" replace /> },
+          { path: '/qrp/admin/permissions', element: <Navigate to="/qrp/admin/users?tab=catalogue" replace /> },
           { path: '/qrp/approvals', element: <ApprovalsPage /> },
           { path: '/qrp/approvals/history', element: <ApprovalHistoryPage /> },
           { path: '/qrp/approvals/:workloadId', element: <ApprovalDetailPage /> },
           { path: '/qrp/projects', element: <ProjectsPage /> },
           { path: '/qrp/projects/:projectId', element: <ProjectDetailPage /> },
           { path: '/qrp/inventory', element: <InventoryPage /> },
-          { path: '/qrp/inventory/new', element: <RegisterAssetPage /> },
-          { path: '/qrp/inventory/import', element: <ImportAssetsPage /> },
+          { path: '/qrp/inventory/register', element: <RegisterAssetPage /> },
+          { path: '/qrp/inventory/new', element: <Navigate to="/qrp/inventory/register?mode=single&step=method" replace /> },
+          {
+            path: '/qrp/inventory/import',
+            element: <Navigate to="/qrp/inventory/register?mode=bulk&step=details" replace />,
+          },
           { path: '/qrp/inventory/:assetId', element: <AssetDetailPage /> },
           { path: '/qrp/pools/:poolId', element: <PoolDetailPage /> },
           { path: '/qrp/providers', element: <ProvidersPage /> },
@@ -157,6 +160,8 @@ export const router = createBrowserRouter([
           { path: '/qrp/procurement', element: <ProcurementPage /> },
           { path: '/qrp/entitlements', element: <EntitlementsPage /> },
           { path: '/qrp/settings', element: <SettingsPage /> },
+          { path: '/qrp/organization', element: <OrganizationHubPage /> },
+          { path: '/qrp/settings/organization', element: <Navigate to="/qrp/organization" replace /> },
           { path: '/qrp/profile', element: <ProfilePage /> },
           // RBAC administration (RBAC-6) — each route is permission-gated; the backend also enforces.
           {
@@ -208,7 +213,6 @@ export const router = createBrowserRouter([
             ),
           },
           { path: '/403', element: <AccessDeniedPage /> },
-          { path: '/system/status', element: <StatusPage framed /> },
         ],
       },
     ],

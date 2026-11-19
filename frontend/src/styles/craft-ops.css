@@ -31,7 +31,7 @@
   /* Fluid type */
   --type-page-title: clamp(1.2rem, 1.05rem + 0.55vw, 1.65rem);
   --type-section: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
-  --type-kpi: clamp(1.35rem, 1.2rem + 0.45vw, 1.75rem);
+  --type-kpi: clamp(1.5rem, 1.35rem + 0.55vw, 2rem);
 
   /* Depth (light) */
   --shadow-card: 0 1px 0 oklch(0.32 0.04 264 / 0.04), 0 8px 24px oklch(0.32 0.04 264 / 0.07);
@@ -207,34 +207,6 @@
   border-color: var(--border-alpha);
 }
 
-.overview-kpi-tile--success,
-.overview-kpi-tile--warning,
-.overview-kpi-tile--critical {
-  position: relative;
-  isolation: isolate;
-}
-
-.overview-kpi-tile--success::before,
-.overview-kpi-tile--warning::before,
-.overview-kpi-tile--critical::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--brand-gradient-multiply);
-  mix-blend-mode: multiply;
-  opacity: 0.28;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.overview-kpi-tile--success > *,
-.overview-kpi-tile--warning > *,
-.overview-kpi-tile--critical > * {
-  position: relative;
-  z-index: 1;
-}
-
 .overview-kpi-tile__label {
   font-variant-caps: all-small-caps;
   letter-spacing: 0.1em;
@@ -291,7 +263,6 @@
     var(--background);
 }
 
-.kpi-rail__viewport,
 .scroll-fade-x {
   mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
 }

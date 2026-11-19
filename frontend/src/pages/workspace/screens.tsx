@@ -21,6 +21,7 @@ import { OverviewDashboardGrid } from '@/components/dashboard/OverviewDashboardG
 import { OverviewKpiScroll, type OverviewKpiItem } from '@/components/dashboard/OverviewKpiScroll'
 import { DataState } from '@/components/data/DataState'
 import { DataTable, type DataTableColumn } from '@/components/data/DataTable'
+import { PaginatedSlice } from '@/components/data/PaginatedSlice'
 import { useNearestTableCaption } from '@/components/data/table-caption-context'
 import { useOptionalPageChromeTitle } from '@/components/layout/page-context'
 import { formatApiError } from '@/lib/apiMessage'
@@ -153,6 +154,7 @@ const CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var
 
 export function OverviewPage() {
   const { user } = useAuth()
+  const orgLabel = user?.tenant_name || user?.tenant_code || 'your organization'
   const focus = overviewFocus(user?.roles?.[0] || 'Operator')
   const pollMs = useDemoOperationalPolling()
   const summary = useQuery({
@@ -335,7 +337,7 @@ export function OverviewPage() {
         { label: 'Home' },
       ]}
       title="Home"
-      description="Governance, capacity, and operations."
+      description={`Organization overview for ${orgLabel} — governance, capacity, and operations.`}
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
       <OverviewKpiScroll items={kpiRail} />
@@ -361,10 +363,11 @@ export function OverviewPage() {
       />
       <RelatedNav
         items={[
+          { to: '/qrp/organization', label: 'Organization' },
           { to: '/qrp/approvals', label: 'Review queue' },
           { to: '/qrp/centre', label: 'Operations centre' },
           { to: '/qrp/projects', label: 'Projects' },
-          { to: '/qrp/settings', label: 'Settings' },
+          { to: '/qrp/metering', label: 'Metering' },
         ]}
       />
     </Page>
@@ -449,7 +452,7 @@ export function ApprovalsPage() {
         { label: 'Review queue', to: '/qrp/approvals' },
       ]}
       title="Review Queue"
-      description="Approvals before holds or dispatch."
+      description="Organization approval queue — workloads from research projects, staged review before quota authorise and dispatch."
       actions={
         nextRow?.workload_id ? (
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
@@ -465,9 +468,9 @@ export function ApprovalsPage() {
     >
       {projectId ? (
         <Notice tone="warning">
-          <span className="font-medium text-foreground">Project filter active</span>
+          <span className="font-medium text-foreground">Research project filter</span>
           <p className="mt-1">
-            Showing requests for{' '}
+            Organization queue scoped to project{' '}
             <CopyableId value={projectId} keep={12} />{' '}
             <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectId}`}>
               Open project hub
@@ -479,21 +482,11 @@ export function ApprovalsPage() {
         </Notice>
       ) : null}
       <KpiStrip className="xl:grid-cols-5">
-        <button type="button" className="text-start" onClick={() => setApprovalFilter('queue')}>
-          <MetricTile label="Needs review" value={summary.data?.queue} tone="primary" />
-        </button>
-        <button type="button" className="text-start" onClick={() => setApprovalFilter('in_review')}>
-          <MetricTile label="In review" value={counts.in_review} tone="warning" />
-        </button>
-        <button type="button" className="text-start" onClick={() => setApprovalFilter('approved')}>
-          <MetricTile label="Approved" value={counts.approved} tone="success" />
-        </button>
-        <button type="button" className="text-start" onClick={() => setApprovalFilter('rejected')}>
-          <MetricTile label="Rejected" value={counts.rejected} tone="critical" />
-        </button>
-        <button type="button" className="text-start" onClick={() => setApprovalFilter('mine')}>
-          <MetricTile label="Mine" value={filter === 'mine' ? rows.length : '→'} />
-        </button>
+        <MetricTile label="Needs review" value={summary.data?.queue} tone="primary" onClick={() => setApprovalFilter('queue')} />
+        <MetricTile label="In review" value={counts.in_review} tone="warning" onClick={() => setApprovalFilter('in_review')} />
+        <MetricTile label="Approved" value={counts.approved} tone="success" onClick={() => setApprovalFilter('approved')} />
+        <MetricTile label="Rejected" value={counts.rejected} tone="critical" onClick={() => setApprovalFilter('rejected')} />
+        <MetricTile label="Mine" value={filter === 'mine' ? rows.length : '→'} onClick={() => setApprovalFilter('mine')} />
       </KpiStrip>
       {!summary.isPending && !summary.isError && stageChart.some((d) => d.value > 0) ? (
         <ChartPanel title="Stages" empty={false}>
@@ -527,7 +520,11 @@ export function ApprovalsPage() {
           {rows.length === 0 ? (
             <EmptyState
               title="No approvals"
-              body={search.trim() ? 'No rows match search.' : 'Submit a workload from a project.'}
+              body={
+                search.trim()
+                  ? 'No rows match search.'
+                  : 'Create a research project, submit a workload, and it appears here for your organization reviewers.'
+              }
               action={
                 search.trim() ? (
                   <button type="button" className="btn-ghost" onClick={() => setSearch('')}>
@@ -600,6 +597,7 @@ export function ApprovalsPage() {
       </Card>
       <RelatedNav
         items={[
+          { to: '/qrp/organization', label: 'Organization' },
           { to: '/qrp/projects', label: 'Projects' },
           { to: '/qrp/policies', label: 'Policies' },
           { to: '/qrp/reservations', label: 'Reservations' },
@@ -771,7 +769,7 @@ export function ApprovalDetailPage() {
         <span className="flex flex-wrap items-center gap-2">
           <CopyableId value={workloadId} keep={16} />
           <InfoTip label="Approval scope">
-            Decision writes to audit and advances stages. Does not dispatch a provider job. After approved: Schedule hold → authorize dispatch.
+            Organization-scoped decision: writes to audit and advances stages. Does not dispatch a provider job. After approved: schedule hold → authorize dispatch.
           </InfoTip>
           <Link to="/qrp/approvals" className="fs-link text-sm">
             Queue
@@ -825,6 +823,7 @@ export function ApprovalDetailPage() {
                   hint: relatedAttempts.isError ? '—' : `${relatedAttempts.data?.length ?? 0}`,
                 },
                 { to: '/qrp/audit', label: 'Audit' },
+                { to: '/qrp/organization', label: 'Organization', hint: 'Tenant identity' },
               ]}
             >
               {tab === 'overview' && (
@@ -1098,6 +1097,13 @@ export function ApprovalDetailPage() {
           </>
         )}
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/policies', label: 'Policies' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
       {confirmDialog}
     </Page>
   )
@@ -1242,8 +1248,8 @@ export function InventoryPage() {
         <QueryBody query={query}>
           <Table
             rows={rows}
-            emptyTitle="No assets"
-            emptyBody="Register an asset or import a catalogue."
+            emptyTitle="No assets in catalogue"
+            emptyBody="Register organization assets or bulk-import — ties to platform providers and pools."
             columns={[
               {
                 key: 'asset_id',
@@ -1292,15 +1298,15 @@ export function InventoryPage() {
         { label: tab === 'pools' ? 'Pools' : tab === 'backends' ? 'Backends' : 'Catalogue' },
       ]}
       title={tab === 'pools' ? 'Resource pools' : tab === 'backends' ? 'Backends' : 'Inventory catalogue'}
-      description="Register assets and backends before scheduling governance holds."
+      description="Organization fleet catalogue — register assets and backends on the shared provider fabric before scheduling holds."
       actions={
         tab === 'catalogue' ? (
           <span className="flex flex-wrap gap-2">
-            <Link className="btn-primary" to="/qrp/inventory/new">
+            <Link className="btn-primary" to="/qrp/inventory/register">
               Register asset
             </Link>
-            <Link className="btn-ghost" to="/qrp/inventory/import">
-              Import
+            <Link className="btn-ghost" to="/qrp/inventory/register?mode=bulk&step=method">
+              Import CSV
             </Link>
           </span>
         ) : null
@@ -1327,9 +1333,26 @@ export function InventoryPage() {
       {tab === 'catalogue' ? (
         <RelatedNav
           items={[
+            { to: '/qrp/organization', label: 'Organization' },
             { to: '/qrp/providers', label: 'Providers' },
             { to: '/qrp/backends', label: 'Backends hub' },
             { to: '/qrp/pools', label: 'Pools' },
+          ]}
+        />
+      ) : tab === 'pools' ? (
+        <RelatedNav
+          items={[
+            { to: '/qrp/inventory', label: 'Catalogue' },
+            { to: '/qrp/scheduling', label: 'Scheduling' },
+            { to: '/qrp/organization', label: 'Organization' },
+          ]}
+        />
+      ) : tab === 'backends' ? (
+        <RelatedNav
+          items={[
+            { to: '/qrp/inventory', label: 'Catalogue' },
+            { to: '/qrp/jobs?tab=queues', label: 'Queues' },
+            { to: '/qrp/organization', label: 'Organization' },
           ]}
         />
       ) : null}
@@ -1378,7 +1401,7 @@ export function ProvidersPage() {
         { label: 'Providers' },
       ]}
       title="Providers"
-      description="Provider manifests and integration stage — upstream of inventory and connectors."
+      description="Platform provider registry (CDAC-operated fabric) — manifests and integration stage upstream of your org inventory."
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip className="sm:grid-cols-2 lg:grid-cols-4">
@@ -1424,8 +1447,8 @@ export function ProvidersPage() {
         <QueryBody query={query}>
           <Table
             rows={rows}
-            emptyTitle="No providers yet"
-            emptyBody="Providers appear after registration. Open a row to publish a manifest and activate."
+            emptyTitle="No providers in catalogue"
+            emptyBody="Platform operators register providers on the shared fabric; your organization then maps inventory and connectors to them."
             columns={[
               {
                 key: 'provider_name',
@@ -1468,6 +1491,7 @@ export function ProvidersPage() {
           { to: '/qrp/connectors', label: 'Connectors' },
           { to: '/qrp/providers/onboarding', label: 'Onboarding board' },
           { to: '/qrp/inventory', label: 'Inventory' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -1535,7 +1559,7 @@ export function ProjectsPage() {
         { label: 'Projects' },
       ]}
       title="Projects"
-      description="Create projects, submit workloads, and track open reviews per owner."
+      description="Research workspaces inside your organization — workloads and approvals are tied to a project."
       actions={
         <button type="button" className="btn-primary" onClick={() => setCreateOpen(true)}>
           New project
@@ -1666,31 +1690,36 @@ export function ProjectsPage() {
               }
             />
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {rows.map((row) => (
-                <Link
-                  key={String(row.project_id)}
-                  to={`/qrp/projects/${row.project_id}`}
-                  className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:bg-accent"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold">{text(row, 'name')}</p>
-                    <StatusBadge tone={row.is_archived ? 'warning' : 'success'} label={row.is_archived ? 'Archived' : 'Active'} />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{text(row, 'owner_username') || 'No owner'} · {String(row.project_type || '').replace(/_/g, ' ')}</p>
-                  <p className="mt-3 text-sm tabular-nums text-muted-foreground">
-                    {requestByProject.get(String(row.project_id || '')) ?? 0} linked request(s)
-                    {row.submission_lock ? ' · submission locked' : ''}
-                  </p>
-                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{text(row, 'description') || 'Open hub for members, requests, holds, usage.'}</p>
-                </Link>
-              ))}
-            </div>
+            <PaginatedSlice items={rows} pageSize={12}>
+              {(pageRows) => (
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {pageRows.map((row) => (
+                    <Link
+                      key={String(row.project_id)}
+                      to={`/qrp/projects/${row.project_id}`}
+                      className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40 hover:bg-accent"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold">{text(row, 'name')}</p>
+                        <StatusBadge tone={row.is_archived ? 'warning' : 'success'} label={row.is_archived ? 'Archived' : 'Active'} />
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{text(row, 'owner_username') || 'No owner'} · {String(row.project_type || '').replace(/_/g, ' ')}</p>
+                      <p className="mt-3 text-sm tabular-nums text-muted-foreground">
+                        {requestByProject.get(String(row.project_id || '')) ?? 0} linked request(s)
+                        {row.submission_lock ? ' · submission locked' : ''}
+                      </p>
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{text(row, 'description') || 'Open hub for members, requests, holds, usage.'}</p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </PaginatedSlice>
           )}
         </QueryBody>
       </Card>
       <RelatedNav
         items={[
+          { to: '/qrp/organization', label: 'Organization' },
           { to: '/qrp/approvals', label: 'Review queue' },
           { to: '/qrp/policies', label: 'Policies' },
           { to: '/qrp/quotas', label: 'Quotas' },
@@ -1719,7 +1748,7 @@ export function PoliciesPage() {
         { label: 'Policies' },
       ]}
       title="Policies"
-      description="Published approval stages, permissions, and policy version tied to the review queue."
+      description="Organization approval policies — published stages, permissions, and version tied to the review queue."
       actions={
         <Link className="btn-primary" to="/qrp/approvals">
           Review queue
@@ -1787,6 +1816,7 @@ export function PoliciesPage() {
       </QueryBody>
       <RelatedNav
         items={[
+          { to: '/qrp/organization', label: 'Organization' },
           { to: '/qrp/approvals', label: 'Review queue' },
           { to: '/qrp/projects', label: 'Projects' },
           { to: '/qrp/quotas', label: 'Quotas' },
@@ -1836,7 +1866,7 @@ export function QuotasPage() {
         { label: 'Quotas' },
       ]}
       title="Quotas"
-      description="Daily shot ledger and headroom — evaluated before approve on each workload."
+      description="Organization-wide daily shot ledger and headroom — optional drill-down by research project."
       updatedAt={query.dataUpdatedAt}
     >
       {projectId ? (
@@ -1846,7 +1876,7 @@ export function QuotasPage() {
             Project hub
           </Link>
           <button type="button" className="btn-ghost ms-2 text-sm" onClick={clearProject}>
-            Institution-wide
+            Organization-wide
           </button>
         </Notice>
       ) : null}
@@ -1867,7 +1897,7 @@ export function QuotasPage() {
           </Notice>
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricTile label="Cap" value={data.daily_shots_cap} hint="Institution shot budget" />
+          <MetricTile label="Cap" value={data.daily_shots_cap} hint="Organization daily shot budget" />
           <MetricTile label="Used" value={data.used_shots} hint="Completed jobs in window" tone="warning" />
           <MetricTile label="Remaining" value={data.remaining_shots} hint="Headroom before deny" tone="success" />
           <MetricTile
@@ -1935,7 +1965,9 @@ export function QuotasPage() {
               {text(data, 'dimension')}
             </p>
             <p className="text-xs leading-snug text-muted-foreground">{text(data, 'dimension_note')}</p>
-            <p className="text-xs text-muted-foreground">Tenant {text(data, 'tenant_id')}</p>
+            <p className="text-xs text-muted-foreground">
+              Organization <span className="font-mono">{text(data, 'tenant_id')}</span>
+            </p>
             {used === 0 && (
               <EmptyState
                 title="No consumption yet"
@@ -1952,7 +1984,7 @@ export function QuotasPage() {
         <div className="grid gap-4 xl:grid-cols-2">
           <Card>
             <PanelHeader
-              title="By project"
+              title="By research project (optional)"
               action={<span className="text-xs text-muted-foreground tabular-nums">{projects.length} rows</span>}
             >
             <Table
@@ -1994,7 +2026,7 @@ export function QuotasPage() {
             <Table
               rows={entries}
               emptyTitle="No ledger entries"
-              emptyBody="Completed simulation jobs that consume the daily cap appear here with requester and shot count."
+              emptyBody="Organization members' completed simulation jobs that consume the daily cap appear here with requester and shot count."
               columns={[
                 { key: 'project_name', label: 'Project' },
                 { key: 'shots', label: 'Shots', sortable: true },
@@ -2006,6 +2038,14 @@ export function QuotasPage() {
           </Card>
         </div>
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/metering', label: 'Metering' },
+          { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/policies', label: 'Policies' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2103,7 +2143,7 @@ export function ReservationsPage() {
         { label: 'Reservation calendar' },
       ]}
       title="Reservations"
-      description="Governance holds on assets — calendar view; overlaps may need manual resolution."
+      description="Organization governance holds on assets — calendar and list; overlaps may need manual resolution."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/scheduling" className="btn-primary">
@@ -2190,7 +2230,7 @@ export function ReservationsPage() {
             <Table
               rows={rows}
               emptyTitle="No reservations"
-              emptyBody="Request a window to hold capacity for a project resource."
+              emptyBody="Request an organization hold window on an approved project asset from Scheduling."
               columns={[
                 {
                   key: 'reservation_id',
@@ -2266,6 +2306,14 @@ export function ReservationsPage() {
           )}
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/scheduling', label: 'Scheduling' },
+          { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/quotas', label: 'Quotas' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
       {confirmDialog}
     </Page>
   )
@@ -2276,6 +2324,10 @@ const METER_HOURS = [
   { id: '72', label: '72 h' },
   { id: '168', label: '7 d' },
 ] as const
+
+function meterWindowLabel(hours: string) {
+  return METER_HOURS.find((h) => h.id === hours)?.label ?? `${hours} h`
+}
 
 export function MeteringPage() {
   const [hours, setHours] = useState<(typeof METER_HOURS)[number]['id']>('24')
@@ -2289,22 +2341,26 @@ export function MeteringPage() {
   })
   const rows = asList(query.data)
   const envelope = query.data ?? {}
-  const sampleCount = Number(envelope.sample_count ?? rows.length)
+  const sampleCount = Number(envelope.sample_count ?? 0)
   const dimensions = new Set(rows.map((row) => String(row.dimension || '')).filter(Boolean)).size
   const metrics = new Set(rows.map((row) => String(row.metric || '')).filter(Boolean)).size
+  const sinceRaw = envelope.since != null ? String(envelope.since) : ''
+  const sinceLabel = sinceRaw ? formatDateTime(sinceRaw) : '—'
+  const hasRollups = rows.length > 0
   const chart = useMemo(() => {
-    const source = asList(query.data)
-    return source
+    return rows
       .map((row) => ({
-        name: `${String(row.metric || '?')}`.slice(0, 18),
+        name: String(row.metric || 'unknown').replace(/_/g, ' '),
+        fullName: String(row.metric || ''),
         value: Number(row.sum_value),
         samples: Number(row.available_samples) || 0,
         unit: String(row.unit || ''),
+        dimension: String(row.dimension || ''),
       }))
       .filter((d) => Number.isFinite(d.value))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 8)
-  }, [query.data])
+  }, [rows])
+
   return (
     <Page
       crumbs={[
@@ -2312,88 +2368,191 @@ export function MeteringPage() {
         { label: 'Metering' },
       ]}
       title="Metering"
-      description="Connector rollups and usage samples — complements quota ledger and audit exports."
+      description="Organization usage rollups from approved workloads and provider jobs in the selected window (not quota ledger balances)."
       actions={
-        <span className="flex flex-wrap items-center gap-2">
-          
-          <button type="button" className="btn-primary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
-            {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
-          </button>
-        </span>
+        <button
+          type="button"
+          className="btn-primary"
+          disabled={exportCsv.isPending || !hasRollups}
+          title={hasRollups ? 'Download rollups as CSV' : 'No rollups to export for this window'}
+          onClick={() => exportCsv.mutate()}
+        >
+          {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
+        </button>
       }
       updatedAt={query.dataUpdatedAt}
     >
-      {exportCsv.error && <Notice>{message(exportCsv.error)}</Notice>}
+      {exportCsv.error ? <Notice tone="critical">{message(exportCsv.error)}</Notice> : null}
       <FilterBar
         options={METER_HOURS}
         value={hours}
         onChange={(id) => setHours(id as (typeof METER_HOURS)[number]['id'])}
         defaultId="24"
       />
-      <KpiStrip>
-        <MetricTile label="Rollup rows" value={query.isError ? '—' : rows.length} hint={`Window ${hours} h`} />
-        <MetricTile label="Samples" value={query.isError ? '—' : sampleCount} hint="Connector samples in window" />
-        <MetricTile label="Dimensions" value={query.isError ? '—' : dimensions} hint="Distinct dimension keys" />
-        <MetricTile label="Metrics" value={query.isError ? '—' : metrics} hint="Distinct metric keys" />
-      </KpiStrip>
-      {(envelope.since != null || envelope.window_hours != null) && (
-        <p className="text-xs text-muted-foreground">
-          Since {text(envelope, 'since')} · window_hours {text(envelope, 'window_hours')}
-        </p>
-      )}
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel
-          className="xl:col-span-2"
-          title="Top sums in window"
-          empty={query.isError || query.isPending || chart.length === 0}
-        >
-          {(h) =>
-            query.isError ? (
-              <EmptyState title="Metering unavailable" body={message(query.error)} />
-            ) : query.isPending ? (
-              <div className="h-full animate-pulse rounded-lg bg-muted" />
-            ) : chart.length === 0 ? (
-              <EmptyState title="No numeric sums" body={`No rollups with sum_value in the last ${hours} h.`} />
-            ) : (
-              <ResponsiveContainer width="100%" height={h}>
-                <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v, _n, item) => [v, (item?.payload as { unit?: string } | undefined)?.unit || 'sum']} />
-                  <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )
+
+      <Card className="space-y-3 text-sm">
+        <PanelHeader
+          title="Reporting window"
+          action={
+            <InfoTip label="Window semantics">
+              The API filters workloads and jobs with timestamps on or after the window start. Changing the window
+              reloads rollups; an empty table means no qualifying records, not necessarily zero platform usage
+              elsewhere.
+            </InfoTip>
           }
-        </ChartPanel>
-        <Card>
-          <PanelHeader title="How to read" />
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>Rollups come from connector meters — not invented portal math.</li>
-            <li>Daily shot cap lives on Quotas; this page is broader usage telemetry.</li>
-            <li>Empty window means no samples returned, not that usage was zero.</li>
-          </ul>
-          <Link className="mt-3 inline-flex text-sm font-medium text-primary hover:underline" to="/qrp/quotas">
-            Open shot ledger →
-          </Link>
-        </Card>
-      </div>
-      <Card>
-        <QueryBody query={query}>
-          <Table
-            rows={rows}
-            emptyTitle="No meter samples"
-            emptyBody={`No rollups in the last ${hours} hours.`}
-            columns={[
-              { key: 'dimension', label: 'Dimension', sortable: true },
-              { key: 'metric', label: 'Metric', sortable: true },
-              { key: 'unit', label: 'Unit' },
-              { key: 'sum_value', label: 'Sum', sortable: true },
-              { key: 'available_samples', label: 'Samples', sortable: true },
-            ]}
-          />
-        </QueryBody>
+        />
+        <dl className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <dt className="text-xs font-medium text-muted-foreground">Range</dt>
+            <dd className="mt-0.5 font-medium">Last {meterWindowLabel(hours)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-muted-foreground">Starts</dt>
+            <dd className="mt-0.5 font-mono text-xs">{sinceLabel}</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-muted-foreground">Sources in rollup</dt>
+            <dd className="mt-0.5 text-muted-foreground">Organization-approved workloads · provider jobs</dd>
+          </div>
+        </dl>
       </Card>
+
+      {hasRollups || query.isPending || query.isError ? (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Summary</span>
+            <InfoTip label="KPI definitions">
+              Rollup rows = returned dimension/metric pairs. Source records = underlying workload/job rows counted.
+              Dimensions and metrics = distinct keys in the table below.
+            </InfoTip>
+          </div>
+          <KpiStrip>
+            <MetricTile label="Rollup rows" value={query.isError ? '—' : rows.length} />
+            <MetricTile label="Source records" value={query.isError ? '—' : sampleCount} />
+            <MetricTile label="Dimensions" value={query.isError ? '—' : dimensions} />
+            <MetricTile label="Metrics" value={query.isError ? '—' : metrics} />
+          </KpiStrip>
+        </>
+      ) : null}
+
+      <QueryBody query={query} notReportedTitle="Metering unavailable">
+        {!query.isPending && !query.isError && !hasRollups ? (
+          <Card className="p-5 sm:p-8">
+            <div className="mx-auto max-w-xl space-y-4 text-center">
+              <StatusBadge tone="neutral" label="No data in window" />
+              <h2 className="text-lg font-semibold tracking-tight">
+                No usage rollups in the last {meterWindowLabel(hours)}
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                The API found no approved workloads (with shot metadata) and no completed or failed provider jobs since{' '}
+                <span className="font-mono text-xs text-foreground">{sinceLabel}</span>. Widen the window, approve
+                workloads, or submit jobs — then refresh.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Shot caps and remaining headroom are on{' '}
+                <Link className="font-medium text-primary hover:underline" to="/qrp/quotas">
+                  Quotas
+                </Link>
+                , not this page.
+              </p>
+              <nav className="flex flex-wrap justify-center gap-2 pt-2" aria-label="Next steps">
+                <Link className="btn-primary text-sm" to="/qrp/approvals">
+                  Review queue
+                </Link>
+                <Link className="btn-ghost text-sm" to="/qrp/jobs">
+                  Provider jobs
+                </Link>
+                <Link className="btn-ghost text-sm" to="/qrp/quotas">
+                  Shot ledger
+                </Link>
+                <Link className="btn-ghost text-sm" to="/qrp/organization">
+                  Organization
+                </Link>
+              </nav>
+            </div>
+          </Card>
+        ) : null}
+
+        {hasRollups ? (
+          <>
+            <ChartPanel className="mb-4" title="Rollup totals" empty={false}>
+              {(h) => (
+                <ResponsiveContainer width="100%" height={h}>
+                  <BarChart data={chart} layout="vertical" margin={{ top: 4, right: 12, left: 8, bottom: 0 }}>
+                    <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={130}
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(v) => (String(v).length > 22 ? `${String(v).slice(0, 20)}…` : v)}
+                    />
+                    <Tooltip
+                      formatter={(v, _n, item) => {
+                        const p = item?.payload as { unit?: string; fullName?: string; dimension?: string } | undefined
+                        return [`${v} ${p?.unit || ''}`.trim(), `${p?.dimension || '—'} · ${p?.fullName || ''}`]
+                      }}
+                    />
+                    <Bar dataKey="value" fill="var(--chart-3)" radius={[0, 6, 6, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </ChartPanel>
+
+            <Card>
+              <PanelHeader
+                title="Rollup detail"
+                action={
+                  <InfoTip label="Columns">
+                    dimension scopes the metric (usually tenant). sum_value aggregates usage in the window;
+                    available_samples is how many underlying records contributed.
+                  </InfoTip>
+                }
+              />
+              <Table
+                rows={rows}
+                caption="Meter rollups"
+                emptyTitle="No rollups"
+                emptyBody="Try a longer window or approve workloads with shot metadata."
+                columns={[
+                  { key: 'dimension', label: 'Dimension', sortable: true },
+                  {
+                    key: 'metric',
+                    label: 'Metric',
+                    sortable: true,
+                    render: (row) => <span className="font-medium">{formatEnum(String(row.metric || ''))}</span>,
+                  },
+                  { key: 'unit', label: 'Unit' },
+                  {
+                    key: 'sum_value',
+                    label: 'Sum',
+                    sortable: true,
+                    render: (row) => (
+                      <span className="tabular-nums font-semibold">
+                        {row.sum_value == null || row.sum_value === '' ? '—' : String(row.sum_value)}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'available_samples',
+                    label: 'Samples',
+                    sortable: true,
+                    render: (row) => <span className="tabular-nums">{text(row, 'available_samples')}</span>,
+                  },
+                ]}
+              />
+            </Card>
+          </>
+        ) : null}
+      </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/quotas', label: 'Quotas' },
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/audit', label: 'Audit trail' },
+          { to: '/qrp/organization', label: 'Organization' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2467,7 +2626,7 @@ export function AuditPage() {
         { label: 'Audit trail' },
       ]}
       title="Audit Trail"
-      description="Append-only events for approvals, inventory, quotas, dispatch, and admin actions."
+      description="Organization audit trail — append-only events for approvals, inventory, quotas, dispatch, and access admin."
       actions={
         <span className="flex flex-wrap gap-2">
           <button type="button" className="btn-primary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
@@ -2480,7 +2639,7 @@ export function AuditPage() {
       {exportCsv.error && <Notice>{message(exportCsv.error)}</Notice>}
       {projectScope ? (
         <Notice tone="warning">
-          Client filter on sample for project <CopyableId value={projectScope} keep={12} /> — export is still tenant-wide.{' '}
+          Client filter on sample for project <CopyableId value={projectScope} keep={12} /> — export is still organization-wide.{' '}
           <Link className="font-medium text-primary hover:underline" to={`/qrp/projects/${projectScope}`}>
             Project hub
           </Link>
@@ -2523,7 +2682,7 @@ export function AuditPage() {
           <Table
             rows={rows}
             emptyTitle="No audit events"
-            emptyBody="Governance actions append here as operators work the queue."
+            emptyBody="Organization governance actions append here as members work approvals, inventory, and access."
             columns={[
               {
                 key: 'timestamp',
@@ -2545,9 +2704,10 @@ export function AuditPage() {
       </Card>
       <RelatedNav
         items={[
+          { to: '/qrp/organization', label: 'Organization' },
           { to: '/qrp/settings', label: 'Settings' },
           { to: '/qrp/approvals/history', label: 'Approval history' },
-          { to: '/qrp/admin/users', label: 'Users & roles' },
+          { to: '/qrp/admin/users', label: 'People & access' },
         ]}
       />
     </Page>
@@ -2587,7 +2747,7 @@ export function SupportPage() {
         { label: 'Alerts' },
       ]}
       title="Alerts"
-      description="Active fleet alerts."
+      description="Organization-visible fleet alerts on shared platform backends — triage before opening incidents."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/incidents" className="btn-primary">
@@ -2664,7 +2824,7 @@ export function SupportPage() {
           <Table
             rows={rows}
             emptyTitle="No active alerts"
-            emptyBody={search || severity !== 'all' ? 'No rows match filters.' : 'Fleet quiet.'}
+            emptyBody={search || severity !== 'all' ? 'No rows match filters.' : 'Organization-visible fleet quiet on this sample.'}
             columns={[
               {
                 key: 'alert_id',
@@ -2712,6 +2872,7 @@ export function SupportPage() {
           { to: '/qrp/incidents', label: 'Incidents' },
           { to: '/qrp/centre', label: 'Operations centre' },
           { to: '/qrp/backends', label: 'Backends' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
@@ -2731,7 +2892,7 @@ export function ProcurementPage() {
         { label: 'Procurement' },
       ]}
       title="Procurement"
-      description="Procurement is out of scope; use inventory and quotas."
+      description="Organization procurement workflows are out of scope; use inventory and quotas."
       actions={
         <Link className="btn-primary" to="/qrp/inventory">
           Inventory
@@ -2751,8 +2912,8 @@ export function ProcurementPage() {
       <Card className="space-y-2 text-sm leading-relaxed text-muted-foreground">
         <PanelHeader title="What to use instead" />
         <ul className="list-disc space-y-1 ps-4">
-          <li>Register assets and backends under Inventory before scheduling holds.</li>
-          <li>Track daily simulation-shot headroom on Quotas; metering rollups sit on Metering.</li>
+          <li>Register assets and backends under Inventory before scheduling organization holds.</li>
+          <li>Track daily simulation-shot headroom on Quotas; tenant rollups sit on Metering.</li>
           <li>Procurement workflows will attach here when scope expands; no placeholder purchase forms ship in this build.</li>
         </ul>
       </Card>
@@ -2761,6 +2922,7 @@ export function ProcurementPage() {
           { to: '/qrp/quotas', label: 'Quotas' },
           { to: '/qrp/providers', label: 'Providers' },
           { to: '/qrp/reservations', label: 'Reservations' },
+          { to: '/qrp/organization', label: 'Organization' },
         ]}
       />
     </Page>
