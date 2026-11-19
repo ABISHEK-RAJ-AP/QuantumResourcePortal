@@ -37,6 +37,7 @@ import {
 } from '@/components/layout/Page'
 import { InfoTip } from '@/components/ui/InfoTip'
 import { Modal } from '@/components/ui/Modal'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ExecutionTimeline } from '@/components/workflow/ExecutionTimeline'
 import { WorkloadSubmitWizard } from '@/components/workflow/WorkloadSubmitWizard'
 import { AccountSecurity } from '@/pages/workspace/AccountSecurity'
@@ -264,6 +265,7 @@ function needsReconcile(row: Row) {
 
 export function ReconciliationPage() {
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const pollMs = useDemoOperationalPolling()
   const [filter, setFilter] = useState<(typeof RECON_FILTERS)[number]['id']>('unresolved')
   const [search, setSearch] = useState('')
@@ -424,9 +426,14 @@ export function ReconciliationPage() {
                           className="text-sm font-medium text-primary hover:underline"
                           disabled={reconcilingId === String(row.attempt_id)}
                           onClick={() => {
-                            if (window.confirm(`Mark attempt as ${outcome}?`)) {
-                              reconcile.mutate({ id: String(row.attempt_id), outcome })
-                            }
+                            const id = String(row.attempt_id)
+                            openConfirm({
+                              title: 'Record dispatch outcome',
+                              body: `Mark attempt ${shortId(id, 10)} as ${outcome}? This updates the reconcile ledger.`,
+                              confirmLabel: `Mark ${outcome}`,
+                              danger: outcome === 'failed',
+                              onConfirm: () => reconcile.mutate({ id, outcome }),
+                            })
                           }}
                         >
                           {reconcilingId === String(row.attempt_id) ? '…' : outcome}
@@ -442,6 +449,7 @@ export function ReconciliationPage() {
         </QueryBody>
       </Card>
       </RecordWorkspace>
+      {confirmDialog}
     </Page>
   )
 }
@@ -2958,6 +2966,7 @@ type CatalogRole = { id: string; label: string; builtin?: boolean; permissions?:
 
 export function UsersPage() {
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const { user } = useAuth()
   const session = user ? { username: user.principal_id, role: user.roles?.[0] ?? 'User' } : null
   const canManage = ['Admin', 'SuperAdmin', 'PlatformAdmin'].includes(session?.role || '')
@@ -3070,8 +3079,13 @@ export function UsersPage() {
           className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault()
-            if (!window.confirm(`Assign ${role} to ${username}?`)) return
-            save.mutate()
+            const userLabel = username.trim()
+            openConfirm({
+              title: 'Assign role',
+              body: `Grant role ${role} to ${userLabel || 'this user'}? Permissions take effect on their next request.`,
+              confirmLabel: 'Assign',
+              onConfirm: () => save.mutate(),
+            })
           }}
         >
           <input
@@ -3245,8 +3259,14 @@ export function UsersPage() {
                       className="btn-ghost text-xs"
                       title="Delete custom role"
                       onClick={() => {
-                        if (!window.confirm(`Delete role ${String(row.id)}?`)) return
-                        deleteRole.mutate(String(row.id))
+                        const roleId = String(row.id)
+                        openConfirm({
+                          title: 'Delete custom role',
+                          body: `Delete role ${roleId} from the catalog? Users already assigned keep the label until reassigned.`,
+                          confirmLabel: 'Delete',
+                          danger: true,
+                          onConfirm: () => deleteRole.mutate(roleId),
+                        })
                       }}
                     >
                       Delete
@@ -3259,6 +3279,7 @@ export function UsersPage() {
         {deleteRole.error ? <p className="mt-2 text-sm text-critical">{message(deleteRole.error)}</p> : null}
         </PanelHeader>
       </Card>
+      {confirmDialog}
     </Page>
   )
 }
@@ -3465,6 +3486,7 @@ function incidentStepIndex(status: string) {
 export function IncidentDetailPage() {
   const { incidentId = '' } = useParams()
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const [note, setNote] = useState('')
   const [tab, setTab] = useState('overview')
   const query = useQuery({
@@ -3630,8 +3652,17 @@ export function IncidentDetailPage() {
                       className={buttonClass}
                       disabled={act.isPending}
                       onClick={() => {
-                        if (!note.trim() && !window.confirm('Resolve without notes?')) return
-                        act.mutate('resolve')
+                        if (note.trim()) {
+                          act.mutate('resolve')
+                          return
+                        }
+                        openConfirm({
+                          title: 'Resolve without notes?',
+                          body: 'Resolution usually expects a note for auditors. Continue without adding one?',
+                          confirmLabel: 'Resolve anyway',
+                          danger: true,
+                          onConfirm: () => act.mutate('resolve'),
+                        })
                       }}
                     >
                       Resolve
@@ -3741,6 +3772,7 @@ export function IncidentDetailPage() {
           { to: '/qrp/centre', label: 'Operations centre' },
         ]}
       />
+      {confirmDialog}
     </Page>
   )
 }

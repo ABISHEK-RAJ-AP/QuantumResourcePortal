@@ -35,6 +35,7 @@ import { FilterBar } from '@/components/data/FilterBar'
 import { KpiStrip } from '@/components/data/KpiStrip'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { InfoTip } from '@/components/ui/InfoTip'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ProjectCreateWizard } from '@/components/workflow/ProjectCreateWizard'
 import { QuotaEvaluationPanel } from '@/components/workflow/QuotaEvaluationPanel'
 import { fieldErrorClass } from '@/components/forms/FormField'
@@ -628,6 +629,7 @@ function progressSteps(row: Row): { steps: WorkflowStep[]; index: number } {
 export function ApprovalDetailPage() {
   const { workloadId = '' } = useParams()
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const [comment, setComment] = useState('')
   const [commentError, setCommentError] = useState('')
   const [tab, setTab] = useState('overview')
@@ -689,8 +691,17 @@ export function ApprovalDetailPage() {
         return
       }
     }
-    const ok = window.confirm(`Record decision “${decision}” for ${workloadId}?`)
-    if (ok) decide.mutate(decision)
+    openConfirm({
+      title: 'Record decision',
+      body: (
+        <>
+          Record <strong>{formatEnum(decision)}</strong> for request {shortId(workloadId, 14)}? Your comment is stored on the audit trail.
+        </>
+      ),
+      confirmLabel: 'Record decision',
+      danger: decision === 'reject',
+      onConfirm: () => decide.mutate(decision),
+    })
   }
   const withdraw = useMutation({
     mutationFn: () =>
@@ -702,7 +713,13 @@ export function ApprovalDetailPage() {
   })
   const confirmWithdraw = () => {
     if (withdraw.isPending) return
-    if (window.confirm(`Withdraw ${workloadId}?`)) withdraw.mutate()
+    openConfirm({
+      title: 'Withdraw request',
+      body: `Withdraw ${shortId(workloadId, 14)}? The requester can edit and resubmit.`,
+      confirmLabel: 'Withdraw',
+      danger: true,
+      onConfirm: () => withdraw.mutate(),
+    })
   }
   const row = query.data
   const trail = row ? progressSteps(row) : { steps: APPROVAL_PATH, index: 0 }
@@ -1081,6 +1098,7 @@ export function ApprovalDetailPage() {
           </>
         )}
       </QueryBody>
+      {confirmDialog}
     </Page>
   )
 }
@@ -2002,6 +2020,7 @@ const RESERVATION_FILTERS = [
 
 export function ReservationsPage() {
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const [searchParams, setSearchParams] = useSearchParams()
   const projectId = searchParams.get('project_id')?.trim() || ''
   const [filter, setFilter] = useState<(typeof RESERVATION_FILTERS)[number]['id']>('all')
@@ -2227,9 +2246,13 @@ export function ReservationsPage() {
                           className="btn-ghost"
                           disabled={movingId === String(row.reservation_id)}
                           onClick={() => {
-                            if (window.confirm(`Move reservation to ${stateLabel(state)}?`)) {
-                              move.mutate({ id: String(row.reservation_id), state })
-                            }
+                            const id = String(row.reservation_id)
+                            openConfirm({
+                              title: 'Change hold state',
+                              body: `Move hold ${shortId(id, 10)} to ${stateLabel(state)}?`,
+                              confirmLabel: stateLabel(state),
+                              onConfirm: () => move.mutate({ id, state }),
+                            })
                           }}
                         >
                           {movingId === String(row.reservation_id) ? '…' : stateLabel(state)}
@@ -2243,6 +2266,7 @@ export function ReservationsPage() {
           )}
         </QueryBody>
       </Card>
+      {confirmDialog}
     </Page>
   )
 }

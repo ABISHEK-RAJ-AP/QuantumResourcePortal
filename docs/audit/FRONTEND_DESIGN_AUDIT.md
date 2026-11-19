@@ -56,7 +56,7 @@
 |----|-----|------|-------|-----------|
 | D1 | 2 | Footer | Governance links go to `/qrp/*` logged-out → redirect | **Fixed** — `/#workflow`, `/#modules`, `/login` |
 | D2 | 2 | All tables | Most `DataTable` call sites omit `caption` | **Fixed** — `Table` page title fallback; `PanelHeader`→table wrapped in `screens` + `continue` |
-| D3 | 2 | Workspace | No global “undo” for destructive row actions | Open — `window.confirm` on decide/withdraw; no undo stack |
+| D3 | 2 | Workspace | No global “undo” for destructive row actions | **Partial** — `ConfirmDialog` + focus trap on decide/withdraw/reconcile/holds/roles; no undo stack |
 | D4 | 1 | Landing | `GridPulse` motion without content pause tie-in | Reduced ambient (prior landing pass) |
 | D5 | 1 | Marketing | No on-page “last updated” for public copy | **Fixed** — hero eyebrow “Public copy · Nov 2026” |
 

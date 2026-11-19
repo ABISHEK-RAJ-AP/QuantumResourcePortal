@@ -8,9 +8,11 @@ import * as rbac from '@/api/rbac'
 import { PermissionGate } from '@/auth/PermissionGate'
 import { Card, EmptyState, Notice, Page } from '@/components/layout/Page'
 import { StatusBadge } from '@/components/status/StatusBadge'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 export function RolesPage() {
   const client = useQueryClient()
+  const { openConfirm, confirmDialog } = useConfirmDialog()
   const roles = useQuery({ queryKey: ['roles'], queryFn: rbac.listRoles })
   const [error, setError] = useState('')
 
@@ -111,7 +113,13 @@ export function RolesPage() {
                               type="button"
                               className="btn-ghost text-xs text-critical"
                               onClick={() => {
-                                if (window.confirm(`Delete role ${r.code}?`)) del.mutate(r.role_id)
+                                openConfirm({
+                                  title: 'Delete role',
+                                  body: `Delete role ${r.code}? Assignments may need cleanup.`,
+                                  confirmLabel: 'Delete',
+                                  danger: true,
+                                  onConfirm: () => del.mutate(r.role_id),
+                                })
                               }}
                             >
                               Delete
@@ -127,6 +135,7 @@ export function RolesPage() {
           </div>
         )}
       </Card>
+      {confirmDialog}
     </Page>
   )
 }
