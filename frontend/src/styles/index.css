@@ -1414,13 +1414,17 @@ html:not(.dark) .cyber-matrix-spot {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  transition: opacity 0.45s ease;
+  transform: translateX(0.75rem);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 
 .overview-kpi-carousel__page.is-active {
   opacity: 1;
   pointer-events: auto;
   position: relative;
+  transform: translateX(0);
 }
 
 @media (max-width: 720px) {
@@ -1452,15 +1456,29 @@ html:not(.dark) .cyber-matrix-spot {
   transform: scale(1.15);
 }
 
-/* Workspace pages: auto-fit count from children */
-.kpi-rail__track--auto {
-  grid-template-columns: repeat(auto-fit, minmax(11.25rem, 1fr));
+.kpi-rail .kpi-rail__viewport {
+  min-height: 5.75rem;
 }
 
-.kpi-rail__track > *,
-.overview-kpi-scroll__track > * {
+.kpi-rail--dense .kpi-rail__viewport {
+  min-height: 4.85rem;
+}
+
+.kpi-rail--dense .metric-tile {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.kpi-rail__cell,
+.kpi-rail__cell > *,
+.overview-kpi-carousel__page > .overview-kpi-tile {
   min-width: 0;
   width: 100%;
+}
+
+.kpi-rail__cell > button {
+  width: 100%;
+  text-align: inherit;
 }
 
 .overview-kpi-tile {
