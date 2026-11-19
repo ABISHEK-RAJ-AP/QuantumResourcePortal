@@ -266,6 +266,52 @@
     radial-gradient(ellipse 50% 35% at 0% 100%, rgb(32 184 213 / 0.05), transparent 50%);
 }
 
+/* Shell page head — TeleScope-style: title | actions | tools */
+.qrp-page-header__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  width: 100%;
+}
+
+.qrp-page-header__main {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.qrp-page-header__actions {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.qrp-page-header__trailing {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.qrp-page-head__freshness {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .qrp-page-header__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qrp-page-header__actions {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .qrp-page-header__trailing {
+    grid-column: 1;
+    justify-self: end;
+    width: 100%;
+  }
+}
+
 /* Workspace density (Cert Studio–style compact lists) */
 .shell-canvas[data-density='compact'] {
   --qrp-cell-y: 0.35rem;

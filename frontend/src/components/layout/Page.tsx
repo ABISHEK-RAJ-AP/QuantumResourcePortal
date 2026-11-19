@@ -34,7 +34,7 @@ export function Page({
   actions?: ReactNode
   children?: ReactNode
 }) {
-  useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt })
+  useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, actions })
 
   const activeStep =
     workflowGuide && steps && steps.length > 0 && stepIndex != null && stepIndex >= 0
@@ -43,7 +43,6 @@ export function Page({
 
   return (
     <div className="flex w-full max-w-none flex-col gap-3">
-      {actions ? <div className="-mt-1 flex flex-wrap items-center justify-end gap-2">{actions}</div> : null}
       {steps && steps.length > 0 ? (
         <section className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />

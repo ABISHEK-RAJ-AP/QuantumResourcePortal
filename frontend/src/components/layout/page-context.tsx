@@ -9,6 +9,8 @@ export type PageChrome = {
   crumbs?: Crumb[]
   /** Query refresh time — rendered once in the app header, not in page body. */
   updatedAt?: number
+  /** Primary page actions (centred in shell header — TeleScope-style). */
+  actions?: ReactNode
   /** Nested panels (e.g. Health inside Settings) must not overwrite shell chrome. */
   skip?: boolean
 }
@@ -33,15 +35,15 @@ export function usePageChrome() {
 }
 
 /** Publishes title/description/freshness into the app header. No-op outside the shell provider. */
-export function useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, skip }: PageChrome) {
+export function useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, actions, skip }: PageChrome) {
   const ctx = useContext(PageChromeContext)
   const setChrome = ctx?.setChrome
   const crumbKey = crumbs?.map((c) => `${c.label}:${c.to ?? ''}`).join('|') ?? ''
   useEffect(() => {
     if (!setChrome || skip) return
-    setChrome({ eyebrow, title, description, crumbs, updatedAt })
+    setChrome({ eyebrow, title, description, crumbs, updatedAt, actions })
     return () => setChrome({})
     // crumbs serialized via crumbKey to avoid identity churn
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eyebrow, title, description, crumbKey, updatedAt, skip, setChrome])
+  }, [eyebrow, title, description, crumbKey, updatedAt, actions, skip, setChrome])
 }

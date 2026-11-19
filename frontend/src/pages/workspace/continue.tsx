@@ -4137,7 +4137,6 @@ export function CentrePage() {
   })
   const fleet = (query.data?.fleet as Row | undefined) ?? {}
   const ops = (query.data?.operations as Row | undefined) ?? {}
-  const platform = (query.data?.data_platform as Row | undefined) ?? {}
   const collectors = (query.data?.collectors as Row | undefined) ?? {}
   const providers = Array.isArray(collectors.providers) ? (collectors.providers as Row[]) : []
   const backendsSnap = Array.isArray(query.data?.backends_snapshot) ? (query.data.backends_snapshot as Row[]) : []
@@ -4164,8 +4163,22 @@ export function CentrePage() {
         name: String(row.backend_name || row.backend_id || '?').slice(0, 16),
         value: Number(row.pending_jobs) || 0,
       }))
+      .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value)
+      .slice(0, 8)
   }, [queues.data])
+  const incidentRows = asList(query.data?.incidents)
+  const showCharts = fleetChart.length > 0 || pendingChart.length > 0
+  const headerActions = (
+    <span className="flex flex-wrap items-center justify-center gap-2">
+      <Link className="btn-primary" to="/qrp/approvals">
+        Approvals
+      </Link>
+      <Link className="btn-secondary" to="/qrp/reconciliation">
+        Reconciliation
+      </Link>
+    </span>
+  )
   return (
     <Page
       crumbs={[
@@ -4173,17 +4186,8 @@ export function CentrePage() {
         { label: 'Operations centre' },
       ]}
       title="Operations Centre"
-      description="Fleet posture, collector health, queue depth, dispatch pressure, and open exceptions for this tenant."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/approvals">
-            Approvals
-          </Link>
-          <Link className="btn-secondary" to="/qrp/reconciliation">
-            Reconciliation
-          </Link>
-        </span>
-      }
+      description="Fleet posture, queue depth, dispatch pressure, and open exceptions."
+      actions={headerActions}
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -4195,6 +4199,12 @@ export function CentrePage() {
           tone={unresolved > 0 ? 'critical' : 'neutral'}
         />
         <MetricTile compact label="Pending jobs" value={queues.isError ? '—' : pendingTotal} tone={pendingTotal > 0 ? 'warning' : 'neutral'} />
+        <MetricTile
+          compact
+          label="Fleet online"
+          value={query.isError ? '—' : `${fleet.online ?? '—'}/${fleet.total ?? '—'}`}
+          tone={Number(fleet.offline || 0) > 0 ? 'warning' : 'success'}
+        />
         <MetricTile
           compact
           label="Active alerts"
@@ -4209,74 +4219,61 @@ export function CentrePage() {
         />
       </KpiStrip>
       <QueryBody query={query}>
-        <div className="grid gap-4 xl:grid-cols-3">
-          <ChartPanel title="Fleet reachability" empty={fleetChart.length === 0}>
-            {(h) =>
-              fleetChart.length === 0 ? (
-                <EmptyState title="No fleet sample" body="Centre returned empty fleet counts." />
-              ) : (
-                <>
-                  <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
-                    <PieChart>
-                      <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, (h - 28) * 0.28)} outerRadius={Math.max(48, (h - 28) * 0.42)} paddingAngle={2}>
-                        {fleetChart.map((d) => (
-                          <Cell key={d.name} fill={d.fill} />
-                        ))}
-                      </Pie>
+        {!showCharts && !query.isPending ? (
+          <EmptyState
+            title="No fleet or queue samples"
+            body="Catalogue and queue telemetry appear here once backends are registered and sampled."
+          />
+        ) : null}
+        {showCharts ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {fleetChart.length > 0 ? (
+              <ChartPanel title="Fleet reachability" empty={false}>
+                {(h) => (
+                  <>
+                    <ResponsiveContainer width="100%" height={Math.max(120, h - 28)}>
+                      <PieChart>
+                        <Pie data={fleetChart} dataKey="value" nameKey="name" innerRadius={Math.max(28, (h - 28) * 0.28)} outerRadius={Math.max(48, (h - 28) * 0.42)} paddingAngle={2}>
+                          {fleetChart.map((d) => (
+                            <Cell key={d.name} fill={d.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <p className="mt-1 text-center text-sm tabular-nums">
+                      {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
+                    </p>
+                  </>
+                )}
+              </ChartPanel>
+            ) : null}
+            {pendingChart.length > 0 ? (
+              <ChartPanel
+                title="Queue depth (top backends)"
+                empty={false}
+                action={
+                  <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/jobs?tab=queues">
+                    Jobs & queues
+                  </Link>
+                }
+              >
+                {(h) => (
+                  <ResponsiveContainer width="100%" height={h}>
+                    <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={48} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
                       <Tooltip />
-                    </PieChart>
+                      <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
+                    </BarChart>
                   </ResponsiveContainer>
-                  <p className="mt-1 text-center text-sm tabular-nums">
-                    {String(fleet.online ?? '—')}/{String(fleet.total ?? '—')} online
-                    {fleet.simulated_catalog != null ? ` · ${String(fleet.simulated_catalog)} simulated` : ''}
-                  </p>
-                </>
-              )
-            }
-          </ChartPanel>
-          <ChartPanel
-            className="xl:col-span-2"
-            title="Queue pending by backend"
-            empty={queues.isError || pendingChart.length === 0}
-            action={
-              <Link className="text-xs font-medium text-primary hover:underline" to="/qrp/queues">
-                Queues
-              </Link>
-            }
-          >
-            {(h) =>
-              queues.isError ? (
-                <EmptyState title="Queues unavailable" body={message(queues.error)} />
-              ) : pendingChart.length === 0 ? (
-                <EmptyState title="No queue samples" body="Telemetry not ingested yet." />
-              ) : (
-                <ResponsiveContainer width="100%" height={h}>
-                  <BarChart data={pendingChart} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={48} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="var(--chart-2)" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )
-            }
-          </ChartPanel>
-        </div>
+                )}
+              </ChartPanel>
+            ) : null}
+          </div>
+        ) : null}
 
-        <KpiStrip>
-          <MetricTile label="Backends" value={fleet.total} hint="Registered in catalogue" />
-          <MetricTile label="Online" value={fleet.online} hint="Currently reachable" tone="success" />
-          <MetricTile label="Assets (gov)" value={summary.data?.inventory_assets} hint="From governance summary" />
-          <MetricTile label="Providers active" value={summary.data?.providers_active} hint="Catalogue active" /></KpiStrip>
-
-        <Card className="text-sm text-muted-foreground">
-          Generated {text(query.data ?? {}, 'generated_at')} · mode {text(platform, 'platform_data_mode')} · storage{' '}
-          {text(platform, 'database_storage')}
-          {platform.enable_mock_data != null ? ` · mock ${String(platform.enable_mock_data)}` : ''}
-          {collectors.failed_or_stale != null ? ` · failed/stale collectors ${String(collectors.failed_or_stale)}` : ''}
-        </Card>
-
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <PanelHeader title="Collector providers" />
             <Table
@@ -4400,14 +4397,13 @@ export function CentrePage() {
           </Card>
         )}
 
+        {incidentRows.length > 0 ? (
         <Card>
-          <PanelHeader
-            title="Open incidents"
-/>
+          <PanelHeader title="Open incidents" />
           <Table
-            rows={asList(query.data?.incidents)}
+            rows={incidentRows}
             emptyTitle="No open incidents"
-            emptyBody="Fleet incidents appear here when triage opens a case."
+            emptyBody=""
             columns={[
               {
                 key: 'title',
@@ -4444,6 +4440,7 @@ export function CentrePage() {
             ]}
           />
         </Card>
+        ) : null}
       </QueryBody>
     </Page>
   )

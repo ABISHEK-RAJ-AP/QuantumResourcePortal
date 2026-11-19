@@ -322,14 +322,6 @@ export function OverviewPage() {
     ops.active_alerts,
   ])
 
-  const emptyWorkspace =
-    demoActionsAllowed &&
-    !summary.isPending &&
-    !summary.isError &&
-    queueCount === 0 &&
-    Number(summary.data?.inventory_assets ?? 0) === 0 &&
-    fleetTotal === 0
-
   return (
     <Page
       crumbs={[
@@ -340,18 +332,6 @@ export function OverviewPage() {
       description="Governance, capacity, and operations."
       updatedAt={summary.dataUpdatedAt || ledger.dataUpdatedAt || centre.dataUpdatedAt}
     >
-      {emptyWorkspace ? (
-        <Notice tone="warning">
-          <p className="font-medium text-foreground">Workspace empty</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Load interconnected demo data from{' '}
-            <Link className="font-medium text-primary hover:underline" to="/qrp/settings">
-              Settings → Demonstration environment
-            </Link>{' '}
-            or Quick actions → Load demo (PLATFORM_ADMIN).
-          </p>
-        </Notice>
-      ) : null}
       <OverviewKpiScroll items={kpiRail} />
       <OverviewDashboardGrid
         lens={focus.kind}

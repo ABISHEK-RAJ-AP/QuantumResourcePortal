@@ -355,9 +355,9 @@ function ShellInner() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <DemoSimulationBanner />
-        <header className="sticky top-8 z-10 border-b border-border/80 bg-card/90 px-6 py-4 backdrop-blur-md">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
+        <header className="qrp-app-page-head sticky top-8 z-10 border-b border-border/80 bg-card/90 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4">
+          <div className="qrp-page-header__row">
+            <div className="qrp-page-header__main min-w-0">
               {chrome.crumbs && chrome.crumbs.length > 0 ? (
                 <Breadcrumbs items={chrome.crumbs} />
               ) : chrome.eyebrow ? (
@@ -365,12 +365,17 @@ function ShellInner() {
               ) : null}
               <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-2xl">{chrome.title || 'Workspace'}</h1>
               {chrome.description ? (
-                <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">{chrome.description}</p>
+                <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{chrome.description}</p>
               ) : null}
             </div>
-            <div className="flex min-w-0 max-w-full shrink-0 flex-col items-end gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            {chrome.actions ? (
+              <div className="qrp-page-header__actions flex flex-wrap items-center justify-center gap-2">{chrome.actions}</div>
+            ) : (
+              <div className="qrp-page-header__actions" aria-hidden />
+            )}
+            <div className="qrp-page-header__trailing flex shrink-0 flex-wrap items-center justify-end gap-2">
               <DataFreshness updatedAt={chrome.updatedAt} />
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <NotificationBell />
                 <WorkspaceLayoutControls />
                 <button
