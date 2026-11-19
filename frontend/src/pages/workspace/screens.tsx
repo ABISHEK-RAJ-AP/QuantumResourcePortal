@@ -2281,7 +2281,7 @@ export function MeteringPage() {
       actions={
         <span className="flex flex-wrap items-center gap-2">
           
-          <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
+          <button type="button" className="btn-primary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
             {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
           </button>
         </span>
@@ -2435,7 +2435,7 @@ export function AuditPage() {
       description="Append-only events for approvals, inventory, quotas, dispatch, and admin actions."
       actions={
         <span className="flex flex-wrap gap-2">
-          <button type="button" className="btn-secondary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
+          <button type="button" className="btn-primary" disabled={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
             {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
           </button>
         </span>

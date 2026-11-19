@@ -70,6 +70,12 @@ export function AccountSecurity() {
         <Link className="font-medium text-primary hover:underline" to="/system/status">
           Platform status
         </Link>
+        <Link className="font-medium text-primary hover:underline" to="/legal/privacy">
+          Privacy
+        </Link>
+        <Link className="font-medium text-primary hover:underline" to="/legal/terms">
+          Terms
+        </Link>
       </p>
     </Card>
   )

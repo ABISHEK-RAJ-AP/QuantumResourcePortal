@@ -89,6 +89,12 @@ export function AuthFooterLinks({
     )
   }
   links.push(
+    <Link key="privacy" className="font-semibold text-primary hover:underline" to="/legal/privacy">
+      Privacy
+    </Link>,
+    <Link key="terms" className="font-semibold text-primary hover:underline" to="/legal/terms">
+      Terms
+    </Link>,
     <Link key="home" className="font-semibold text-primary hover:underline" to="/">
       Home
     </Link>,

@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from qre.core import authz
 from qre.core.context import TenantContext
 from qre.core.deps import db_session, get_ctx, require_permission
+from qre.core.rate_limit import enforce_auth_ip_rate_limit
 from qre.services.svc02_identity import captcha as captcha_svc
 from qre.services.svc02_identity.capabilities import build_auth_capabilities
 from qre.services.svc02_identity.service import (
@@ -85,6 +86,7 @@ async def auth_capabilities(request: Request) -> dict:
 @router.get("/auth/captcha")
 async def auth_captcha(request: Request) -> dict:
     settings = request.app.state.settings
+    enforce_auth_ip_rate_limit(settings, ip=_client_ip(request), bucket="captcha")
     if not settings.captcha_enabled:
         from fastapi import HTTPException
 
@@ -103,6 +105,7 @@ async def auth_login(
     session: AsyncSession = Depends(db_session),
 ) -> LoginOut:
     settings = request.app.state.settings
+    enforce_auth_ip_rate_limit(settings, ip=_client_ip(request), bucket="login")
     corr = request.scope.get("state", {}).get("correlation_id", "-")
     if settings.captcha_enabled:
         captcha_svc.verify(body.captcha_id, body.captcha_code)

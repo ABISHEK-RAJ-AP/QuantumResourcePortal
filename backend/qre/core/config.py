@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     auth_lockout_threshold: int = Field(default=5, ge=1, le=100)
     auth_lockout_window_min: int = Field(default=15, ge=1, le=24 * 60)
     auth_lockout_minutes: int = Field(default=15, ge=1, le=24 * 60)
+    auth_ip_rate_limit: int = Field(default=60, ge=5, le=10_000)
+    auth_ip_rate_window_sec: int = Field(default=900, ge=60, le=86_400)
     captcha_enabled: bool = False  # SRS §4.2.1: CAPTCHA is deployment-configurable
 
     # Redis / Valkey — ephemeral cache (CAPTCHA, hot reads). Sessions remain in PostgreSQL.

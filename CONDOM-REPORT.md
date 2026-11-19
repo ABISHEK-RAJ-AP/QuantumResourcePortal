@@ -130,10 +130,12 @@
 
 | Finding | Change | Re-test | Commit |
 | --- | --- | --- | --- |
-| SEC-AUTH-01 | `safeReturnPath()`; Login + MFA use it | `frontend/src/lib/safeReturnPath.test.ts` (vitest) | pending in this push |
+| SEC-AUTH-01 | `safeReturnPath()`; Login + MFA use it | `frontend/src/lib/safeReturnPath.test.ts` (vitest) | `e5c243a` |
+| SEC-ABUSE-01 (partial) | Per-IP limit on login + captcha (`auth_ip_rate_*`) | `backend/tests/unit/test_rate_limit.py` | this push |
+| LAW-PRIV-01 (partial) | Draft `/legal/privacy` + `/legal/terms` | manual spot-check | this push |
 
 ## Still open
 
-- **SEC-AUTH-01** — fixed in SPA; add server-side redirect allow-list if backend ever issues `next` URLs.
-- Legal pages — need owner facts (data retention, subprocessors, contact).
-- Rate limiting — product decision on thresholds.
+- **SEC-AUTH-01** — add server-side redirect allow-list if backend ever issues `next` URLs.
+- **Legal** — replace draft privacy/terms with counsel-reviewed text before external users.
+- **RLS** — `QRE_RLS_ENABLED=false`; enable before multi-tenant internet production.

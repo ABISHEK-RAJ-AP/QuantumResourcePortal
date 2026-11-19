@@ -49,6 +49,7 @@ import { ForgotPasswordPage } from '@/pages/public/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/public/ResetPasswordPage'
 import { RegisterPage } from '@/pages/public/RegisterPage'
 import { MfaPage } from '@/pages/public/MfaPage'
+import { PrivacyPage, TermsPage } from '@/pages/public/LegalPage'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { RouteError } from '@/components/routing/RouteError'
 import { ProtectedRoute } from '@/auth/ProtectedRoute'
@@ -102,6 +103,8 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   { path: '/mfa', element: <MfaPage />, errorElement: <RouteError /> },
+  { path: '/legal/privacy', element: <PrivacyPage />, errorElement: <RouteError /> },
+  { path: '/legal/terms', element: <TermsPage />, errorElement: <RouteError /> },
   {
     element: <RequireAuth />,
     errorElement: <RouteError />,
