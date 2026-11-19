@@ -13,6 +13,7 @@
 @import 'tw-animate-css';
 @import './qre-notify.css';
 @import './motion-ops.css';
+@import './craft-ops.css';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
@@ -261,9 +262,7 @@
   }
 }
 
-.shell-canvas {
-  background-color: var(--background);
-}
+/* shell canvas surface — gradient depth in craft-ops.css */
 
 .page-related-nav {
   display: flex flex-wrap;
@@ -1620,4 +1619,26 @@ html:not(.dark) .cyber-matrix-spot {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* craft-ops — OKLCH alpha borders + depth (after base palette) */
+html:root {
+  --border: var(--border-alpha);
+  --input: oklch(0.52 0.03 264 / 0.16);
+  --brand-gradient: linear-gradient(
+    135deg,
+    oklch(0.58 0.19 264) 0%,
+    oklch(0.56 0.18 305) 55%,
+    oklch(0.68 0.12 205) 100%
+  );
+}
+
+html.dark {
+  --input: oklch(0.88 0.03 264 / 0.16);
+  --brand-gradient: linear-gradient(
+    135deg,
+    oklch(0.72 0.14 264) 0%,
+    oklch(0.62 0.16 305) 55%,
+    oklch(0.74 0.11 205) 100%
+  );
 }

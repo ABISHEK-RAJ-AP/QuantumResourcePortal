@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Boxes,
@@ -117,6 +117,38 @@ function initials(name: string) {
   if (parts.length === 0) return '?'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
+}
+
+function ThemeIconToggle({ dark, onToggle, label }: { dark: boolean; onToggle: () => void; label: string }) {
+  const [swapping, setSwapping] = useState(false)
+  const timer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (timer.current != null) window.clearTimeout(timer.current)
+    },
+    [],
+  )
+  return (
+    <button
+      type="button"
+      className={cn(
+        'qrp-icon-swap grid size-9 place-items-center rounded-lg border border-input hover:bg-accent',
+        swapping && 'is-swapping',
+      )}
+      aria-label={label}
+      title={label}
+      onClick={() => {
+        setSwapping(true)
+        onToggle()
+        if (timer.current != null) window.clearTimeout(timer.current)
+        timer.current = window.setTimeout(() => setSwapping(false), 160)
+      }}
+    >
+      <span className="qrp-icon-swap__icon">
+        {dark ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
+      </span>
+    </button>
+  )
 }
 
 function ShellInner() {
@@ -361,9 +393,9 @@ function ShellInner() {
               ) : chrome.eyebrow ? (
                 <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">{chrome.eyebrow}</p>
               ) : null}
-              <h1 className="text-xl font-semibold tracking-tight text-balance sm:text-2xl">{chrome.title || 'Workspace'}</h1>
+              <h1 className="type-page-title type-trim type-title-clamp">{chrome.title || 'Workspace'}</h1>
               {chrome.description ? (
-                <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{chrome.description}</p>
+                <p className="qrp-page-desc type-desc-clamp hyphenate mt-0.5">{chrome.description}</p>
               ) : null}
             </div>
             {chrome.actions ? (
@@ -388,15 +420,11 @@ function ShellInner() {
                 >
                   <RefreshCw className="size-4" />
                 </button>
-                <button
-                  type="button"
-                  className="grid size-9 place-items-center rounded-lg border border-input hover:bg-accent"
-                  aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                  title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-                  onClick={toggleTheme}
-                >
-                  {theme === 'dark' ? <Sun className="size-4 text-amber-500" /> : <Moon className="size-4" />}
-                </button>
+                <ThemeIconToggle
+                  dark={theme === 'dark'}
+                  onToggle={toggleTheme}
+                  label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                />
               </div>
             </div>
           </div>
@@ -422,7 +450,7 @@ function ShellInner() {
 export function AppShell() {
   return (
     <PageChromeProvider>
-      <div className="flex min-h-svh flex-col">
+      <div className="qrp-dvh-shell flex min-h-svh flex-col">
         <A11yPreheader />
         <div className="flex min-h-0 min-w-0 flex-1">
           <ShellInner />

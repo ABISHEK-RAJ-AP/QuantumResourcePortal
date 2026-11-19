@@ -21,7 +21,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
             {last || !item.to ? (
               <span className={last ? 'font-semibold text-foreground' : undefined}>{item.label}</span>
             ) : (
-              <Link className="text-primary/90 hover:text-primary hover:underline" to={item.to}>
+              <Link className="fs-link text-primary/90 hover:text-primary" to={item.to}>
                 {item.label}
               </Link>
             )}

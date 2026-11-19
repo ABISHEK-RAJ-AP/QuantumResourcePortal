@@ -45,7 +45,7 @@ export function Page({
   return (
     <div className="flex w-full max-w-none flex-col gap-3">
       {steps && steps.length > 0 ? (
-        <section className="rounded-xl border border-border bg-card px-4 py-3 shadow-card">
+        <section className="craft-card rounded-xl border border-border bg-card px-4 py-3 shadow-card">
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />
         </section>
       ) : null}
@@ -59,7 +59,7 @@ export function Page({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <section className={cn('rounded-xl border border-border bg-card p-4 shadow-card', className)}>{children}</section>
+    <section className={cn('craft-card rounded-xl border border-border bg-card p-4 shadow-card', className)}>{children}</section>
   )
 }
 
@@ -97,7 +97,7 @@ export function MetricTile({
         className,
       )}
     >
-      <p className={cn('font-semibold tracking-[0.12em] text-muted-foreground uppercase', compact ? 'text-[10px]' : 'text-[11px]')}>
+      <p className={cn('acr font-semibold text-muted-foreground', compact ? 'text-[10px]' : 'text-[11px]')}>
         {label}
       </p>
       <p className={cn('font-semibold tracking-tight tabular-nums', compact ? 'mt-0.5 text-xl leading-none' : 'mt-2 text-3xl')}>
@@ -138,7 +138,7 @@ export function PanelHeader({
 }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <h2 className="type-section-title type-title-clamp">{title}</h2>
       {action}
     </div>
   )
