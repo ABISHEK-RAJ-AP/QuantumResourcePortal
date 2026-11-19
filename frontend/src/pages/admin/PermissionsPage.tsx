@@ -21,7 +21,6 @@ export function PermissionsPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title="Permissions"
       description="The permission catalogue is read-only. Grant permissions by editing a role."
     >

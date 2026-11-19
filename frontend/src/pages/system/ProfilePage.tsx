@@ -29,7 +29,7 @@ export function ProfilePage() {
       title="My profile"
       description="Your identity, roles and effective permissions."
       actions={
-        <Link to="/qrp/settings" className="btn-secondary text-sm">
+        <Link to="/qrp/settings" className="fs-link text-sm">
           Settings
         </Link>
       }

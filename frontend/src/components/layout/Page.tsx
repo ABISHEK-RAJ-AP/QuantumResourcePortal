@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 
 import type { Crumb } from '@/components/layout/Breadcrumbs'
-import { StatusBadge, type StatusTone } from '@/components/status/StatusBadge'
+import type { StatusTone } from '@/components/status/StatusBadge'
 import { WorkflowGuide } from '@/components/workflow/WorkflowGuide'
 import { WorkflowSteps, type WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { useSetPageChrome } from '@/components/layout/page-context'
@@ -79,13 +80,13 @@ export function MetricTile({
 }) {
   const toneClass =
     tone === 'primary'
-      ? 'border-primary/25 bg-gradient-to-br from-accent/80 to-card'
+      ? 'border-primary/30 bg-primary/[0.04]'
       : tone === 'success'
-        ? 'border-success/20 bg-gradient-to-br from-success-soft/60 to-card'
+        ? 'border-success/25 bg-success-soft/40'
         : tone === 'warning'
-          ? 'border-warning/25 bg-gradient-to-br from-warning-soft/70 to-card'
+          ? 'border-warning/25 bg-warning-soft/35'
           : tone === 'critical'
-            ? 'border-critical/25 bg-gradient-to-br from-critical-soft/70 to-card'
+            ? 'border-critical/25 bg-critical-soft/35'
             : ''
   return (
     <Card
@@ -104,6 +105,27 @@ export function MetricTile({
       </p>
       {hint && !compact ? <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p> : null}
     </Card>
+  )
+}
+
+export type RelatedNavItem = { to: string; label: string; hint?: string }
+
+/** TeleScope-style related pages — text links, not secondary button rows. */
+export function RelatedNav({ items, className }: { items: RelatedNavItem[]; className?: string }) {
+  if (!items.length) return null
+  return (
+    <nav className={cn('page-related-nav', className)} aria-label="Related pages">
+      <span className="page-related-nav__label">Related</span>
+      <ul className="page-related-nav__list">
+        {items.map((item) => (
+          <li key={item.to}>
+            <Link className="fs-link" to={item.to} title={item.hint}>
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   )
 }
 
@@ -157,10 +179,19 @@ export function Notice({
   className?: string
 }) {
   return (
-    <Card className={cn('flex w-full max-w-none items-start gap-3 text-left', className)}>
-      <StatusBadge tone={tone} label={tone === 'critical' ? 'Unavailable' : 'Note'} />
-      <div className="text-sm text-muted-foreground">{children}</div>
-    </Card>
+    <div
+      className={cn(
+        'rounded-lg border px-3 py-2.5 text-sm text-muted-foreground',
+        tone === 'critical'
+          ? 'border-critical/30 bg-critical-soft/25 text-foreground'
+          : tone === 'warning'
+            ? 'border-warning/30 bg-warning-soft/20'
+            : 'border-border bg-muted/15',
+        className,
+      )}
+    >
+      {children}
+    </div>
   )
 }
 

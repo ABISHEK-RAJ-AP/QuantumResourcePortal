@@ -32,8 +32,19 @@ function Card({ className, children }: { className?: string; children: React.Rea
   )
 }
 
-function CheckRow({ name, check }: { name: string; check: Check }) {
+function CheckRow({ name, check, compact }: { name: string; check: Check; compact?: boolean }) {
   const meta = CHECK_META[name] ?? { label: name, icon: Server }
+  if (compact) {
+    return (
+      <li className="flex items-center justify-between gap-3 border-b border-border/60 py-2 text-sm last:border-0">
+        <span className="text-muted-foreground">{meta.label}</span>
+        <span className="flex items-center gap-2">
+          <span className="max-w-[12rem] truncate font-mono text-xs text-muted-foreground">{check.detail}</span>
+          <StatusBadge tone={check.ok ? 'success' : 'critical'} label={check.ok ? 'OK' : 'Fail'} />
+        </span>
+      </li>
+    )
+  }
   const Icon = meta.icon
   return (
     <li className="flex items-center gap-4 py-3">
@@ -134,8 +145,7 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="relative overflow-hidden">
-            <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-(image:--brand-gradient)" />
+          <Card>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Activity aria-hidden="true" className="size-4" /> API liveness
             </div>
@@ -176,17 +186,19 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
         </div>
       )}
 
-      <DeploymentCapabilitiesPanel />
+      {!framed ? <DeploymentCapabilitiesPanel /> : null}
 
       <Card>
         <h2 className="text-base font-semibold">Readiness checks</h2>
-        <p className="text-sm text-muted-foreground">
-          From <code className="font-mono text-xs">GET /readyz</code> · refreshes every 15 seconds
-        </p>
+        {!framed ? (
+          <p className="text-sm text-muted-foreground">
+            From <code className="font-mono text-xs">GET /readyz</code> · refreshes every 15 seconds
+          </p>
+        ) : null}
         {readiness.data ? (
           <ul className="mt-2 divide-y divide-border">
             {Object.entries(readiness.data.checks).map(([name, check]) => (
-              <CheckRow key={name} name={name} check={check} />
+              <CheckRow key={name} name={name} check={check} compact={framed} />
             ))}
           </ul>
         ) : (
@@ -196,12 +208,14 @@ export function StatusPage({ framed = false }: { framed?: boolean }) {
         )}
       </Card>
 
-      <p className="text-left text-xs text-muted-foreground">
-        API documentation:{' '}
-        <a className="font-medium text-primary underline-offset-4 hover:underline" href="/api/v1/docs">
-          /api/v1/docs
-        </a>
-      </p>
+      {!framed ? (
+        <p className="text-left text-xs text-muted-foreground">
+          API documentation:{' '}
+          <a className="font-medium text-primary underline-offset-4 hover:underline" href="/api/v1/docs">
+            /api/v1/docs
+          </a>
+        </p>
+      ) : null}
     </main>
   )
 }

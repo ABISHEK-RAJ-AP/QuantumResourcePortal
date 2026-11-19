@@ -261,9 +261,42 @@
 }
 
 .shell-canvas {
-  background-image:
-    radial-gradient(ellipse 70% 40% at 100% 0%, rgb(83 109 254 / 0.06), transparent 55%),
-    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(32 184 213 / 0.05), transparent 50%);
+  background-color: var(--background);
+}
+
+.page-related-nav {
+  display: flex flex-wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.page-related-nav__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.page-related-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fs-link {
+  font-weight: 500;
+  color: var(--primary);
+  text-underline-offset: 3px;
+}
+
+.fs-link:hover {
+  text-decoration: underline;
 }
 
 /* Shell page head — TeleScope-style: title | actions | tools */

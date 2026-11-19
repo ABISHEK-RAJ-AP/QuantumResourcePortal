@@ -31,6 +31,7 @@ import {
   Notice,
   Page,
   PanelHeader,
+  RelatedNav,
   stateLabel,
   stateTone,
 } from '@/components/layout/Page'
@@ -55,7 +56,7 @@ import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
 import { useAuth } from '@/auth/hooks'
-import { formatDateTime, formatEnum, formatPrincipalId, formatRole } from '@/lib/display'
+import { formatDateTime, formatEnum } from '@/lib/display'
 import {
   scopedApprovalsPath,
   scopedAuditPath,
@@ -125,7 +126,7 @@ export function AssetDetailPage() {
       steps={LIFECYCLE}
       stepIndex={lifecycleIndex(state)}
       actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
+        <Link to="/qrp/inventory" className="fs-link text-sm">
           Back to inventory
         </Link>
       }
@@ -656,16 +657,6 @@ export function SlaPage() {
       ]}
       title="Service levels"
       description="Formal SLA targets, breach prediction, and credits are not implemented in this release."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/metering">
-            Metering
-          </Link>
-          <Link className="btn-secondary" to="/qrp/incidents">
-            Incidents
-          </Link>
-        </span>
-      }
       updatedAt={meter.dataUpdatedAt}
     >
       <KpiStrip className="sm:grid-cols-3">
@@ -679,6 +670,12 @@ export function SlaPage() {
           empty charts; missing telemetry is reported as unavailable, not as 100% availability.
         </p>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/metering', label: 'Metering' },
+          { to: '/qrp/incidents', label: 'Incidents' },
+        ]}
+      />
     </Page>
   )
 }
@@ -698,21 +695,13 @@ export function NotificationsPage() {
       title="Notifications"
       description="Session inbox in the header bell. Governance toasts and review items sync from the same APIs as Home and Approvals."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => window.dispatchEvent(new CustomEvent('govern:open-notices'))}
-          >
-            Open notification panel
-          </button>
-          <Link className="btn-secondary" to="/qrp/audit">
-            Audit log
-          </Link>
-          <Link className="btn-secondary" to="/qrp/approvals/history">
-            Approval history
-          </Link>
-        </span>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => window.dispatchEvent(new CustomEvent('govern:open-notices'))}
+        >
+          Open notification panel
+        </button>
       }
     >
       <KpiStrip className="sm:grid-cols-3">
@@ -727,6 +716,13 @@ export function NotificationsPage() {
       <Card className="text-sm text-muted-foreground">
         Open the notification panel from the bell in the header, or use Approval history and Audit for durable records.
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/audit', label: 'Audit log' },
+          { to: '/qrp/approvals/history', label: 'Approval history' },
+          { to: '/qrp/approvals', label: 'Review queue' },
+        ]}
+      />
     </Page>
   )
 }
@@ -746,14 +742,9 @@ export function EntitlementsPage() {
       title="Entitlements"
       description="Provider entitlement grants and contract SKUs are outside this portal. Enforce capacity with the quota ledger and reservations."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/quotas">
-            Quotas
-          </Link>
-          <Link className="btn-secondary" to="/qrp/admin/users">
-            Users
-          </Link>
-        </span>
+        <Link className="btn-primary" to="/qrp/quotas">
+          Quotas
+        </Link>
       }
       updatedAt={ledger.dataUpdatedAt}
     >
@@ -771,6 +762,13 @@ export function EntitlementsPage() {
         Contract entitlements and provider SKU grants are maintained outside QRP. Capacity enforcement for approvals uses the quota
         ledger and project-scoped reservations.
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/quotas', label: 'Quotas' },
+          { to: '/qrp/admin/users', label: 'Users & roles' },
+          { to: '/qrp/reservations', label: 'Reservations' },
+        ]}
+      />
     </Page>
   )
 }
@@ -782,14 +780,9 @@ export function OnboardingPage() {
   })
   return (
     <Page
-      eyebrow="Resources"
+      crumbs={[{ label: 'Resources', to: '/qrp/providers' }, { label: 'Onboarding' }]}
       title="Provider onboarding board"
       description="Stage codes from the connector catalogue. Open a provider to publish a manifest and activate."
-      actions={
-        <Link className="btn-secondary" to="/qrp/providers">
-          Provider list
-        </Link>
-      }
     >
       <Card>
         <QueryBody query={query}>
@@ -815,6 +808,12 @@ export function OnboardingPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/providers', label: 'Providers' },
+          { to: '/qrp/connectors', label: 'Connectors' },
+        ]}
+      />
     </Page>
   )
 }
@@ -842,11 +841,10 @@ export function RegisterAssetPage() {
         { label: 'Resources', to: '/qrp/inventory' },
         { label: 'Register asset' },
       ]}
-      eyebrow="Resources"
       title="Register asset"
       description="One asset, one provider, one native id."
       actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
+        <Link to="/qrp/inventory" className="fs-link text-sm">
           Inventory
         </Link>
       }
@@ -935,11 +933,10 @@ export function ImportAssetsPage() {
         { label: 'Resources', to: '/qrp/inventory' },
         { label: 'Import assets' },
       ]}
-      eyebrow="Resources"
       title="Import assets"
       description="CSV columns: native_asset_id, asset_class, execution_class. A bad row commits nothing."
       actions={
-        <Link to="/qrp/inventory" className="btn-secondary">
+        <Link to="/qrp/inventory" className="fs-link text-sm">
           Inventory
         </Link>
       }
@@ -1772,7 +1769,6 @@ export function AlertDetailPage() {
 
   return (
     <Page
-      eyebrow="Operations · Alert investigation"
       title={row ? String(row.alert_type || 'Alert') : 'Alert'}
       description={
         row
@@ -2432,7 +2428,6 @@ export function PoolDetailPage() {
   const members = Array.isArray(query.data?.members) ? (query.data.members as Row[]) : []
   return (
     <Page
-      eyebrow="Resources"
       title={String(query.data?.name || poolId)}
       description="Add a registered asset. Membership does not reserve the asset."
       actions={
@@ -2708,7 +2703,6 @@ export function DispatchPage() {
         { label: 'Governance', to: '/qrp/approvals' },
         { label: 'Dispatch' },
       ]}
-      eyebrow="Operations"
       title="Dispatch & Jobs"
       description={`Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs and reconciliation. ${APPROVAL_VS_DISPATCH}`}
       actions={
@@ -3311,16 +3305,9 @@ export function IncidentsPage() {
   }, [all])
   return (
     <Page
-      eyebrow="Operations"
+      crumbs={[{ label: 'Operations', to: '/qrp/centre' }, { label: 'Incidents' }]}
       title="Incidents"
       description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link to="/qrp/support" className="btn-secondary">
-            Active alerts
-          </Link>
-        </span>
-      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3437,6 +3424,13 @@ export function IncidentsPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/support', label: 'Active alerts' },
+          { to: '/qrp/jobs', label: 'Jobs & queues' },
+        ]}
+      />
     </Page>
   )
 }
@@ -3501,7 +3495,6 @@ export function IncidentDetailPage() {
 
   return (
     <Page
-      eyebrow="Operations · Incidents"
       title={String(query.data?.title || incidentId)}
       description={String(query.data?.summary || 'Operational exception lifecycle — links alerts, backends, and dispatch context.')}
       steps={INCIDENT_FLOW}
@@ -3919,6 +3912,13 @@ export function JobsPage() {
       >
         {tab === 'queues' ? <QueuesPage embedded /> : jobsBody}
       </RecordWorkspace>
+      <RelatedNav
+        items={[
+          { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/dispatch', label: 'Dispatch' },
+          { to: '/qrp/backends', label: 'Backends' },
+        ]}
+      />
     </Page>
   )
 }
@@ -4144,16 +4144,17 @@ export function CentrePage() {
   }, [queues.data])
   const incidentRows = asList(query.data?.incidents)
   const showCharts = fleetChart.length > 0 || pendingChart.length > 0
-  const headerActions = (
-    <span className="flex flex-wrap items-center justify-center gap-2">
+  const queueCount = Number(summary.data?.queue ?? 0)
+  const headerActions =
+    queueCount > 0 ? (
       <Link className="btn-primary" to="/qrp/approvals">
-        Approvals
+        Review queue ({queueCount})
       </Link>
-      <Link className="btn-secondary" to="/qrp/reconciliation">
-        Reconciliation
+    ) : unresolved > 0 ? (
+      <Link className="btn-primary" to="/qrp/reconciliation">
+        Reconcile ({unresolved})
       </Link>
-    </span>
-  )
+    ) : undefined
   return (
     <Page
       crumbs={[
@@ -4417,6 +4418,14 @@ export function CentrePage() {
         </Card>
         ) : null}
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/reconciliation', label: 'Reconciliation' },
+          { to: '/qrp/jobs', label: 'Jobs & queues' },
+          { to: '/qrp/incidents', label: 'Incidents' },
+          { to: '/qrp/inventory', label: 'Inventory' },
+        ]}
+      />
     </Page>
   )
 }
@@ -4618,7 +4627,6 @@ export function BackendDetailPage() {
       : queue.data?.pending_jobs
   return (
     <Page
-      eyebrow="Operations"
       title={String(backend.data?.backend_name || backendId)}
       description="Catalogue record and topology from returned fields. Wait estimates come from Queues telemetry samples."
       actions={
@@ -5138,13 +5146,7 @@ export function EvidencePage() {
 
 export function SettingsPage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const session = user
-    ? {
-        username: formatPrincipalId(user.principal_id, user.roles?.[0]),
-        role: formatRole(user.roles?.[0]),
-      }
-    : null
+  const { logout } = useAuth()
   const boundary = useQuery({
     queryKey: ['institution-boundary'],
     queryFn: () => qre<Row>('/governance/institution-boundary'),
@@ -5155,6 +5157,7 @@ export function SettingsPage() {
     <Page
       crumbs={[{ label: 'Admin' }, { label: 'Settings' }]}
       title="Settings"
+      description="Account, demonstration tools, and platform health."
       actions={
         <button
           type="button"
@@ -5168,59 +5171,32 @@ export function SettingsPage() {
         </button>
       }
     >
-      <Card className="space-y-2 text-sm">
-        <PanelHeader title="Session" />
-        {session ? (
-          <dl className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">User</dt>
-              <dd className="mt-1 font-medium">{session.username}</dd>
-            </div>
-            <div>
-              <dt className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Role</dt>
-              <dd className="mt-1 font-medium">{session.role}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="text-muted-foreground">No session.</p>
-        )}
-      </Card>
-      <AccountSecurity />
-      <DemoEnvironmentPanel />
-      <DeploymentCapabilitiesPanel compact />
-      <Card className="space-y-2 text-sm">
-        <PanelHeader title="Institution" />
-        <QueryBody query={boundary} compactLoading notReportedTitle="Institution boundary not reported">
-          {boundary.data ? (
-            <>
-              <p>
-                Tenant <CopyableId value={String(boundary.data.active_tenant_id || '')} keep={20} />
-              </p>
-              <p>
-                Site {text(fed, 'local_site_name')} · peers {String(fed.peer_sites_reporting ?? '—')}/
-                {String(fed.peer_sites_configured ?? '—')}
-              </p>
-            </>
-          ) : (
-            <p className="text-muted-foreground">No institution boundary payload in this environment.</p>
-          )}
-        </QueryBody>
-      </Card>
-      <Card className="space-y-3">
-        <PanelHeader title="Health" />
-        <StatusPage framed />
-      </Card>
-      <Card className="space-y-2 text-sm">
-        <PanelHeader title="Records" />
-        <p className="flex flex-wrap gap-3">
-          <Link className="font-medium text-primary hover:underline" to="/qrp/admin/users">
-            Users & roles
-          </Link>
-          <Link className="font-medium text-primary hover:underline" to="/qrp/audit">
-            Audit trail
-          </Link>
-        </p>
-      </Card>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <AccountSecurity />
+          <DemoEnvironmentPanel />
+          <DeploymentCapabilitiesPanel compact />
+          <Card className="space-y-2 text-sm">
+            <PanelHeader title="Institution" />
+            <QueryBody query={boundary} compactLoading notReportedTitle="Boundary unavailable">
+              {boundary.data ? (
+                <p className="text-muted-foreground">
+                  {text(fed, 'local_site_name')} · tenant{' '}
+                  <CopyableId value={String(boundary.data.active_tenant_id || '')} keep={12} />
+                </p>
+              ) : null}
+            </QueryBody>
+          </Card>
+        </div>
+        <Card className="space-y-2 p-0 overflow-hidden">
+          <div className="border-b border-border px-4 py-3">
+            <PanelHeader title="Platform health" />
+          </div>
+          <div className="px-2 pb-4">
+            <StatusPage framed />
+          </div>
+        </Card>
+      </div>
     </Page>
   )
 }

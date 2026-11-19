@@ -47,7 +47,6 @@ export function UsersAdminPage() {
         { label: 'Admin', to: '/qrp/settings' },
         { label: 'Users & roles' },
       ]}
-      eyebrow="Administration"
       title="Users & roles"
       description="Assign and revoke roles. Scope and escalation rules are enforced by the server."
     >

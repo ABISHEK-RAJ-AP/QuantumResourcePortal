@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { cn } from '@/lib/utils'
-import { Card, PanelHeader } from '@/components/layout/Page'
+import { Card, PanelHeader, RelatedNav } from '@/components/layout/Page'
 
 export type RecordTab = {
   id: string
@@ -129,21 +129,8 @@ export function RecordWorkspace({
         ) : null}
 
         {related && related.length > 0 ? (
-          <Card className="space-y-2">
-            <PanelHeader title="Related records" />
-            <ul className="space-y-1">
-              {related.map((item) => (
-                <li key={`${item.to}-${item.label}`}>
-                  <Link
-                    className="flex flex-col rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
-                    to={item.to}
-                  >
-                    <span className="font-medium text-primary">{item.label}</span>
-                    {item.hint ? <span className="text-xs text-muted-foreground">{item.hint}</span> : null}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <Card className="pt-3 pb-2">
+            <RelatedNav items={related.map((item) => ({ to: item.to, label: item.label, hint: item.hint }))} />
           </Card>
         ) : null}
 

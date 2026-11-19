@@ -121,7 +121,6 @@ export function RoleEditorPage() {
         { label: 'Roles', to: '/qrp/admin/roles' },
         { label: isNew ? 'New role' : readOnly ? 'View role' : 'Edit role' },
       ]}
-      eyebrow="Administration"
       title={isNew ? 'New role' : readOnly ? 'Role (system)' : 'Edit role'}
       description="Choose a scope and the permissions this role grants, grouped by module."
     >

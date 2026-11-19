@@ -21,7 +21,6 @@ export function UserPermissionsPage() {
 
   return (
     <Page
-      eyebrow="Administration"
       title={eff.data ? `Permissions · ${eff.data.username}` : 'User permissions'}
       description="Effective permissions resolved from the user's active role assignments."
       actions={

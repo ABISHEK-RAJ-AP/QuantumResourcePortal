@@ -52,6 +52,7 @@ import {
   Notice,
   Page,
   PanelHeader,
+  RelatedNav,
   stateLabel,
   stateTone,
 } from '@/components/layout/Page'
@@ -350,6 +351,14 @@ export function OverviewPage() {
         activityRows={activityRows}
         activityError={activity.isError}
       />
+      <RelatedNav
+        items={[
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/settings', label: 'Settings' },
+        ]}
+      />
     </Page>
   )
 }
@@ -439,7 +448,7 @@ export function ApprovalsPage() {
             Open {shortId(String(nextRow.workload_id), 8)}
           </Link>
         ) : (
-          <Link className="btn-secondary" to="/qrp/projects">
+          <Link className="btn-primary" to="/qrp/projects">
             New project
           </Link>
         )
@@ -581,6 +590,14 @@ export function ApprovalsPage() {
           )}
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/policies', label: 'Policies' },
+          { to: '/qrp/reservations', label: 'Reservations' },
+          { to: '/qrp/approvals/history', label: 'Approval history' },
+        ]}
+      />
     </Page>
   )
 }
@@ -732,7 +749,7 @@ export function ApprovalDetailPage() {
           <InfoTip label="Approval scope">
             Decision writes to audit and advances stages. Does not dispatch a provider job. After approved: Schedule hold → authorize dispatch.
           </InfoTip>
-          <Link to="/qrp/approvals" className="btn-secondary">
+          <Link to="/qrp/approvals" className="fs-link text-sm">
             Queue
           </Link>
           {govState === 'approved' ? (
@@ -1255,7 +1272,7 @@ export function InventoryPage() {
             <Link className="btn-primary" to="/qrp/inventory/new">
               Register asset
             </Link>
-            <Link className="btn-secondary" to="/qrp/inventory/import">
+            <Link className="btn-ghost" to="/qrp/inventory/import">
               Import
             </Link>
           </span>
@@ -1280,6 +1297,15 @@ export function InventoryPage() {
         {tab === 'pools' ? <PoolsPage embedded /> : null}
         {tab === 'backends' ? <BackendsPage embedded /> : null}
       </RecordWorkspace>
+      {tab === 'catalogue' ? (
+        <RelatedNav
+          items={[
+            { to: '/qrp/providers', label: 'Providers' },
+            { to: '/qrp/backends', label: 'Backends hub' },
+            { to: '/qrp/pools', label: 'Pools' },
+          ]}
+        />
+      ) : null}
     </Page>
   )
 }
@@ -1326,16 +1352,6 @@ export function ProvidersPage() {
       ]}
       title="Providers"
       description="Provider manifests and integration stage — upstream of inventory and connectors."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-secondary" to="/qrp/connectors">
-            Connectors
-          </Link>
-          <Link className="btn-secondary" to="/qrp/providers/onboarding">
-            Onboarding board
-          </Link>
-        </span>
-      }
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip className="sm:grid-cols-2 lg:grid-cols-4">
@@ -1420,6 +1436,13 @@ export function ProvidersPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/connectors', label: 'Connectors' },
+          { to: '/qrp/providers/onboarding', label: 'Onboarding board' },
+          { to: '/qrp/inventory', label: 'Inventory' },
+        ]}
+      />
     </Page>
   )
 }
@@ -1639,6 +1662,13 @@ export function ProjectsPage() {
           )}
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/policies', label: 'Policies' },
+          { to: '/qrp/quotas', label: 'Quotas' },
+        ]}
+      />
     </Page>
   )
 }
@@ -1728,6 +1758,13 @@ export function PoliciesPage() {
           />
         </Card>
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/approvals', label: 'Review queue' },
+          { to: '/qrp/projects', label: 'Projects' },
+          { to: '/qrp/quotas', label: 'Quotas' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2471,6 +2508,13 @@ export function AuditPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/settings', label: 'Settings' },
+          { to: '/qrp/approvals/history', label: 'Approval history' },
+          { to: '/qrp/admin/users', label: 'Users & roles' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2628,6 +2672,13 @@ export function SupportPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/incidents', label: 'Incidents' },
+          { to: '/qrp/centre', label: 'Operations centre' },
+          { to: '/qrp/backends', label: 'Backends' },
+        ]}
+      />
     </Page>
   )
 }
@@ -2647,17 +2698,9 @@ export function ProcurementPage() {
       title="Procurement"
       description="Purchasing and entitlement contracts are outside this release. Use inventory registration and the quota ledger for live capacity control."
       actions={
-        <span className="flex flex-wrap gap-2">
-          <Link className="btn-primary" to="/qrp/inventory">
-            Inventory
-          </Link>
-          <Link className="btn-secondary" to="/qrp/quotas">
-            Quotas
-          </Link>
-          <Link className="btn-secondary" to="/qrp/providers">
-            Providers
-          </Link>
-        </span>
+        <Link className="btn-primary" to="/qrp/inventory">
+          Inventory
+        </Link>
       }
       updatedAt={summary.dataUpdatedAt}
     >
@@ -2678,6 +2721,13 @@ export function ProcurementPage() {
           <li>Procurement workflows will attach here when scope expands; no placeholder purchase forms ship in this build.</li>
         </ul>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/quotas', label: 'Quotas' },
+          { to: '/qrp/providers', label: 'Providers' },
+          { to: '/qrp/reservations', label: 'Reservations' },
+        ]}
+      />
     </Page>
   )
 }
