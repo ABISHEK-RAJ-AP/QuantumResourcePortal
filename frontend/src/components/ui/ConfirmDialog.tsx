@@ -35,7 +35,7 @@ export function ConfirmDialog({
         <div className="text-sm leading-relaxed text-muted-foreground">{body}</div>
         <p className="text-xs text-muted-foreground">This cannot be undone from the console.</p>
         <div className="flex flex-wrap justify-end gap-2">
-          <button type="button" className="btn-secondary" disabled={busy} onClick={safeClose}>
+          <button type="button" className="btn-ghost" disabled={busy} onClick={safeClose}>
             {cancelLabel}
           </button>
           <button

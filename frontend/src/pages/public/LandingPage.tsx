@@ -14,7 +14,7 @@ const CAPABILITIES = [
   },
   {
     title: 'Capacity you can explain',
-    body: 'Daily shot ledger, reservations, and metering rollups tied to the active tenant, not a demo counter.',
+    body: 'Daily shot ledger, reservations, and metering rollups for the active institution.',
   },
   {
     title: 'Evidence on demand',
@@ -44,8 +44,8 @@ const FAQ = [
     a: 'C-DAC’s governance workspace for quantum workloads: approvals, capacity, fleet operations, and evidence for one institution at a time.',
   },
   {
-    q: 'How do I run the lab demo?',
-    a: 'Sign in (Demo accounts on the login page if enabled), open Approvals, and use Start demo review to walk a live stage trail.',
+    q: 'How do I start a review?',
+    a: 'Sign in, open Approvals, and submit or open a workload on your project policy stages.',
   },
   {
     q: 'Is procurement in this build?',
@@ -61,29 +61,28 @@ export function LandingPage() {
   return (
     <PublicShell>
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
-        <GridPulse className="qrp-landing-bg-grid absolute inset-0 z-0" ambient={0.6} maxLit={48} reach={1.8} />
+        <GridPulse className="qrp-landing-bg-grid absolute inset-0 z-0" cell={40} ambient={0.45} maxLit={36} reach={1.5} />
         <main id="main-content" className="relative z-10 flex flex-col">
           <section className="qrp-landing-hero flex min-h-[min(88dvh,88svh,880px)] w-full flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24 lg:py-28">
             <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
-              <p className="qrp-landing-hero__eyebrow">C-DAC · Quantum Resource Portal</p>
+              <p className="qrp-landing-hero__eyebrow">Quantum Resource Portal</p>
               <h1 className="qrp-landing-hero__title type-trim text-balance">
                 Govern quantum workloads from submit to reconcile
               </h1>
               <p className="qrp-landing-hero__lead hyphenate mx-auto max-w-2xl text-pretty">
-                One operator workspace for approvals, quotas, fleet posture, dispatch, and audit evidence — built for
-                institution-scale governance, not a generic SaaS dashboard.
+                Approvals, quotas, fleet status, dispatch, and audit exports for one institution.
               </p>
               <div className="qrp-landing-hero__actions mt-10">
                 <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
                   Sign in
                   <ArrowRight className="size-5" aria-hidden />
                 </Link>
-                <Link to="/register" className="btn-secondary landing-hero-cta">
+              </div>
+              <p className="mt-5 text-sm text-muted-foreground">
+                Need an account?{' '}
+                <Link to="/register" className="fs-link font-semibold text-primary">
                   Request access
                 </Link>
-              </div>
-              <p className="mt-6 text-sm text-muted-foreground">
-                Lab demo: open Approvals after sign-in and start the packaged review trail.
               </p>
             </div>
             <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-24" aria-hidden />
@@ -91,16 +90,16 @@ export function LandingPage() {
 
           <div className="qrp-landing-main space-y-0">
             <section id="capabilities" className="scroll-mt-28">
-              <div className="qrp-landing-section-head qrp-landing-section-head--split">
+              <div className="qrp-landing-section-head">
                 <div>
                   <span className="qrp-landing-kicker">Console</span>
                   <h2 className="qrp-landing-section__title mt-1">What operators run here</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                    Request, review, authorise, and reconcile with exportable records.
+                  </p>
                 </div>
-                <p className="hyphenate max-w-md text-sm leading-relaxed text-muted-foreground">
-                  G1–G3 governance: request, review, authorise, and reconcile with records you can export.
-                </p>
               </div>
-              <div className="mt-10 grid gap-4 md:grid-cols-3">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {CAPABILITIES.map((item, i) => (
                   <article key={item.title} className={cn('qrp-landing-tile', i === 0 && 'qrp-landing-tile--lead md:col-span-1')}>
                     <h3 className="text-base font-semibold tracking-tight text-foreground">{item.title}</h3>
@@ -113,10 +112,7 @@ export function LandingPage() {
             <section id="modules" className="scroll-mt-28">
               <div className="qrp-landing-section-head max-w-3xl">
                 <span className="qrp-landing-kicker">Modules</span>
-                <h2 className="qrp-landing-section__title mt-1">Surfaces wired to the API today</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Each route maps to a live workspace screen — no placeholder procurement or fake KPIs.
-                </p>
+                <h2 className="qrp-landing-section__title mt-1">Workspace routes</h2>
               </div>
               <div className="mt-8 qrp-landing-module-list">
                 {MODULES.map((item) => (

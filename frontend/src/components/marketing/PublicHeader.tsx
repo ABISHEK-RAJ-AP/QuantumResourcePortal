@@ -99,13 +99,12 @@ export function PublicHeader({ className }: { className?: string }) {
           <Link
             to="/register"
             className={cn(
-              'hidden items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap md:inline-flex',
-              dark ? 'bg-white text-[#0b1220] hover:bg-white/90' : 'bg-primary text-primary-foreground hover:brightness-95',
-              onRegister && 'ring-2 ring-primary/40',
+              'fs-link hidden whitespace-nowrap px-2 py-2 text-sm font-semibold md:inline-flex',
+              dark ? 'text-white/80 hover:text-white' : 'text-muted-foreground hover:text-foreground',
+              onRegister && 'text-primary',
             )}
           >
-            Get started
-            <ArrowRight className="size-4" />
+            Request access
           </Link>
 
           <button
@@ -133,12 +132,12 @@ export function PublicHeader({ className }: { className?: string }) {
                 {link.label}
               </a>
             ))}
-            <div className="mt-2 flex gap-2 border-t pt-3" style={{ borderColor: 'inherit' }}>
-              <Link to="/login" className="btn-secondary flex-1 justify-center" onClick={() => setOpen(false)}>
+            <div className="mt-2 flex flex-col gap-2 border-t pt-3" style={{ borderColor: 'inherit' }}>
+              <Link to="/login" className="btn-primary justify-center" onClick={() => setOpen(false)}>
                 Sign in
               </Link>
-              <Link to="/register" className="btn-primary flex-1 justify-center" onClick={() => setOpen(false)}>
-                Get started
+              <Link to="/register" className="fs-link px-3 py-2 text-center text-sm font-semibold" onClick={() => setOpen(false)}>
+                Request access
               </Link>
             </div>
           </nav>

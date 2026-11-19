@@ -21,7 +21,7 @@ export function RouteError() {
           <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
             Refresh
           </button>
-          <Link to="/" className="btn-secondary">
+          <Link to="/" className="fs-link text-sm font-semibold text-primary">
             Back home
           </Link>
         </div>

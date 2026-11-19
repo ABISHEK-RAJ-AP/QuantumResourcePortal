@@ -40,7 +40,12 @@ export function FilterBar({
         <button
           key={opt.id}
           type="button"
-          className={cn(value === opt.id ? 'btn-secondary' : 'btn-ghost')}
+          className={cn(
+            'rounded-lg px-3 py-1.5 text-sm font-medium transition',
+            value === opt.id
+              ? 'bg-accent font-semibold text-accent-foreground'
+              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+          )}
           aria-pressed={value === opt.id}
           onClick={() => onChange(opt.id)}
         >

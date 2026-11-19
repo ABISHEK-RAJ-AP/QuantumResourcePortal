@@ -2058,7 +2058,7 @@ export function AlertDetailPage() {
                         </button>
                       )}
                       {status !== 'RESOLVED' && (
-                        <button type="button" className="btn-secondary" disabled={advance.isPending} onClick={() => advance.mutate('resolve')}>
+                        <button type="button" className="btn-ghost" disabled={advance.isPending} onClick={() => advance.mutate('resolve')}>
                           Resolve
                         </button>
                       )}
@@ -2754,7 +2754,7 @@ export function DispatchPage() {
             type="button"
             role="tab"
             aria-selected={view === t.id}
-            className={view === t.id ? 'btn-secondary' : 'btn-ghost'}
+            className={view === t.id ? 'chip-active' : 'btn-ghost'}
             onClick={() => setView(t.id)}
           >
             {t.label}
@@ -2806,7 +2806,7 @@ export function DispatchPage() {
               <li>Cross-check provider job when external_job_id exists.</li>
             </ol>
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" className="btn-secondary" onClick={() => setView('attempts')}>
+              <button type="button" className="btn-ghost" onClick={() => setView('attempts')}>
                 Browse attempts
               </button>
             </div>
@@ -3063,7 +3063,7 @@ export function UsersPage() {
       actions={
         <div className="flex flex-wrap justify-end gap-2">
           {canManage ? (
-            <button type="button" className="btn-secondary" onClick={() => setRoleOpen(true)} title="Create a catalog role from a clone">
+            <button type="button" className="btn-ghost" onClick={() => setRoleOpen(true)} title="Create a catalog role from a clone">
               New role
             </button>
           ) : null}
@@ -5207,7 +5207,7 @@ export function SettingsPage() {
       actions={
         <button
           type="button"
-          className="btn-secondary"
+          className="btn-ghost"
           onClick={() => {
             void logout()
             navigate('/login')

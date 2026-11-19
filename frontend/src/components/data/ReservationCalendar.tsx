@@ -249,7 +249,7 @@ export function ReservationCalendar({
         {selectedDate && scheduleDayHref ? (
           <Link
             to={scheduleDayHref(selectedDate)}
-            className="btn-secondary mt-3 inline-flex w-full justify-center text-sm"
+            className="btn-ghost mt-3 inline-flex w-full justify-center text-sm"
           >
             Request hold on this day
           </Link>

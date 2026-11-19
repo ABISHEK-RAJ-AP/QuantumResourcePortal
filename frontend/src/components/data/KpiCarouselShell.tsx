@@ -26,14 +26,14 @@ const slideVariants = {
 export function KpiCarouselShell({
   pageCount,
   pageIndex,
-  onSelectPage,
   ariaLabel,
   className,
   children,
 }: {
   pageCount: number
   pageIndex: number
-  onSelectPage: (index: number) => void
+  /** Autoplay only — dots removed; kept for API compatibility. */
+  onSelectPage?: (index: number) => void
   ariaLabel: string
   className?: string
   children: ReactNode
@@ -66,21 +66,6 @@ export function KpiCarouselShell({
           </AnimatePresence>
         )}
       </div>
-      {pageCount > 1 ? (
-        <div className="overview-kpi-carousel__dots" role="tablist" aria-label="KPI pages">
-          {Array.from({ length: pageCount }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              role="tab"
-              aria-selected={i === pageIndex}
-              aria-label={`Page ${i + 1} of ${pageCount}`}
-              className={cn('overview-kpi-carousel__dot', i === pageIndex && 'is-active')}
-              onClick={() => onSelectPage(i)}
-            />
-          ))}
-        </div>
-      ) : null}
     </section>
   )
 }

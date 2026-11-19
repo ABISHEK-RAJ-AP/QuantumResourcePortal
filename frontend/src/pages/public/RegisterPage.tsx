@@ -49,16 +49,15 @@ export function RegisterPage() {
         onAvailability={setCaptchaOn}
         fieldError={fieldError}
       />
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button type="button" className="btn-primary qrp-auth-submit auth-cta flex-1" onClick={continueToSignIn}>
+      <div className="mt-6 space-y-4">
+        <button type="button" className="btn-primary qrp-auth-submit auth-cta w-full" onClick={continueToSignIn}>
           Continue to sign in
         </button>
-        <Link
-          className="btn-secondary qrp-auth-submit auth-cta inline-flex flex-1 items-center justify-center"
-          to="/login"
-        >
-          Back to sign in
-        </Link>
+        <p className="text-center text-sm text-muted-foreground">
+          <Link className="fs-link font-semibold text-primary" to="/login">
+            Back to sign in
+          </Link>
+        </p>
       </div>
     </AuthPanel>
   )

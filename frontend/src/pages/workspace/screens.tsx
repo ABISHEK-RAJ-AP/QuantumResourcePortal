@@ -530,7 +530,7 @@ export function ApprovalsPage() {
               body={search.trim() ? 'No rows match search.' : 'Submit a workload from a project.'}
               action={
                 search.trim() ? (
-                  <button type="button" className="btn-secondary" onClick={() => setSearch('')}>
+                  <button type="button" className="btn-ghost" onClick={() => setSearch('')}>
                     Clear search
                   </button>
                 ) : (
@@ -983,7 +983,7 @@ export function ApprovalDetailPage() {
                         >
                           Reject
                         </button>
-                        <button type="button" disabled={withdraw.isPending} onClick={confirmWithdraw} className="btn-secondary">
+                        <button type="button" disabled={withdraw.isPending} onClick={confirmWithdraw} className="btn-ghost">
                           Withdraw
                         </button>
                       </div>
@@ -1229,7 +1229,7 @@ export function InventoryPage() {
                 <button
                   key={opt.id}
                   type="button"
-                  className={life === opt.id ? 'btn-secondary' : 'btn-ghost'}
+                  className={life === opt.id ? 'chip-active' : 'btn-ghost'}
                   aria-pressed={life === opt.id}
                   onClick={() => setLife(opt.id)}
                 >
@@ -1586,10 +1586,10 @@ export function ProjectsPage() {
             defaultId="all"
           />
           <div className="flex gap-1 rounded-lg border border-border p-1">
-            <button type="button" className={view === 'table' ? 'btn-secondary' : 'btn-ghost'} onClick={() => setView('table')}>
+            <button type="button" className={view === 'table' ? 'chip-active' : 'btn-ghost'} onClick={() => setView('table')}>
               Table
             </button>
-            <button type="button" className={view === 'cards' ? 'btn-secondary' : 'btn-ghost'} onClick={() => setView('cards')}>
+            <button type="button" className={view === 'cards' ? 'chip-active' : 'btn-ghost'} onClick={() => setView('cards')}>
               Cards
             </button>
           </div>
@@ -2139,7 +2139,7 @@ export function ReservationsPage() {
             cancelling one hold, or adjust windows.
           </p>
           {!conflictsOnly ? (
-            <button type="button" className="btn-secondary mt-2 text-sm" onClick={showConflictsOnly}>
+            <button type="button" className="btn-ghost mt-2 text-sm" onClick={showConflictsOnly}>
               Show overlapping holds
             </button>
           ) : (
@@ -2169,14 +2169,14 @@ export function ReservationsPage() {
             defaultId="all"
           />
           <div className="ms-auto flex gap-1 rounded-lg border border-border p-0.5" role="tablist" aria-label="Reservation view">
-            <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'btn-secondary' : 'btn-ghost'} onClick={() => setView('list')}>
+            <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'chip-active' : 'btn-ghost'} onClick={() => setView('list')}>
               List
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={view === 'calendar'}
-              className={view === 'calendar' ? 'btn-secondary' : 'btn-ghost'}
+              className={view === 'calendar' ? 'chip-active' : 'btn-ghost'}
               onClick={() => setView('calendar')}
             >
               Calendar

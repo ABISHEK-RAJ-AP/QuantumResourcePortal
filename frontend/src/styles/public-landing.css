@@ -21,7 +21,13 @@
 }
 
 .qrp-landing-main > section + section {
-  margin-top: 7rem;
+  margin-top: 5rem;
+}
+
+@media (min-width: 1024px) {
+  .qrp-landing-main > section + section {
+    margin-top: 6rem;
+  }
 }
 
 .qrp-landing-section-head {
@@ -136,7 +142,7 @@
 }
 
 .qrp-landing-bg-grid {
-  opacity: 0.45;
+  opacity: 0.32;
 }
 
 @media (prefers-reduced-motion: reduce) {

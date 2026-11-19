@@ -65,15 +65,16 @@ html.theme-instant *::after {
 
 .overview-kpi-carousel__page-motion {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+  gap: 0.625rem;
   width: 100%;
   will-change: transform, opacity;
 }
 
-@media (max-width: 720px) {
+@media (min-width: 640px) {
   .overview-kpi-carousel__page-motion {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 }
 

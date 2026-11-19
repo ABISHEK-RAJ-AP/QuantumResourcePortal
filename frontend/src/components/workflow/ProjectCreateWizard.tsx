@@ -103,7 +103,7 @@ export function ProjectCreateWizard({
             />
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" className="btn-secondary" onClick={reset}>
+            <button type="button" className="btn-ghost" onClick={reset}>
               Cancel
             </button>
             <button type="submit" className="btn-primary">
@@ -123,7 +123,7 @@ export function ProjectCreateWizard({
             <strong>Authorise</strong> — approvers record rationale; audit trail is append-only.
           </p>
           <div className="flex justify-between gap-2 pt-2">
-            <button type="button" className="btn-secondary" onClick={() => setStep(0)}>
+            <button type="button" className="btn-ghost" onClick={() => setStep(0)}>
               Back
             </button>
             <button type="button" className="btn-primary" onClick={() => setStep(2)}>
@@ -151,7 +151,7 @@ export function ProjectCreateWizard({
             ) : null}
           </dl>
           <div className="flex justify-between gap-2">
-            <button type="button" className="btn-secondary" onClick={() => setStep(1)}>
+            <button type="button" className="btn-ghost" onClick={() => setStep(1)}>
               Back
             </button>
             <button

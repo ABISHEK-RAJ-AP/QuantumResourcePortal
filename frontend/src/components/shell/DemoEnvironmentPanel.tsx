@@ -55,14 +55,14 @@ export function DemoEnvironmentPanel() {
           {seed.isPending ? 'Seeding…' : 'Load demo data'}
         </button>
         {!simOn ? (
-          <button type="button" className="btn-secondary" disabled={busy} onClick={() => start.mutate()}>
+          <button type="button" className="btn-ghost" disabled={busy} onClick={() => start.mutate()}>
             Start simulation
           </button>
         ) : (
           <>
             <button
               type="button"
-              className="btn-secondary"
+              className="btn-ghost"
               disabled={busy}
               onClick={() => (status.data?.paused ? resume.mutate() : pause.mutate())}
             >

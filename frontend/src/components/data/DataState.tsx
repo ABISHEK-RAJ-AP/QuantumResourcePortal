@@ -43,7 +43,7 @@ export function DataState({
         <p className="font-medium text-foreground">{title}</p>
         <p className="mt-1 text-pretty">{formatApiError(error)}</p>
         {onRetry ? (
-          <button type="button" className="btn-secondary mt-3 text-sm" onClick={onRetry}>
+          <button type="button" className="btn-ghost mt-3 text-sm" onClick={onRetry}>
             Retry
           </button>
         ) : null}
