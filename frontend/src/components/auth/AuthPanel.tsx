@@ -47,7 +47,7 @@ export function AuthPanel({
                 </Link>
               </div>
             </aside>
-            <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7">
+            <main id="main-content" className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7">
               <div className="mx-auto w-full max-w-md space-y-6">
                 <header>
                   <h1 className="type-page-title type-trim text-balance">{title}</h1>
@@ -58,7 +58,7 @@ export function AuthPanel({
                 {children}
                 {footer ? <div className="qrp-auth-form-footer auth-panel-footer border-t border-border pt-3">{footer}</div> : null}
               </div>
-            </div>
+            </main>
           </div>
         </div>
       </div>

@@ -76,7 +76,8 @@ export function LandingPage() {
       {/* Landing only (between public header and footer): pointer trail across all sections */}
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="z-0 opacity-90" ambient={1} maxLit={96} reach={2.2} />
-        <section className="qrp-landing-hero relative z-10 flex min-h-[min(92dvh,92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
+        <main id="main-content" className="relative z-10 flex flex-col">
+        <section className="qrp-landing-hero flex min-h-[min(92dvh,92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
           <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
             <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow acr', guard)}>
               C-DAC · Quantum platform
@@ -100,9 +101,9 @@ export function LandingPage() {
           <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-24" aria-hidden />
         </section>
 
-        <main className="relative z-10 mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-7xl space-y-24 px-4 py-20 sm:px-8 lg:px-10">
           <section id="capabilities" className="scroll-mt-28">
-            <div className="flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
+            <div className="qrp-landing-section-head flex flex-col justify-between gap-6 border-b border-border pb-4 md:flex-row md:items-end">
               <div>
                 <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                   Approvals, capacity, and evidence in one workspace
@@ -134,7 +135,7 @@ export function LandingPage() {
           </section>
 
           <section id="modules" className="scroll-mt-28">
-            <div className="max-w-3xl space-y-2 text-left">
+            <div className="qrp-landing-section-head max-w-3xl space-y-2">
               <h2 data-grid-avoid className={cn('qrp-landing-section__title', guard)}>
                 Operator modules for the live fleet
               </h2>
@@ -206,6 +207,7 @@ export function LandingPage() {
             <div className="mt-10 divide-y divide-border border-y border-border">
               {FAQ.map((item, idx) => {
                 const open = openFaq === idx
+                const answerId = `faq-answer-${idx}`
                 return (
                   <div key={item.q}>
                     <button
@@ -213,6 +215,7 @@ export function LandingPage() {
                       className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       onClick={() => setOpenFaq(open ? -1 : idx)}
                       aria-expanded={open}
+                      aria-controls={answerId}
                     >
                       <span data-grid-avoid className={cn('type-title-clamp', guard)}>
                         {item.q}
@@ -224,11 +227,15 @@ export function LandingPage() {
                         )}
                       />
                     </button>
-                    {open && (
-                      <p data-grid-avoid className={cn('hyphenate pb-6 text-sm leading-relaxed text-muted-foreground', guard)}>
+                    {open ? (
+                      <p
+                        id={answerId}
+                        data-grid-avoid
+                        className={cn('hyphenate pb-6 text-sm leading-relaxed text-muted-foreground', guard)}
+                      >
                         {item.a}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 )
               })}
@@ -257,6 +264,7 @@ export function LandingPage() {
               </div>
             </div>
           </section>
+        </div>
         </main>
       </div>
     </PublicShell>

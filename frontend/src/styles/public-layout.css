@@ -120,6 +120,18 @@
   gap: 1rem 1.5rem;
 }
 
+.qrp-landing-section-head {
+  text-align: center;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .qrp-landing-section-head {
+    text-align: left;
+    align-items: flex-end;
+  }
+}
+
 .qrp-landing-hero {
   text-align: center;
   align-items: center;

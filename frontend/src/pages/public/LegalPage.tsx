@@ -7,7 +7,7 @@ import { Card } from '@/components/layout/Page'
 export function PrivacyPage() {
   return (
     <PublicShell>
-      <main className="mx-auto max-w-2xl px-4 py-10 text-center">
+      <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 text-center">
         <h1 className="type-page-title type-trim">Privacy (draft)</h1>
         <Card className="hyphenate mt-4 space-y-3 text-left text-sm leading-relaxed text-muted-foreground">
           <p>
@@ -35,7 +35,7 @@ export function PrivacyPage() {
 export function TermsPage() {
   return (
     <PublicShell>
-      <main className="mx-auto max-w-2xl px-4 py-10 text-center">
+      <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 text-center">
         <h1 className="type-page-title type-trim">Terms of use (draft)</h1>
         <Card className="hyphenate mt-4 space-y-3 text-left text-sm leading-relaxed text-muted-foreground">
           <p>

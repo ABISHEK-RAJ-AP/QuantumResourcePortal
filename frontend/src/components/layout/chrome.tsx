@@ -205,6 +205,7 @@ function ShellInner() {
   return (
     <div className="flex min-h-0 w-full flex-1 bg-surface text-foreground">
       <aside
+        aria-label="Primary navigation"
         className={cn(
           'sticky top-8 flex h-[calc(100svh-2rem)] shrink-0 flex-col border-e border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out',
           collapsed ? 'w-[72px]' : 'w-60',

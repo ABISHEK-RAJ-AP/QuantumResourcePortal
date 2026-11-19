@@ -32,11 +32,14 @@ function rowKey(row: DataTableRow, index: number) {
 export function DataTable<T extends DataTableRow = DataTableRow>({
   columns,
   rows,
+  caption,
   emptyTitle = 'Nothing here yet',
   emptyBody = '',
 }: {
   columns: DataTableColumn<T>[]
   rows: T[]
+  /** Visible or screen-reader table label (H6 / #13). */
+  caption?: string
   emptyTitle?: string
   emptyBody?: ReactNode
 }) {
@@ -55,14 +58,30 @@ export function DataTable<T extends DataTableRow = DataTableRow>({
   return (
     <div className="scroll-bar-hidden overflow-x-auto">
       <table className="data-table w-full text-left text-sm">
+        {caption ? (
+          <caption className="sr-only">
+            {caption}
+          </caption>
+        ) : null}
         <thead>
           <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
             {columns.map((col) => (
-              <th key={col.key} className="px-3 py-2.5 font-semibold first:ps-0 last:pe-0">
+              <th
+                key={col.key}
+                className="px-3 py-2.5 font-semibold first:ps-0 last:pe-0"
+                aria-sort={
+                  col.sortable && sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
+                }
+              >
                 {col.sortable ? (
                   <button
                     type="button"
                     className="inline-flex items-center gap-1 hover:text-foreground"
+                    aria-label={
+                      sortKey === col.key
+                        ? `Sort by ${col.label}, ${sortDir === 'asc' ? 'ascending' : 'descending'}`
+                        : `Sort by ${col.label}`
+                    }
                     onClick={() => {
                       if (sortKey === col.key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
                       else {
