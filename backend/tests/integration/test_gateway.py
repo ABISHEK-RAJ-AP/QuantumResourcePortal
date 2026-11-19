@@ -36,6 +36,13 @@ async def test_healthz_generates_correlation_id(client):
     assert is_ulid(response.headers["X-Correlation-ID"])
 
 
+async def test_healthz_includes_baseline_security_headers(client):
+    response = await client.get("/healthz")
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert response.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+
+
 async def test_valid_inbound_correlation_id_is_preserved(client):
     response = await client.get("/healthz", headers={"X-Correlation-ID": "trace-abc-12345"})
     assert response.headers["X-Correlation-ID"] == "trace-abc-12345"

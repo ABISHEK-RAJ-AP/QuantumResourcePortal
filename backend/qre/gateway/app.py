@@ -19,6 +19,7 @@ from qre.core.db import Database
 from qre.core.logging import configure_logging
 from qre.gateway import health
 from qre.gateway.middleware.correlation import CorrelationMiddleware
+from qre.gateway.middleware.security_headers import SecurityHeadersMiddleware
 from qre.gateway.problem import install_problem_handlers
 
 API_PREFIX = "/api/v1"
@@ -186,7 +187,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ],
             expose_headers=["X-Correlation-ID", "Retry-After"],
         )
-    # Added last = outermost: every response (including CORS and errors) gets a correlation id.
+    # Added last = outermost: correlation id + baseline security headers on every response.
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(CorrelationMiddleware)
 
     app.include_router(health.router)

@@ -1,0 +1,101 @@
+/* Ops console motion — springs, press, shake; respect reduced-motion. */
+
+html.theme-instant,
+html.theme-instant *,
+html.theme-instant *::before,
+html.theme-instant *::after {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.overview-kpi-carousel__dot {
+  transform-origin: center;
+  transition:
+    transform 0.14s cubic-bezier(0.34, 1.2, 0.64, 1),
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.overview-kpi-carousel__dot:active {
+  transform: scale(0.92);
+}
+
+@keyframes qrp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.qrp-shake {
+  animation: qrp-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.qrp-form-shell.qrp-shake {
+  animation: qrp-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+.overview-kpi-carousel__viewport {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.overview-kpi-carousel__page-motion {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 720px) {
+  .overview-kpi-carousel__page-motion {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.shell-canvas,
+.kpi-rail__viewport {
+  overscroll-behavior: contain;
+}
+
+[data-tooltip-root] {
+  /* no delay — hover shows panel immediately via pointer-events */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:active:not(:disabled),
+  .btn-secondary:active:not(:disabled),
+  .btn-ghost:active:not(:disabled),
+  .overview-kpi-carousel__dot:active {
+    transform: none;
+  }
+
+  .qrp-shake,
+  .qrp-form-shell.qrp-shake {
+    animation: none;
+  }
+}

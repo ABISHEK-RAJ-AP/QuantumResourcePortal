@@ -49,7 +49,7 @@
 | 2 | Open redirect same pattern on MFA success | CONFIRMED | High | `frontend/src/pages/public/MfaPage.tsx:66` |
 | 3 | No global IP rate limit on login (only per-account lockout) | LIKELY | Medium | `backend/qre/services/svc02_identity/service.py` — lockout at `config.py:57-59`; no 429 middleware |
 | 4 | PostgreSQL RLS disabled (second isolation layer) | CONFIRMED | Medium | `backend/.env.example:50` `QRE_RLS_ENABLED=false` |
-| 5 | Security headers (HSTS, CSP, X-Frame-Options) not set in app | LIKELY | Low | `backend/qre/gateway/app.py` — CORS only |
+| 5 | Security headers (HSTS, CSP, X-Frame-Options) not set in app | PARTIAL FIX | Low | Baseline headers in `security_headers.py` (nosniff, DENY, referrer); HSTS/CSP still at edge |
 | 6 | OpenAPI/Swagger public on API | CONFIRMED | Low | `backend/qre/gateway/app.py:165-168` |
 | 7 | Session cookie `Secure` off in lab | CONFIRMED | Low (lab) / High (if mis-profiled) | `backend/qre/core/config.py:124-126` |
 

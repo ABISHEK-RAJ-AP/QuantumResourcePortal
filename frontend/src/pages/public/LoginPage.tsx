@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/hooks'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
-import { FieldAlert, FormBanner, mapApiFieldErrors } from '@/components/auth/FormAlerts'
+import { FieldAlert, FormBanner, FormShakeShell, mapApiFieldErrors } from '@/components/auth/FormAlerts'
 import { AuthDemoPresets } from '@/components/auth/AuthDemoPresets'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
@@ -95,6 +95,7 @@ export function LoginPage() {
         </div>
       }
     >
+      <FormShakeShell shakeKey={banner} className="space-y-4">
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
         <AuthOutlineField label="Username" htmlFor="login-username">
@@ -133,6 +134,7 @@ export function LoginPage() {
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+      </FormShakeShell>
     </AuthPanel>
   )
 }

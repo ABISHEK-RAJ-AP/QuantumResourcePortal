@@ -1,6 +1,6 @@
 import { Children, useMemo, useState, type ReactNode } from 'react'
 
-import { KpiCarouselPage, KpiCarouselShell } from '@/components/data/KpiCarouselShell'
+import { KpiCarouselShell } from '@/components/data/KpiCarouselShell'
 import { chunkItems, useKpiCarouselRotate } from '@/components/data/kpiCarouselShared'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
 import { cn } from '@/lib/utils'
@@ -25,14 +25,10 @@ export function KpiStrip({ children, className }: { children: ReactNode; classNa
       ariaLabel="Key metrics"
       className={cn(prefs.kpiLayout === 'dense' && 'kpi-rail--dense', className)}
     >
-      {pages.map((page, pi) => (
-        <KpiCarouselPage key={pi} active={pi === pageIndex}>
-          {page.map((child, idx) => (
-            <div key={idx} className="kpi-rail__cell" role="listitem">
-              {child}
-            </div>
-          ))}
-        </KpiCarouselPage>
+      {(pages[pageIndex] ?? []).map((child, idx) => (
+        <div key={idx} className="kpi-rail__cell" role="listitem">
+          {child}
+        </div>
       ))}
     </KpiCarouselShell>
   )

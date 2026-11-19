@@ -14,10 +14,14 @@ export function readTheme(): AppTheme {
 
 export function applyTheme(theme: AppTheme) {
   const root = document.documentElement
+  root.classList.add('theme-instant')
   root.classList.toggle('dark', theme === 'dark')
   root.dataset.theme = theme
   root.style.colorScheme = theme
   window.dispatchEvent(new CustomEvent('qrp-theme-changed', { detail: { theme } }))
+  requestAnimationFrame(() => {
+    root.classList.remove('theme-instant')
+  })
 }
 
 export function setTheme(theme: AppTheme) {

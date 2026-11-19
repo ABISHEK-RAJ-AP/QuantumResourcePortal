@@ -12,6 +12,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './qre-notify.css';
+@import './motion-ops.css';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
@@ -1435,35 +1436,7 @@ html:not(.dark) .cyber-matrix-spot {
 
 .overview-kpi-carousel__viewport {
   position: relative;
-  min-height: 7.25rem;
-}
-
-.overview-kpi-carousel__page {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-  width: 100%;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  transform: translateX(0.75rem);
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
-}
-
-.overview-kpi-carousel__page.is-active {
-  opacity: 1;
-  pointer-events: auto;
-  position: relative;
-  transform: translateX(0);
-}
-
-@media (max-width: 720px) {
-  .overview-kpi-carousel__page {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  min-height: auto;
 }
 
 .overview-kpi-carousel__dots {
@@ -1481,7 +1454,6 @@ html:not(.dark) .cyber-matrix-spot {
   padding: 0;
   background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .overview-kpi-carousel__dot.is-active {
@@ -1504,6 +1476,7 @@ html:not(.dark) .cyber-matrix-spot {
 
 .kpi-rail__cell,
 .kpi-rail__cell > *,
+.overview-kpi-carousel__page-motion > .overview-kpi-tile,
 .overview-kpi-carousel__page > .overview-kpi-tile {
   min-width: 0;
   width: 100%;

@@ -3,7 +3,7 @@ import { Info } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
-/** Compact help — replaces wall-of-text justifications. */
+/** Compact help — shows on hover/focus instantly (no delay). */
 export function InfoTip({
   label = 'More info',
   children,
@@ -27,7 +27,17 @@ export function InfoTip({
   }, [open])
 
   return (
-    <span ref={root} className={cn('relative inline-flex', className)}>
+    <span
+      ref={root}
+      data-tooltip-root
+      className={cn('relative inline-flex', className)}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={(e) => {
+        if (!root.current?.contains(e.relatedTarget as Node)) setOpen(false)
+      }}
+    >
       <button
         type="button"
         className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -41,7 +51,7 @@ export function InfoTip({
       {open ? (
         <span
           id={id}
-          role="note"
+          role="tooltip"
           className="absolute start-0 top-full z-40 mt-1 w-64 rounded-lg border border-border bg-card p-3 text-xs font-normal normal-case tracking-normal text-muted-foreground shadow-lg"
         >
           {children}

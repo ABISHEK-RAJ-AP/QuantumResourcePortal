@@ -1,3 +1,4 @@
+import { useEffect, useRef, type ReactNode } from 'react'
 import type { FieldError } from '@/api/client'
 import { cn } from '@/lib/utils'
 
@@ -11,9 +12,16 @@ export function FieldAlert({
   message?: string | null
   className?: string
 }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  useEffect(() => {
+    if (!message || !ref.current) return
+    ref.current.classList.remove('qrp-shake')
+    void ref.current.offsetWidth
+    ref.current.classList.add('qrp-shake')
+  }, [message])
   if (!message) return null
   return (
-    <p id={id} role="alert" className={cn('mt-1 text-sm text-critical', className)}>
+    <p id={id} ref={ref} role="alert" className={cn('mt-1 text-sm text-critical', className)}>
       {message}
     </p>
   )
@@ -29,6 +37,13 @@ export function FormBanner({
   tone?: 'critical' | 'warning' | 'success'
   className?: string
 }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!message || !ref.current) return
+    ref.current.classList.remove('qrp-shake')
+    void ref.current.offsetWidth
+    ref.current.classList.add('qrp-shake')
+  }, [message])
   if (!message) return null
   const shell =
     tone === 'success'
@@ -37,7 +52,7 @@ export function FormBanner({
         ? 'border-warning/30 bg-warning-soft text-warning-text'
         : 'border-critical/30 bg-critical-soft text-critical-text'
   return (
-    <div role="alert" className={cn('rounded-[var(--radius-inner)] border px-3 py-2 text-sm', shell, className)}>
+    <div ref={ref} role="alert" className={cn('rounded-[var(--radius-inner)] border px-3 py-2 text-sm', shell, className)}>
       {message}
     </div>
   )
@@ -53,4 +68,27 @@ export function mapApiFieldErrors(errors: FieldError[] | undefined): Record<stri
     if (e.field && e.message) out[e.field] = e.message
   }
   return out
+}
+
+export function FormShakeShell({
+  shakeKey,
+  className,
+  children,
+}: {
+  shakeKey?: string | null
+  className?: string
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!shakeKey || !ref.current) return
+    ref.current.classList.remove('qrp-shake')
+    void ref.current.offsetWidth
+    ref.current.classList.add('qrp-shake')
+  }, [shakeKey])
+  return (
+    <div ref={ref} className={cn('qrp-form-shell', className)}>
+      {children}
+    </div>
+  )
 }
