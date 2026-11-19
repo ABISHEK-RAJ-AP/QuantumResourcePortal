@@ -44,6 +44,11 @@ export function KpiCarouselShell({
 
   return (
     <section className={cn('overview-kpi-carousel kpi-rail', className)} aria-label={ariaLabel} role="list">
+      {pageCount > 1 ? (
+        <p className="sr-only" aria-live="polite" aria-atomic="true">
+          Metrics page {pageIndex + 1} of {pageCount}
+        </p>
+      ) : null}
       <div className="overview-kpi-carousel__viewport kpi-rail__viewport">
         {reduceMotion ? (
           <div className="overview-kpi-carousel__page-motion" key={pageIndex}>

@@ -30,9 +30,12 @@
 
 ## Passes applied this run
 
-1. **Type** — landing kickers sentence case.  
-2. **Copy/layout** — review date out of hero into footer.  
-3. **Motion** — confirm reduced-motion off for grid (prior).
+1. **Type** — hero/section titles 600 (not 800); shorter hero min-height.  
+2. **Layout** — lead capability + 2-up row; module grid 2-col from `lg` only; workflow without numbered pills.  
+3. **Eyebrow budget** — section kickers removed (hero eyebrow only).  
+4. **Auth** — aside copy without lab-demo trail.  
+5. **A11y** — KPI autoplay page announce (`aria-live` polite).  
+6. **Legal** — left-aligned reading column (`qrp-landing-main`).
 
 ## Re-run
 

@@ -14,4 +14,4 @@ alwaysApply: true
 7. Old routes redirect; preserve RBAC and API contracts.
 8. Draggable home widgets: use `components/ui/draggable-widget-grid.tsx` + real API slices — not stock AI observability demos.
 
-Skills: `.cursor/skills/draggable-dashboard/SKILL.md` · **unslop** `.cursor/skills/unslop/SKILL.md` (vendored `tools/unslop/`)
+Skills: `.cursor/skills/draggable-dashboard/SKILL.md` · **unslop** `tools/unslop/skills/unslop/SKILL.md` (see `tools/unslop/README.qrp.md`)

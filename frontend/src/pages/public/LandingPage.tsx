@@ -32,10 +32,10 @@ const MODULES = [
 ]
 
 const WORKFLOW = [
-  { n: '01', title: 'Submit', body: 'Package a workload from an approved project and submit for review.' },
-  { n: '02', title: 'Review', body: 'Technical and operations stages follow published policy.' },
-  { n: '03', title: 'Authorise', body: 'Quota passes; decisions advance the request.' },
-  { n: '04', title: 'Reconcile', body: 'Dispatch attempts and outcomes land on the audit trail.' },
+  { title: 'Submit', body: 'Package a workload from an approved project and submit for review.' },
+  { title: 'Review', body: 'Technical and operations stages follow published policy.' },
+  { title: 'Authorise', body: 'Quota passes; decisions advance the request.' },
+  { title: 'Reconcile', body: 'Dispatch attempts and outcomes land on the audit trail.' },
 ]
 
 const FAQ = [
@@ -48,8 +48,8 @@ const FAQ = [
     a: 'Sign in, open Approvals, and submit or open a workload on your project policy stages.',
   },
   {
-    q: 'Is procurement in this build?',
-    a: 'No. Procurement and entitlement writes are out of scope. Use inventory registration and the quota ledger for capacity control.',
+    q: 'Where is procurement?',
+    a: 'Procurement is not in this release. Register inventory and track capacity in the quota ledger.',
   },
 ]
 
@@ -63,14 +63,14 @@ export function LandingPage() {
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="qrp-landing-bg-grid absolute inset-0 z-0" cell={40} ambient={0.45} maxLit={36} reach={1.5} />
         <main id="main-content" className="relative z-10 flex flex-col">
-          <section className="qrp-landing-hero flex min-h-[min(88dvh,88svh,880px)] w-full flex-col items-center justify-center px-6 py-16 text-center sm:px-10 sm:py-24 lg:py-28">
+          <section className="qrp-landing-hero flex min-h-[min(72dvh,720px)] w-full flex-col items-center justify-center px-6 py-14 text-center sm:px-10 sm:py-20 lg:py-24">
             <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
-              <p className="qrp-landing-hero__eyebrow">Quantum Resource Portal</p>
+              <p className="qrp-landing-hero__eyebrow">C-DAC · Quantum Resource Portal</p>
               <h1 className="qrp-landing-hero__title type-trim text-balance">
-                Govern quantum workloads from submit to reconcile
+                Govern workloads from submit to reconcile
               </h1>
-              <p className="qrp-landing-hero__lead hyphenate mx-auto max-w-2xl text-pretty">
-                Approvals, quotas, fleet status, dispatch, and audit exports for one institution.
+              <p className="qrp-landing-hero__lead hyphenate mx-auto max-w-xl text-pretty">
+                Approvals, quotas, fleet, dispatch, and audit exports for one institution.
               </p>
               <div className="qrp-landing-hero__actions mt-10">
                 <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
@@ -91,28 +91,30 @@ export function LandingPage() {
           <div className="qrp-landing-main space-y-0">
             <section id="capabilities" className="scroll-mt-28">
               <div className="qrp-landing-section-head">
-                <div>
-                  <span className="qrp-landing-kicker">Console</span>
-                  <h2 className="qrp-landing-section__title mt-1">What operators run here</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                    Request, review, authorise, and reconcile with exportable records.
-                  </p>
-                </div>
+                <h2 className="qrp-landing-section__title">What operators run here</h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                  Request, review, authorise, and reconcile with exportable records.
+                </p>
               </div>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {CAPABILITIES.map((item, i) => (
-                  <article key={item.title} className={cn('qrp-landing-tile', i === 0 && 'qrp-landing-tile--lead md:col-span-1')}>
-                    <h3 className="text-base font-semibold tracking-tight text-foreground">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-                  </article>
-                ))}
+              <div className="mt-8 flex flex-col gap-3">
+                <article className="qrp-landing-tile qrp-landing-tile--lead">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">{CAPABILITIES[0].title}</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{CAPABILITIES[0].body}</p>
+                </article>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {CAPABILITIES.slice(1).map((item) => (
+                    <article key={item.title} className="qrp-landing-tile">
+                      <h3 className="text-base font-semibold tracking-tight text-foreground">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+                    </article>
+                  ))}
+                </div>
               </div>
             </section>
 
             <section id="modules" className="scroll-mt-28">
               <div className="qrp-landing-section-head max-w-3xl">
-                <span className="qrp-landing-kicker">Modules</span>
-                <h2 className="qrp-landing-section__title mt-1">Workspace routes</h2>
+                <h2 className="qrp-landing-section__title">Workspace routes</h2>
               </div>
               <div className="mt-8 qrp-landing-module-list">
                 {MODULES.map((item) => (
@@ -126,15 +128,13 @@ export function LandingPage() {
 
             <section id="workflow" className="scroll-mt-28">
               <div className="qrp-landing-section-head max-w-2xl">
-                <span className="qrp-landing-kicker">Workflow</span>
-                <h2 className="qrp-landing-section__title mt-1">From submit to reconcile</h2>
-                <p className="text-sm text-muted-foreground">The stage trail your institution configures in policy.</p>
+                <h2 className="qrp-landing-section__title">From submit to reconcile</h2>
+                <p className="mt-2 text-sm text-muted-foreground">Stages follow policy configured for your institution.</p>
               </div>
               <div className="mt-8 qrp-landing-steps">
                 {WORKFLOW.map((step) => (
-                  <div key={step.n} className="qrp-landing-step">
-                    <span className="text-xs font-semibold tabular-nums text-primary">{step.n}</span>
-                    <h3 className="mt-1 text-base font-semibold text-foreground">{step.title}</h3>
+                  <div key={step.title} className="qrp-landing-step">
+                    <h3 className="text-base font-semibold text-foreground">{step.title}</h3>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
                   </div>
                 ))}
@@ -143,7 +143,7 @@ export function LandingPage() {
 
             <section id="faq" className="scroll-mt-28 max-w-3xl">
               <div className="qrp-landing-section-head border-b-0 pb-0">
-                <h2 className="qrp-landing-section__title">Questions before sign-in</h2>
+                <h2 className="qrp-landing-section__title">Before you sign in</h2>
               </div>
               <div className="mt-6 divide-y divide-border border-y border-border">
                 {FAQ.map((item, idx) => {

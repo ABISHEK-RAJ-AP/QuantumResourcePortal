@@ -34,9 +34,9 @@ export function AuthPanel({
                 <AuthFridgeVisual />
               </div>
               <div className="mt-auto space-y-2">
-                <h2 className="type-section-title text-white type-title-clamp">Sign in to the governance workspace</h2>
+                <h2 className="type-section-title text-white type-title-clamp">Governance workspace</h2>
                 <p className="hyphenate max-w-[40ch] text-sm leading-relaxed text-white/60 text-pretty">
-                  After login: open Approvals, run the lab demo trail, then quotas, dispatch, and audit exports.
+                  Approvals, quotas, dispatch, and audit exports after sign-in.
                 </p>
                 <Link to="/" className="fs-link inline-flex min-h-10 items-center text-sm font-medium text-cyan-300/90 hover:text-cyan-200">
                   ← Back to home

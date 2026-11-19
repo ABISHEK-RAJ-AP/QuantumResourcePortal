@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 
 import { LogoMark } from '@/components/brand/LogoMark'
 import { ThemeIconToggle } from '@/components/theme/ThemeIconToggle'
