@@ -56,7 +56,7 @@ export function AuthPanel({
                   ) : null}
                 </header>
                 {children}
-                {footer ? <div className="auth-panel-footer border-t border-border pt-3">{footer}</div> : null}
+                {footer ? <div className="qrp-auth-form-footer auth-panel-footer border-t border-border pt-3">{footer}</div> : null}
               </div>
             </div>
           </div>
@@ -66,12 +66,15 @@ export function AuthPanel({
   )
 }
 
+/** Auth-only links — Privacy/Terms live in site footer (Q-TeleScope pattern). */
 export function AuthFooterLinks({
   showForgot = false,
   showRegister = false,
+  showHome = true,
 }: {
   showForgot?: boolean
   showRegister?: boolean
+  showHome?: boolean
 }) {
   const links: ReactNode[] = []
   if (showForgot) {
@@ -88,20 +91,18 @@ export function AuthFooterLinks({
       </Link>,
     )
   }
-  links.push(
-    <Link key="privacy" className="fs-link font-semibold text-primary" to="/legal/privacy">
-      Privacy
-    </Link>,
-    <Link key="terms" className="fs-link font-semibold text-primary" to="/legal/terms">
-      Terms
-    </Link>,
-    <Link key="home" className="fs-link font-semibold text-primary" to="/">
-      Home
-    </Link>,
-  )
+  if (showHome) {
+    links.push(
+      <Link key="home" className="fs-link font-semibold text-primary" to="/">
+        Home
+      </Link>,
+    )
+  }
+
+  if (!links.length) return null
 
   return (
-    <p className="auth-panel-footer__links text-left text-sm text-muted-foreground">
+    <p className="auth-panel-footer__links text-sm text-muted-foreground">
       {links.map((node, i) => (
         <span key={i} className="inline-flex items-center gap-2">
           {i > 0 ? <span aria-hidden>·</span> : null}

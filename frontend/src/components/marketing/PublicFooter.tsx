@@ -34,12 +34,17 @@ const SECTIONS: { title: string; links: FooterLink[] }[] = [
   },
 ]
 
+const LEGAL_LINKS: FooterLink[] = [
+  { name: 'Privacy (draft)', to: '/legal/privacy' },
+  { name: 'Terms (draft)', to: '/legal/terms' },
+]
+
 type PublicFooterProps = {
   variant?: 'dark' | 'light'
   className?: string
 }
 
-/** Cert Studio / Q-TeleScope public footer: brand + link columns + copyright bar. */
+/** Q-TeleScope footer: brand column · link grid · copyright left / legal right. */
 export function PublicFooter({ variant = 'dark', className }: PublicFooterProps) {
   const year = new Date().getFullYear()
   const dark = variant === 'dark'
@@ -53,12 +58,12 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
       )}
       aria-label="Site footer"
     >
-      <div className="mx-auto w-full max-w-6xl px-6 py-12 text-left sm:px-8 lg:px-12 lg:py-16">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-12">
-          <div className="space-y-4 text-left lg:col-span-2">
+      <div className="qrp-public-footer__wrap py-12 lg:py-16">
+        <div className="qrp-public-footer__grid">
+          <div className="qrp-public-footer__brand space-y-4">
             <Link to="/" className="inline-flex items-center gap-3">
               <LogoMark className={cn('h-10 w-auto', dark && 'brightness-0 invert')} />
-              <div>
+              <div className="text-left">
                 <p className="type-page-title type-trim">Quantum Resource Portal</p>
                 <p className={cn('acr text-xs font-medium', dark ? 'text-white/50' : 'text-muted-foreground')}>
                   C-DAC Quantum Platform
@@ -74,17 +79,10 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 text-left sm:grid-cols-3 lg:col-span-3">
+          <div className="qrp-public-footer__cols">
             {SECTIONS.map((section) => (
               <div key={section.title} className="space-y-3">
-                <h3
-                  className={cn(
-                    'acr text-[11px] font-bold',
-                    dark ? 'text-white/80' : 'text-foreground',
-                  )}
-                >
-                  {section.title}
-                </h3>
+                <h3 className={cn('acr text-[11px] font-bold', dark ? 'text-white/80' : 'text-foreground')}>{section.title}</h3>
                 <ul className="space-y-2">
                   {section.links.map((link) => (
                     <li key={link.name}>
@@ -118,20 +116,22 @@ export function PublicFooter({ variant = 'dark', className }: PublicFooterProps)
         </div>
 
         <div
-          className={cn(
-            'mt-12 flex flex-col gap-4 border-t pt-6 text-left text-xs sm:flex-row sm:items-center sm:justify-between',
-            dark ? 'border-white/10 text-white/45' : 'border-border text-muted-foreground',
-          )}
+          className={cn('qrp-public-footer__bar', dark ? 'border-white/10 text-white/45' : 'text-muted-foreground')}
         >
           <p className="max-w-prose">© {year} Centre for Development of Advanced Computing (C-DAC). All rights reserved.</p>
-          <div className="flex flex-wrap items-center gap-6 sm:justify-end">
-            <a href="/#capabilities" className="font-semibold hover:underline">
+          <div className="qrp-public-footer__bar-links">
+            {LEGAL_LINKS.map((link) => (
+              <Link key={link.name} to={link.to!} className={cn('fs-link font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
+                {link.name}
+              </Link>
+            ))}
+            <a href="/#capabilities" className={cn('font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
               Capabilities
             </a>
-            <Link to="/login" className="font-semibold hover:underline">
+            <Link to="/login" className={cn('font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
               Sign in
             </Link>
-            <Link to="/system/status" className="font-semibold hover:underline">
+            <Link to="/system/status" className={cn('font-semibold', dark ? 'hover:text-white' : 'hover:text-foreground')}>
               Status
             </Link>
           </div>

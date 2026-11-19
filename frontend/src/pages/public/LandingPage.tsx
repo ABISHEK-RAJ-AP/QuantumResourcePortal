@@ -77,17 +77,17 @@ export function LandingPage() {
       <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
         <GridPulse className="z-0 opacity-90" ambient={1} maxLit={96} reach={2.2} />
         <section className="qrp-landing-hero relative z-10 flex min-h-[min(92dvh,92svh,920px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
-          <div className="fade-up pointer-events-auto mx-auto w-full max-w-6xl">
+          <div className="qrp-landing-hero__inner fade-up pointer-events-auto">
             <p data-grid-avoid className={cn('qrp-landing-hero__eyebrow acr', guard)}>
               C-DAC · Quantum platform
             </p>
             <h1 data-grid-avoid className={cn('qrp-landing-hero__title type-trim text-balance', guard)}>
               Quantum Resource Portal
             </h1>
-            <p data-grid-avoid className={cn('qrp-landing-hero__lead hyphenate mx-auto max-w-3xl text-pretty', guard)}>
+            <p data-grid-avoid className={cn('qrp-landing-hero__lead hyphenate max-w-3xl text-pretty', guard)}>
               Govern quantum workloads end to end — approvals, capacity, operations, and evidence for your tenant.
             </p>
-            <div className="mt-10 flex flex-col flex-wrap justify-center gap-4 sm:flex-row">
+            <div className="qrp-landing-hero__actions mt-10">
               <Link to="/login" className="btn-primary landing-hero-cta gap-2">
                 Enter portal
                 <ArrowRight className="size-5" aria-hidden />
@@ -246,7 +246,7 @@ export function LandingPage() {
               <p data-grid-avoid className={cn('hyphenate text-base text-muted-foreground text-pretty', guard)}>
                 Sign in, open Approvals, and walk the live stage trail.
               </p>
-              <div className="mt-2 flex w-full flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">
+              <div className="qrp-landing-hero__actions mt-2">
                 <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
                   Sign in
                   <ArrowRight className="size-5" aria-hidden />

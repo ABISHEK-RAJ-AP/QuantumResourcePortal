@@ -26,7 +26,7 @@ export function PublicShell({
     >
       <A11yPreheader />
       <PublicHeader />
-      <div id="page-content" className="flex min-h-0 flex-1 flex-col" tabIndex={-1}>
+      <div id="page-content" className="qrp-public-content flex min-h-0 flex-1 flex-col" tabIndex={-1}>
         {children}
       </div>
       <PublicFooter variant={dark ? 'dark' : 'light'} />
