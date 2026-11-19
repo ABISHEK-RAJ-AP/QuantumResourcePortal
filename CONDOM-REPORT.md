@@ -128,10 +128,12 @@
 
 ## Fix log
 
-*(empty — audit only; say **condom fix** to start remediations one finding at a time.)*
+| Finding | Change | Re-test | Commit |
+| --- | --- | --- | --- |
+| SEC-AUTH-01 | `safeReturnPath()`; Login + MFA use it | `frontend/src/lib/safeReturnPath.test.ts` (vitest) | pending in this push |
 
 ## Still open
 
-- **SEC-AUTH-01** open redirect — ready for minimal Claude patch + Vitest/e2e assertion.
+- **SEC-AUTH-01** — fixed in SPA; add server-side redirect allow-list if backend ever issues `next` URLs.
 - Legal pages — need owner facts (data retention, subprocessors, contact).
 - Rate limiting — product decision on thresholds.

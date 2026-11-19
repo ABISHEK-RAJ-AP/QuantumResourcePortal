@@ -51,7 +51,6 @@ import {
   reservationHoldSchema,
   evidenceLabelSchema,
 } from '@/lib/validation/schemas'
-import { APPROVAL_VS_DISPATCH, HOLD_VS_DISPATCH } from '@/lib/operatorCopy'
 import { cn } from '@/lib/utils'
 import { RecordWorkspace } from '@/components/workflow/RecordWorkspace'
 import { StatusPage } from '@/pages/system/StatusPage'
@@ -319,7 +318,7 @@ export function ReconciliationPage() {
         { label: 'Reconciliation' },
       ]}
       title="Reconciliation"
-      description="Record provider outcome for durable dispatch attempts. Do not retry ambiguous calls blindly."
+      description="Record provider outcome for dispatch attempts."
       updatedAt={query.dataUpdatedAt}
     >
       <RecordWorkspace
@@ -530,14 +529,7 @@ export function SchedulingPage() {
         { label: 'Request window' },
       ]}
       title="Request reservation window"
-      description={`Plan a governance hold. Calendar shows existing holds, not live provider availability. ${HOLD_VS_DISPATCH}`}
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <Link to="/qrp/reservations" className="btn-secondary">
-            Reservation calendar
-          </Link>
-        </span>
-      }
+      description="Plan a governance hold window."
     >
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
@@ -638,6 +630,12 @@ export function SchedulingPage() {
           </QueryBody>
         </Card>
       </div>
+      <RelatedNav
+        items={[
+          { to: '/qrp/reservations', label: 'Reservation calendar' },
+          { to: '/qrp/projects', label: 'Projects' },
+        ]}
+      />
     </Page>
   )
 }
@@ -693,7 +691,7 @@ export function NotificationsPage() {
         { label: 'Notifications' },
       ]}
       title="Notifications"
-      description="Session inbox in the header bell. Governance toasts and review items sync from the same APIs as Home and Approvals."
+      description="In-app notices and governance sync."
       actions={
         <button
           type="button"
@@ -740,7 +738,7 @@ export function EntitlementsPage() {
         { label: 'Entitlements' },
       ]}
       title="Entitlements"
-      description="Provider entitlement grants and contract SKUs are outside this portal. Enforce capacity with the quota ledger and reservations."
+      description="Contract SKUs are outside QRP; capacity uses the quota ledger."
       actions={
         <Link className="btn-primary" to="/qrp/quotas">
           Quotas
@@ -1163,11 +1161,10 @@ export function ProjectDetailPage() {
         ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={projectName}
-      description="Project hub: members, requests, holds, quota, and activity — create requests here with project already scoped."
+      description="Members, requests, holds, and quota for this project."
       actions={
-        <span className="flex flex-wrap gap-2">
+        <span className="flex flex-wrap items-center gap-3">
           <CopyableId value={projectId} keep={14} />
-          
           <button
             type="button"
             className="btn-primary"
@@ -1176,11 +1173,8 @@ export function ProjectDetailPage() {
               else setSubmitOpen(true)
             }}
           >
-            {locked ? 'View requests' : archived ? 'View requests' : 'Create resource request'}
+            {locked || archived ? 'View requests' : 'Create resource request'}
           </button>
-          <Link to="/qrp/scheduling" className="btn-secondary">
-            Request hold
-          </Link>
         </span>
       }
       updatedAt={project.dataUpdatedAt}
@@ -1335,7 +1329,7 @@ export function ProjectDetailPage() {
                         <button type="button" className="btn-primary" onClick={() => setTab('requests')}>
                           {locked ? 'Review open requests' : 'Create resource request'}
                         </button>
-                        <Link className="btn-secondary" to="/qrp/scheduling">
+                        <Link className="fs-link text-sm" to="/qrp/scheduling">
                           Request hold window
                         </Link>
                       </div>
@@ -1515,7 +1509,7 @@ export function ProjectDetailPage() {
                   <PanelHeader
                     title="Reservation holds"
                     action={
-                      <Link className="btn-secondary" to="/qrp/scheduling">
+                      <Link className="fs-link text-sm" to="/qrp/scheduling">
                         Request window
                       </Link>
                     }
@@ -1775,17 +1769,22 @@ export function AlertDetailPage() {
           ? `${String(row.message || '')} · Detected ${formatAlertAge(row.detected_at)} · ${String(row.resource_id || '')}`
           : `Alert ${shortId(alertId, 12)}`
       }
+      crumbs={[
+        { label: 'Operations', to: '/qrp/support' },
+        { label: 'Alert' },
+      ]}
       actions={
-        <span className="flex flex-wrap gap-2">
+        <span className="flex flex-wrap items-center gap-3">
           <CopyableId value={alertId} keep={14} />
-          <Link to="/qrp/support" className="btn-secondary">
-            Alert queue
-          </Link>
           {incidentId ? (
             <Link to={`/qrp/incidents/${incidentId}`} className="btn-primary">
-              Open incident ({String(incident.data?.alert_count ?? '…')})
+              Open incident
             </Link>
-          ) : null}
+          ) : (
+            <Link to="/qrp/support" className="fs-link text-sm">
+              Alert queue
+            </Link>
+          )}
         </span>
       }
     >
@@ -2638,7 +2637,7 @@ export function ConnectorsPage({ embedded = false }: { embedded?: boolean }) {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/providers' }, { label: 'Connectors' }]}
       title="Connectors"
-      description="Integration stage is evidence on file. I5 is not claimed until a reconciled dispatch exists. No live connection test endpoint."
+      description="Connector integration stage and maturity."
       updatedAt={query.dataUpdatedAt}
     >
       {body}
@@ -2704,16 +2703,13 @@ export function DispatchPage() {
         { label: 'Dispatch' },
       ]}
       title="Dispatch & Jobs"
-      description={`Bridge governance approval to provider execution: durable attempts, ICD contract, and links to jobs and reconciliation. ${APPROVAL_VS_DISPATCH}`}
+      description="Dispatch attempts and ICD contract."
       actions={
-        <span className="flex flex-wrap gap-2">
+        unresolved > 0 ? (
           <Link to="/qrp/reconciliation" className="btn-primary">
-            Open reconciliation
+            Reconcile ({unresolved})
           </Link>
-          <Link to="/qrp/jobs" className="btn-secondary">
-            Provider jobs
-          </Link>
-        </span>
+        ) : undefined
       }
       updatedAt={attempts.dataUpdatedAt}
     >
@@ -2933,12 +2929,19 @@ export function DispatchPage() {
               <li>Confirmed requires provider-reported external_job_id when policy says so.</li>
               <li>Connector capability gaps block submission — see Connectors.</li>
             </ul>
-            <Link className="text-sm font-medium text-primary hover:underline" to="/qrp/connectors">
-              Connector maturity →
+            <Link className="fs-link text-sm" to="/qrp/connectors">
+              Connectors
             </Link>
           </Card>
         </div>
       )}
+      <RelatedNav
+        items={[
+          { to: '/qrp/jobs', label: 'Provider jobs' },
+          { to: '/qrp/reconciliation', label: 'Reconciliation' },
+          { to: '/qrp/connectors', label: 'Connectors' },
+        ]}
+      />
     </Page>
   )
 }
@@ -3307,7 +3310,7 @@ export function IncidentsPage() {
     <Page
       crumbs={[{ label: 'Operations', to: '/qrp/centre' }, { label: 'Incidents' }]}
       title="Incidents"
-      description="Operational exception cases with lifecycle, ownership, and alert groups. Prefer incidents over scrolling raw qubit alerts."
+      description="Exception cases with lifecycle and ownership."
       updatedAt={query.dataUpdatedAt}
     >
       <KpiStrip>
@@ -3496,18 +3499,14 @@ export function IncidentDetailPage() {
   return (
     <Page
       title={String(query.data?.title || incidentId)}
-      description={String(query.data?.summary || 'Operational exception lifecycle — links alerts, backends, and dispatch context.')}
+      crumbs={[
+        { label: 'Operations', to: '/qrp/incidents' },
+        { label: String(query.data?.title || 'Incident') },
+      ]}
+      description={String(query.data?.summary || '')}
       steps={INCIDENT_FLOW}
       stepIndex={incidentStepIndex(status)}
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <CopyableId value={incidentId} keep={14} />
-          
-          <Link to="/qrp/incidents" className="btn-secondary">
-            All incidents
-          </Link>
-        </span>
-      }
+      actions={<CopyableId value={incidentId} keep={14} />}
       updatedAt={query.dataUpdatedAt}
     >
       <QueryBody query={query}>
@@ -3708,15 +3707,15 @@ export function IncidentDetailPage() {
                 <Card className="space-y-2">
                   <PanelHeader title="Evidence" />
                   <p className="text-sm text-muted-foreground">Capture operational snapshots that support this incident claim.</p>
-                  <Link className="btn-secondary" to="/qrp/evidence">
-                    Open evidence
+                  <Link className="fs-link text-sm" to="/qrp/evidence">
+                    Evidence
                   </Link>
                 </Card>
                 <Card className="space-y-2">
                   <PanelHeader title="Audit" />
-                  <p className="text-sm text-muted-foreground">Acknowledge / investigate / resolve append to the audit trail.</p>
-                  <Link className="btn-secondary" to="/qrp/audit">
-                    Open audit
+                  <p className="text-sm text-muted-foreground">Lifecycle events append to the audit trail.</p>
+                  <Link className="fs-link text-sm" to="/qrp/audit">
+                    Audit log
                   </Link>
                 </Card>
               </div>
@@ -3724,6 +3723,13 @@ export function IncidentDetailPage() {
           </RecordWorkspace>
         )}
       </QueryBody>
+      <RelatedNav
+        items={[
+          { to: '/qrp/incidents', label: 'All incidents' },
+          { to: '/qrp/support', label: 'Alerts' },
+          { to: '/qrp/centre', label: 'Operations centre' },
+        ]}
+      />
     </Page>
   )
 }
@@ -3954,18 +3960,8 @@ export function JobDetailPage() {
         ...(tabCrumb ? [{ label: tabCrumb }] : []),
       ]}
       title={status ? stateLabel(status) : 'Provider job'}
-      description={`Provider execution ${shortId(jobId, 14)}. QRP dispatch record is separate from governance approval.`}
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <CopyableId value={jobId} keep={16} />
-          <Link to="/qrp/jobs" className="btn-secondary">
-            All jobs
-          </Link>
-          <Link to="/qrp/reconciliation" className="btn-secondary">
-            Reconciliation
-          </Link>
-        </span>
-      }
+      description={`Provider execution ${shortId(jobId, 14)}.`}
+      actions={<CopyableId value={jobId} keep={16} />}
       updatedAt={query.dataUpdatedAt}
     >
       <QueryBody query={query}>
@@ -3979,6 +3975,8 @@ export function JobDetailPage() {
             activeTab={tab}
             onTabChange={setTab}
             related={[
+              { to: '/qrp/jobs', label: 'All jobs' },
+              { to: '/qrp/reconciliation', label: 'Reconciliation' },
               query.data.backend_id
                 ? {
                     to: `/qrp/backends/${query.data.backend_id}`,
@@ -4561,7 +4559,7 @@ export function BackendsPage({ embedded = false }: { embedded?: boolean }) {
     <Page
       crumbs={[{ label: 'Resources', to: '/qrp/inventory' }, { label: 'Backends' }]}
       title="Backends"
-      description="Catalogue QPUs. Operational status is provider/catalogue state — not QRP governance eligibility or live dispatch claim."
+      description="Catalogue and fleet backends."
       updatedAt={query.dataUpdatedAt}
     >
       {body}
@@ -4628,15 +4626,8 @@ export function BackendDetailPage() {
   return (
     <Page
       title={String(backend.data?.backend_name || backendId)}
-      description="Catalogue record and topology from returned fields. Wait estimates come from Queues telemetry samples."
-      actions={
-        <span className="flex flex-wrap gap-2">
-          <CopyableId value={backendId} keep={14} />
-          <Link to="/qrp/backends" className="btn-secondary">
-            All backends
-          </Link>
-        </span>
-      }
+      description="Backend catalogue and queue telemetry."
+      actions={<CopyableId value={backendId} keep={14} />}
       updatedAt={backend.dataUpdatedAt || queue.dataUpdatedAt}
     >
       <KpiStrip>
@@ -4751,6 +4742,13 @@ export function BackendDetailPage() {
           />
         </QueryBody>
       </Card>
+      <RelatedNav
+        items={[
+          { to: '/qrp/backends', label: 'All backends' },
+          { to: '/qrp/jobs?tab=queues', label: 'Queues' },
+          { to: '/qrp/support', label: 'Alerts' },
+        ]}
+      />
     </Page>
   )
 }
@@ -5042,7 +5040,7 @@ export function EvidencePage() {
         { label: 'Evidence' },
       ]}
       title="Evidence"
-      description="Point-in-time fleet snapshots for audit and compliance — distinct from the live audit event stream."
+      description="Point-in-time operational snapshots."
       actions={
         <button type="button" className="btn-primary" onClick={() => setCaptureOpen(true)}>
           Capture snapshot

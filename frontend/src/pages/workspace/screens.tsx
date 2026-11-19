@@ -441,7 +441,7 @@ export function ApprovalsPage() {
         { label: 'Review queue', to: '/qrp/approvals' },
       ]}
       title="Review Queue"
-      description="Multi-stage approvals before capacity holds or dispatch. Filter by project or open the next item in queue."
+      description="Approvals before holds or dispatch."
       actions={
         nextRow?.workload_id ? (
           <Link className="btn-primary" to={`/qrp/approvals/${nextRow.workload_id}`}>
@@ -1912,10 +1912,10 @@ export function QuotasPage() {
             {used === 0 && (
               <EmptyState
                 title="No consumption yet"
-                body="Approve and complete simulation jobs to see project rollups. Missing meters stay unavailable — never invented as zero usage elsewhere."
+                body="Usage appears after approved simulation jobs complete."
                 action={
-                  <Link className="btn-secondary" to="/qrp">
-                    Overview · Load demo
+                  <Link className="fs-link text-sm" to="/qrp/approvals">
+                    Review queue
                   </Link>
                 }
               />
@@ -2552,7 +2552,7 @@ export function SupportPage() {
         { label: 'Alerts' },
       ]}
       title="Alerts"
-      description="Active detector rows from the fleet. Group related warnings into incidents before deep-drilling single alerts."
+      description="Active fleet alerts."
       actions={
         <span className="flex flex-wrap gap-2">
           <Link to="/qrp/incidents" className="btn-primary">
@@ -2696,7 +2696,7 @@ export function ProcurementPage() {
         { label: 'Procurement' },
       ]}
       title="Procurement"
-      description="Purchasing and entitlement contracts are outside this release. Use inventory registration and the quota ledger for live capacity control."
+      description="Procurement is out of scope; use inventory and quotas."
       actions={
         <Link className="btn-primary" to="/qrp/inventory">
           Inventory

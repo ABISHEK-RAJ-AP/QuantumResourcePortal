@@ -11,6 +11,7 @@ import { AuthDemoPresets } from '@/components/auth/AuthDemoPresets'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { parseForm } from '@/lib/validation/parseForm'
+import { safeReturnPath } from '@/lib/safeReturnPath'
 import { loginSchema } from '@/lib/validation/schemas'
 
 const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
@@ -19,7 +20,7 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()
-  const from = (location.state as { from?: string } | null)?.from || '/qrp'
+  const from = safeReturnPath((location.state as { from?: string } | null)?.from)
   const captchaEnabled = useAuthCaptchaRequired()
 
   const [username, setUsername] = useState('')
@@ -57,7 +58,7 @@ export function LoginPage() {
         })
         return
       }
-      navigate(from.startsWith('/') ? from : '/qrp', { replace: true })
+      navigate(from, { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
         const mapped = mapApiFieldErrors(err.fieldErrors)

@@ -54,7 +54,7 @@ export function UsersAdminPage() {
       {memberships.isError ? (
         <Notice tone="warning">
           Could not load role assignments: {formatApiError(memberships.error)}. User list may be incomplete.
-          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => void memberships.refetch()}>
+          <button type="button" className="btn-ghost mt-2 text-sm" onClick={() => void memberships.refetch()}>
             Retry assignments
           </button>
         </Notice>
@@ -62,7 +62,7 @@ export function UsersAdminPage() {
       {roles.isError ? (
         <Notice tone="warning">
           Could not load role catalogue: {formatApiError(roles.error)}. Grant form may be limited.
-          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => void roles.refetch()}>
+          <button type="button" className="btn-ghost mt-2 text-sm" onClick={() => void roles.refetch()}>
             Retry roles
           </button>
         </Notice>
