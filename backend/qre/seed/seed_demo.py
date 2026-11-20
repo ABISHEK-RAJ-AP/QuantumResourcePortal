@@ -14,11 +14,12 @@ from sqlalchemy.engine import Connection
 from qre.core.config import Profile
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
+from qre.seed.lab_credentials import LAB_UNIFIED_PASSWORD
 from qre.seed.validate import SeedValidationError, validate_demo_seed
 from qre.services.svc17_audit.service import write_audit
 
 DEMO_SEED_VERSION = "2026.11.demo.v1"
-DEMO_PASSWORD = "Demo-Strong-Pw-2026"
+DEMO_PASSWORD = LAB_UNIFIED_PASSWORD
 DEFAULT_STAGES = [
     {"id": "technical", "label": "Technical review"},
     {"id": "policy", "label": "Policy check"},

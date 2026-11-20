@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
@@ -14,7 +15,6 @@ from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 
 
 @pytest.fixture
@@ -29,6 +29,7 @@ async def seeded_tenant(migrated_db: str):
             tenant_name="Seed test",
             admin_username=f"admin_{code.lower()}",
             password=ADMIN_PW,
+            password_min_len=LAB_PASSWORD_MIN_LEN,
         )
         return res.tenant_id, code
 

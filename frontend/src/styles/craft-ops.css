@@ -336,15 +336,13 @@ html.dark .qrp-public-shell {
 }
 
 .qrp-auth-shell .auth-outline-field,
-.qrp-auth-shell .captcha-field__image,
-.qrp-auth-shell .auth-demo-presets__btn {
+.qrp-auth-shell .captcha-field__image {
   border-radius: var(--radius-inner);
   border-color: var(--border-alpha);
 }
 
 .qrp-auth-shell .auth-outline-field__name {
-  letter-spacing: 0.06em;
-  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
 }
 
 .qrp-landing-card {

@@ -1,4 +1,4 @@
-"""Lab-only: ensure the demo tenant has a PLATFORM_ADMIN (admin / known password)."""
+"""Lab-only: ensure the demo tenant has a PLATFORM_ADMIN (admin / unified lab password)."""
 
 from __future__ import annotations
 
@@ -9,16 +9,15 @@ from sqlalchemy.engine import Connection
 
 from qre.core.config import Settings
 from qre.core.security import hash_password
+from qre.seed.lab_credentials import (
+    LAB_ADMIN_USERNAME,
+    LAB_PASSWORD_MIN_LEN,
+    LAB_TENANT_NAME,
+    LAB_UNIFIED_PASSWORD,
+)
 from qre.services.svc02_identity.bootstrap import BootstrapError, bootstrap_admin
 
 log = logging.getLogger("qre.seed.auto_bootstrap")
-
-# Matches frontend AuthDemoPresets + docs/RBAC_DELIVERY.md lab copy.
-LAB_ADMIN_USERNAME = "admin"
-LAB_ADMIN_PASSWORD = "Admin-Strong-Pw-2026"
-LAB_DEMO_OPERATOR = "demo_operator"
-LAB_DEMO_OPERATOR_PASSWORD = "Demo-Strong-Pw-2026"
-LAB_TENANT_NAME = "C-DAC Chennai"
 
 
 def _tenant_has_platform_admin(conn: Connection, tenant_code: str) -> bool:
@@ -42,8 +41,8 @@ def _tenant_has_platform_admin(conn: Connection, tenant_code: str) -> bool:
     return row is not None
 
 
-def _sync_lab_admin_password(conn: Connection, *, tenant_code: str, username: str, password: str) -> bool:
-    """Reset known lab demo password and clear lockout (idempotent)."""
+def _sync_user_password(conn: Connection, *, tenant_code: str, username: str, password: str) -> bool:
+    """Reset lab password and clear lockout (idempotent)."""
     user_id = conn.execute(
         text(
             """
@@ -79,8 +78,8 @@ def run_auto_bootstrap_lab(conn: Connection, settings: Settings) -> None:
     code = (settings.demo_tenant_code or "CDAC").strip()
     if not code:
         return
-    if _sync_lab_admin_password(
-        conn, tenant_code=code, username=LAB_ADMIN_USERNAME, password=LAB_ADMIN_PASSWORD
+    if _sync_user_password(
+        conn, tenant_code=code, username=LAB_ADMIN_USERNAME, password=LAB_UNIFIED_PASSWORD
     ):
         log.info(
             "lab admin credentials synced",
@@ -95,8 +94,9 @@ def run_auto_bootstrap_lab(conn: Connection, settings: Settings) -> None:
             tenant_code=code,
             tenant_name=LAB_TENANT_NAME,
             admin_username=LAB_ADMIN_USERNAME,
-            password=LAB_ADMIN_PASSWORD,
+            password=LAB_UNIFIED_PASSWORD,
             display_name="Platform Admin",
+            password_min_len=LAB_PASSWORD_MIN_LEN,
         )
         log.info(
             "lab auto-bootstrap complete",
@@ -111,15 +111,32 @@ def run_auto_bootstrap_lab(conn: Connection, settings: Settings) -> None:
 
 
 def sync_lab_demo_passwords(conn: Connection, settings: Settings) -> None:
-    """After demo seed — reset known lab passwords and clear lockouts."""
+    """Reset every active user on the demo tenant to the unified lab password."""
     if not settings.is_lab:
         return
     code = (settings.demo_tenant_code or "CDAC").strip()
     if not code:
         return
-    for username, password in (
-        (LAB_ADMIN_USERNAME, LAB_ADMIN_PASSWORD),
-        (LAB_DEMO_OPERATOR, LAB_DEMO_OPERATOR_PASSWORD),
-    ):
-        if _sync_lab_admin_password(conn, tenant_code=code, username=username, password=password):
-            log.info("lab credentials synced", extra={"tenant_code": code, "username": username})
+    rows = conn.execute(
+        text(
+            """
+            SELECT u.username
+            FROM app_user u
+            JOIN tenant t ON t.tenant_id = u.home_tenant_id
+            WHERE t.code = :c AND u.status = 'ACTIVE'
+            ORDER BY u.username
+            """
+        ),
+        {"c": code},
+    ).fetchall()
+    synced = 0
+    for (username,) in rows:
+        if _sync_user_password(
+            conn, tenant_code=code, username=str(username), password=LAB_UNIFIED_PASSWORD
+        ):
+            synced += 1
+    if synced:
+        log.info(
+            "lab credentials synced",
+            extra={"tenant_code": code, "user_count": synced, "password": "unified"},
+        )

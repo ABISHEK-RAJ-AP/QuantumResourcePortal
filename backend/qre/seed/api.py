@@ -58,7 +58,7 @@ async def post_seed_demo(
             "created": result.created,
             "counts": result.counts,
             "demo_users": result.demo_users,
-            "password_hint": "See docs/development/QRP_DEMO_ENVIRONMENT.md",
+            "password_hint": "quantum2026 (all lab demo users — see docs/development/QRP_DEMO_ENVIRONMENT.md)",
         }
 
     try:

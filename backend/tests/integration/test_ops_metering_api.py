@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
@@ -10,7 +11,6 @@ from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 
 
 async def test_centre_activity_metering(client, migrated_db):
@@ -21,7 +21,7 @@ async def test_centre_activity_metering(client, migrated_db):
             tenant_code="OPSTEST",
             tenant_name="OpsTest",
             admin_username=admin_u,
-            password=ADMIN_PW,
+            password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN,
         )
 
     from sqlalchemy.ext.asyncio import create_async_engine

@@ -67,7 +67,7 @@ function AuthPanelInner({
         <MarketingContainer
           narrow
           className="cert-auth-page__container"
-          style={{ maxWidth: wide ? 540 : 480 }}
+          style={{ maxWidth: wide ? 540 : 424 }}
         >
           <div className={`qrp-auth-shell ${cardClass}`}>
             <div className="cert-login-card__logo-wrap">

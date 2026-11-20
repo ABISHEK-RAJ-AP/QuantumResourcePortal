@@ -60,7 +60,7 @@ def _run_seed_demo(args: argparse.Namespace) -> int:
                     "created": result.created,
                     "counts": result.counts,
                     "demo_users": result.demo_users,
-                    "password": "Demo-Strong-Pw-2026",
+                    "password": "quantum2026",
                 },
                 indent=2,
             )

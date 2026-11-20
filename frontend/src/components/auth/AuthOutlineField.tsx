@@ -25,4 +25,4 @@ export function AuthOutlineField({
 }
 
 export const authOutlineControlClass =
-  'auth-outline-field__control w-full border-0 bg-transparent text-base outline-none'
+  'auth-outline-field__control w-full border-0 bg-transparent text-[1.0625rem] leading-snug outline-none'

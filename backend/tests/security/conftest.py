@@ -15,8 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
 from qre.services.svc02_identity.bootstrap import bootstrap_admin
-
-ADMIN_PW = "Admin-Password-12345"
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 RESEARCHER_PW = "Researcher-Password-123"
 
 
@@ -48,7 +47,7 @@ async def world(engine: AsyncEngine) -> World:
     other_code = f"O{new_ulid()[-8:]}"
 
     def build(c):
-        res = bootstrap_admin(c, tenant_code=code, tenant_name="Sec", admin_username=admin_u, password=ADMIN_PW)
+        res = bootstrap_admin(c, tenant_code=code, tenant_name="Sec", admin_username=admin_u, password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN)
         tid = res.tenant_id
         pid = new_ulid()
         c.execute(
@@ -74,7 +73,12 @@ async def world(engine: AsyncEngine) -> World:
         )
         # tenant B with a tenant-scoped custom role (must be 404 to tenant A).
         other = bootstrap_admin(
-            c, tenant_code=other_code, tenant_name="Other", admin_username=f"admin_{other_code.lower()}", password=ADMIN_PW
+            c,
+            tenant_code=other_code,
+            tenant_name="Other",
+            admin_username=f"admin_{other_code.lower()}",
+            password=ADMIN_PW,
+            password_min_len=LAB_PASSWORD_MIN_LEN,
         )
         other_role_id = new_ulid()
         c.execute(

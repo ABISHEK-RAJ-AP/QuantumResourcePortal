@@ -74,4 +74,4 @@ bash "$ROOT/scripts/verify-qrp-stack.sh" || vm_die "Verification failed — fix 
 vm_log "Portal  http://0.0.0.0:${UI_PORT}/login"
 vm_log "API     http://0.0.0.0:${API_PORT}/api/v1/docs"
 vm_log "Redis   ephemeral cache + CAPTCHA (sessions in PostgreSQL)"
-vm_log "Admin   admin / Admin-Strong-Pw-2026 (lab, after migrate seed — see docs/RBAC_DELIVERY.md)"
+vm_log "Admin   admin / quantum2026 (all CDAC lab users — after migrate + API restart)"

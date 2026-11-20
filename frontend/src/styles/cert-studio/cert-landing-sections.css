@@ -81,7 +81,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg, 0.75rem);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .landing-faq-item__trigger {
@@ -90,15 +90,19 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4, 1rem);
-  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  box-sizing: border-box;
+  min-height: 3rem;
+  padding: 0.875rem 1.25rem;
   background: none;
   border: none;
   font-family: var(--font-display, inherit);
   font-size: var(--text-base, 1rem);
   font-weight: 700;
+  line-height: 1.45;
   text-align: left;
   color: var(--text-primary, var(--foreground));
   cursor: pointer;
+  overflow: visible;
 }
 
 .landing-faq-item__chev {
@@ -112,12 +116,12 @@
 }
 
 .landing-faq-item__body {
-  padding: 0 var(--space-5, 1.25rem) var(--space-4, 1rem);
+  padding: 0.75rem 1.25rem 1.25rem;
   color: var(--text-secondary, var(--muted-foreground));
   line-height: 1.65;
   border-top: 1px solid var(--border);
-  padding-top: var(--space-3, 0.75rem);
   margin-top: 0;
+  box-sizing: border-box;
 }
 
 .qre-marketing-container {

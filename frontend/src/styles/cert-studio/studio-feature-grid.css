@@ -55,6 +55,8 @@
 
 .landing-page .studio-feature-grid {
   padding-block: 4px;
+  padding-inline: 2px;
+  box-sizing: border-box;
 }
 
 .studio-feature-card__icon {

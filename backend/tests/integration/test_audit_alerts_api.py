@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 
 
 async def test_audit_events_and_alerts_empty(client, migrated_db):
@@ -21,7 +21,7 @@ async def test_audit_events_and_alerts_empty(client, migrated_db):
             tenant_code="AUDALT",
             tenant_name="AuditAlerts",
             admin_username="admin_aa",
-            password=ADMIN_PW,
+            password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN,
         )
 
     from sqlalchemy.ext.asyncio import create_async_engine

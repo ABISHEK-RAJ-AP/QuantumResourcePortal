@@ -8,14 +8,17 @@ import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, FormShakeShell, mapApiFieldErrors } from '@/components/auth/FormAlerts'
 import { AuthBackdropSync } from '@/components/auth/authBackdrop'
-import { AuthDemoPresets } from '@/components/auth/AuthDemoPresets'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { parseForm } from '@/lib/validation/parseForm'
 import { safeReturnPath } from '@/lib/safeReturnPath'
 import { loginSchema } from '@/lib/validation/schemas'
 
-const showLabPresets = import.meta.env.VITE_QRE_ENV !== 'production'
+const showLabCredentialsHint = import.meta.env.VITE_QRE_ENV !== 'production'
+
+/** Matches backend `lab_credentials.LAB_UNIFIED_PASSWORD` after migrate + API restart. */
+const LAB_ADMIN_USER = 'admin'
+const LAB_UNIFIED_PASSWORD = 'quantum2026'
 
 type LoginLocationState = {
   from?: string
@@ -80,7 +83,9 @@ export function LoginPage() {
         setFields(mapped)
         const generic =
           err.status === 401
-            ? 'Sign-in failed. Check username and password. In lab, restart the API after migrate so demo admin sync runs.'
+            ? showLabCredentialsHint
+              ? `Sign-in failed. Use ${LAB_ADMIN_USER} or any demo role with password ${LAB_UNIFIED_PASSWORD}. Restart the API after migrate if the account was just created.`
+              : 'Sign-in failed. Check username and password.'
             : err.detail || 'Sign in failed'
         setBanner(Object.keys(mapped).length ? '' : generic)
       } else {
@@ -106,25 +111,19 @@ export function LoginPage() {
     <AuthPanel
       title="Sign in"
       subtitle="Sign in to your organization workspace with portal credentials."
-      footer={
-        <div className="space-y-3">
-          <AuthFooterLinks showForgot showRegister />
-          <AuthDemoPresets
-            visible={showLabPresets}
-            disabled={busy}
-            onSelect={(user, pass) => {
-              setUsername(user)
-              setPassword(pass)
-            }}
-            onSignIn={(user, pass) => doLogin(user, pass)}
-          />
-        </div>
-      }
+      footer={<AuthFooterLinks showForgot showRegister />}
     >
       <FormShakeShell shakeKey={banner} className="space-y-4">
       <AuthBackdropSync username={username} password={password} captchaInput={captchaCode} />
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
+        {showLabCredentialsHint ? (
+          <p className="cert-login-card__lab-hint" role="note">
+            Lab: any tenant user (e.g. <span className="font-mono font-semibold text-foreground">{LAB_ADMIN_USER}</span>,{' '}
+            <span className="font-mono font-semibold text-foreground">demo_operator</span>) — password{' '}
+            <span className="font-mono font-semibold text-foreground">{LAB_UNIFIED_PASSWORD}</span>
+          </p>
+        ) : null}
         <AuthOutlineField label="Username" htmlFor="login-username">
           <input
             id="login-username"

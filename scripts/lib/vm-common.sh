@@ -43,7 +43,7 @@ vm_ensure_env_files() {
       echo "$pair" >>"$root/backend/.env"
     fi
   done
-  for pair in 'VITE_QRE_ENV=lab' 'VITE_QRE_CAPTCHA=1'; do
+  for pair in 'VITE_QRE_ENV=lab' 'VITE_QRE_CAPTCHA=0'; do
     k="${pair%%=*}"
     if grep -q "^${k}=" "$root/frontend/.env.local" 2>/dev/null; then
       sed -i "s/^${k}=.*/${pair}/" "$root/frontend/.env.local"

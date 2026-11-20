@@ -10,7 +10,7 @@ Load the portal with **interconnected demonstration data** stored in PostgreSQL.
 | Explicit action | Run `make seed-demo` or `POST /api/v1/admin/seed-demo` (PLATFORM_ADMIN, lab only) |
 | Idempotency | Re-run is a no-op when `demo_seed_version` matches; use `--force` to rebuild |
 | Reset | `python -m qre seed-demo --tenant-code CDAC --reset-only` removes `[DEMO]`-labelled rows only |
-| Credentials | Demo accounts use password `Demo-Strong-Pw-2026` — never reuse in production |
+| Credentials | Lab demo users share password `quantum2026` — never reuse in production |
 
 ## Prerequisites
 
@@ -39,11 +39,11 @@ make dev-web    # :5176
 
 | Username | Role (illustrative) | Password |
 | --- | --- | --- |
-| `admin` (bootstrap) | PLATFORM_ADMIN | your bootstrap password |
-| `demo_researcher` | RESEARCHER on demo projects | `Demo-Strong-Pw-2026` |
-| `demo_pi` | PROJECT_OWNER on demo projects | `Demo-Strong-Pw-2026` |
-| `demo_operator` | OPERATOR (tenant) | `Demo-Strong-Pw-2026` |
-| `demo_auditor` | AUDITOR (tenant) | `Demo-Strong-Pw-2026` |
+| `admin` (bootstrap) | PLATFORM_ADMIN | `quantum2026` |
+| `demo_researcher` | RESEARCHER on demo projects | `quantum2026` |
+| `demo_pi` | PROJECT_OWNER on demo projects | `quantum2026` |
+| `demo_operator` | OPERATOR (tenant) | `quantum2026` |
+| `demo_auditor` | AUDITOR (tenant) | `quantum2026` |
 
 All demo entities are prefixed `[DEMO]` or `DEMO-PRJ-*` / `demo-*` ids.
 
@@ -90,7 +90,7 @@ cd frontend && npm run test:e2e:smoke
 npx playwright test e2e/module-detail.spec.ts
 ```
 
-Login: bootstrap admin or `demo_operator` / `Demo-Strong-Pw-2026`. Backend topology on demo hardware backends fills on seed (`demo-%` backends without nodes).
+Login: `admin` or any `demo_*` user with password `quantum2026` (no CAPTCHA in lab unless you set `QRE_CAPTCHA_ENABLED=true`). Backend topology on demo hardware backends fills on seed (`demo-%` backends without nodes).
 
 ## Disable demo in shared environments
 

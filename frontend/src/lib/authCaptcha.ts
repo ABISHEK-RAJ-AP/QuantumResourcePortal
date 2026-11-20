@@ -1,12 +1,7 @@
-/** SPA preference — off in production builds unless `VITE_QRE_CAPTCHA=1`; on in lab/dev by default. */
+/** SPA preference — off unless `VITE_QRE_CAPTCHA=1` (must match API QRE_CAPTCHA_ENABLED). */
 export function isAuthCaptchaEnabled(): boolean {
-  if (import.meta.env.VITE_QRE_ENV === 'production') {
-    const flag = import.meta.env.VITE_QRE_CAPTCHA
-    return flag === '1' || flag === 'true'
-  }
   const flag = import.meta.env.VITE_QRE_CAPTCHA
-  if (flag === '0' || flag === 'false') return false
-  return true
+  return flag === '1' || flag === 'true'
 }
 
 export type CaptchaPayload = {

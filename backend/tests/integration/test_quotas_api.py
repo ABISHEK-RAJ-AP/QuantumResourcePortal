@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.core.ids import new_ulid
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 RESEARCHER_PW = "Research-Strong-Pw-9"
 
 
@@ -44,7 +44,7 @@ async def world(client, migrated_db):
 
     def build(c):
         res = bootstrap_admin(
-            c, tenant_code=code, tenant_name="QuotaTest", admin_username=admin_u, password=ADMIN_PW
+            c, tenant_code=code, tenant_name="QuotaTest", admin_username=admin_u, password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN
         )
         tid = res.tenant_id
         pid = new_ulid()

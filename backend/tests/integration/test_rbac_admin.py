@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
@@ -18,7 +19,6 @@ from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 PW = "Member-Strong-Pw-2026"
 
 
@@ -48,7 +48,7 @@ async def world(engine: AsyncEngine) -> World:
 
     def build(c):
         res = bootstrap_admin(c, tenant_code=code, tenant_name="T", admin_username=admin_u,
-                              password=ADMIN_PW)
+                              password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN)
         pid = new_ulid()
         c.execute(text("INSERT INTO project (project_id, tenant_id, code, name) VALUES (:p,:t,:c,'P')"),
                   {"p": pid, "t": res.tenant_id, "c": f"PRJ{code}"})

@@ -112,9 +112,8 @@ class Settings(BaseSettings):
     def _cross_field_rules(self) -> Settings:
         if self.page_size_default > self.page_size_max:
             raise ValueError("QRE_PAGE_SIZE_DEFAULT must not exceed QRE_PAGE_SIZE_MAX")
-        # Lab profile: CAPTCHA on for demos (SRS §4.2.1); production uses QRE_CAPTCHA_ENABLED.
+        # Lab profile: CAPTCHA off unless QRE_CAPTCHA_ENABLED=true (SRS §4.2.1).
         if self.is_lab:
-            self.captcha_enabled = True
             if not self.org_self_register_enabled:
                 self.org_self_register_enabled = True
         if self.env is Profile.PRODUCTION:

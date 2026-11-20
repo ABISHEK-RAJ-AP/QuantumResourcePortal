@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 
 
 async def test_pools_connectors_incidents(client, migrated_db):
@@ -18,7 +18,7 @@ async def test_pools_connectors_incidents(client, migrated_db):
             tenant_code="PCI01",
             tenant_name="PCITest",
             admin_username="admin_pci",
-            password=ADMIN_PW,
+            password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN,
         )
 
     from sqlalchemy import text

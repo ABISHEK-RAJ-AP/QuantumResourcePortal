@@ -45,6 +45,7 @@ def bootstrap_admin(
     password: str,
     email: str | None = None,
     display_name: str | None = None,
+    password_min_len: int = 12,
 ) -> BootstrapResult:
     code = tenant_code.strip()
     username = admin_username.strip().lower()
@@ -54,8 +55,11 @@ def bootstrap_admin(
         raise BootstrapError(
             "admin username must be 3–128 chars (lower-case letters, digits, . _ -)"
         )
-    if len(password) < 12:
-        raise BootstrapError("admin password must be at least 12 characters (PD-12)")
+    if len(password) < password_min_len:
+        raise BootstrapError(
+            f"admin password must be at least {password_min_len} characters"
+            + (" (PD-12)" if password_min_len >= 12 else "")
+        )
 
     # Resolve the seeded system role; the catalogue must be loaded first (migration 0005).
     role_id = conn.execute(

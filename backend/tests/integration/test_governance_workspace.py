@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 from qre.core.ids import new_ulid
 from qre.core.security import hash_password
@@ -14,7 +15,6 @@ from qre.services.svc02_identity.bootstrap import bootstrap_admin
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 RESEARCHER_PW = "Research-Strong-Pw-9"
 OWNER_PW = "Owner-Strong-Pw-9"
 
@@ -47,7 +47,7 @@ async def world(engine: AsyncEngine) -> World:
 
     def build(c):
         res = bootstrap_admin(
-            c, tenant_code=code, tenant_name="GovTest", admin_username=admin_u, password=ADMIN_PW
+            c, tenant_code=code, tenant_name="GovTest", admin_username=admin_u, password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN
         )
         tid = res.tenant_id
         pid = new_ulid()
@@ -167,7 +167,7 @@ async def test_governance_summary_empty_tenant(client, engine):
 
     def build(c):
         return bootstrap_admin(
-            c, tenant_code=code, tenant_name="Empty", admin_username=admin_u, password=ADMIN_PW
+            c, tenant_code=code, tenant_name="Empty", admin_username=admin_u, password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN
         )
 
     async with engine.begin() as aconn:

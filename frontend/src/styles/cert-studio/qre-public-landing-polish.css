@@ -97,7 +97,8 @@
   padding-left: 0;
   padding-right: 0;
   min-height: 0;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
 }
 
 .landing-page .landing-hero__container {
@@ -116,7 +117,7 @@
   max-width: 100%;
   width: 100%;
   margin-inline: auto;
-  text-align: left;
+  text-align: center;
   padding: clamp(2rem, 4vw, 3.25rem) clamp(1.5rem, 3vw, 2.5rem);
   overflow: visible;
 }
@@ -126,7 +127,7 @@
   line-height: 1.08;
   letter-spacing: -0.03em;
   margin: 0 0 var(--space-5);
-  text-align: left;
+  text-align: center;
 }
 
 .landing-page .landing-hero__title-accent {
@@ -138,13 +139,13 @@
   font-size: clamp(1.125rem, 2.2vw, 1.3125rem);
   line-height: 1.65;
   max-width: 44rem;
-  margin: 0 0 var(--space-8);
-  text-align: left;
+  margin: 0 auto var(--space-8);
+  text-align: center;
 }
 
 .landing-page .landing-hero__ctas {
   gap: var(--space-3);
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .landing-page .landing-hero__ctas .landing-cta-primary,
@@ -172,7 +173,7 @@
   font-family: var(--font-display);
   font-weight: 800;
   margin: 0 0 var(--space-3);
-  text-align: left;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -181,8 +182,8 @@
   line-height: 1.65;
   color: var(--text-secondary);
   max-width: 44rem;
-  margin: 0 0 var(--space-10);
-  text-align: left;
+  margin: 0 auto var(--space-10);
+  text-align: center;
 }
 
 .landing-page .landing-section .studio-feature-grid,
@@ -202,6 +203,8 @@
 
 .landing-page .studio-feature-card__body {
   text-align: left;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  min-height: 12rem;
 }
 
 .landing-page .landing-bento__card {
@@ -274,25 +277,49 @@
 }
 
 /* —— FAQ —— */
+.landing-page .landing-faq-list {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.landing-page .landing-faq-item {
+  border-radius: 0.75rem;
+}
+
 .landing-page .landing-faq-item__trigger {
-  font-size: 1.125rem;
-  padding: var(--space-5) var(--space-6);
+  box-sizing: border-box;
+  min-height: 3rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.45;
+  align-items: center;
+  overflow: visible;
+}
+
+.landing-page .landing-faq-item__chev {
+  align-self: center;
 }
 
 .landing-page .landing-faq-item__body {
-  font-size: 1.125rem;
-  line-height: 1.7;
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  padding: 0.75rem 1.5rem 1.25rem;
+}
+
+.landing-page .landing-faq-wrap {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .landing-page .landing-final-cta {
-  text-align: left;
-  max-width: none;
-  margin-inline: 0;
+  text-align: center;
+  max-width: 36rem;
+  margin-inline: auto;
 }
 
 .landing-page .landing-final-cta .landing-hero__ctas {
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .landing-page .landing-final-cta h2 {
@@ -546,11 +573,14 @@
 @media (max-width: 640px) {
   .landing-page .landing-hero__ctas {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
   }
 
-  .landing-page .landing-hero__ctas .qre-btn {
+  .landing-page .landing-hero__ctas .qre-btn,
+  .landing-page .landing-hero__ctas .landing-cta-primary,
+  .landing-page .landing-hero__ctas .landing-cta-secondary--glass {
     width: 100%;
+    max-width: 22rem;
     justify-content: center;
   }
 }

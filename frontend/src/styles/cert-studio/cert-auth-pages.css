@@ -35,13 +35,14 @@
 .cert-register-card {
   box-sizing: border-box;
   width: 100%;
+  max-width: 26.5rem;
   margin-inline: auto;
   background: color-mix(in srgb, var(--card) 94%, transparent);
-  padding: clamp(1.5rem, 4vw, 2rem);
+  padding: clamp(1.75rem, 4vw, 2.25rem);
   border-radius: var(--radius-xl, 1rem);
   box-shadow: 0 16px 48px color-mix(in srgb, var(--foreground) 8%, transparent);
   border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
 }
 
 [data-theme='dark'] .cert-login-card,
@@ -85,6 +86,17 @@
   font-size: 0.9375rem;
   color: var(--muted-foreground);
   line-height: 1.5;
+}
+
+.cert-login-card__lab-hint {
+  margin: 0 0 0.25rem;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  border-radius: var(--radius-lg, 0.75rem);
+  background: color-mix(in srgb, var(--primary) 6%, var(--card));
 }
 
 .cert-auth-card__footer {

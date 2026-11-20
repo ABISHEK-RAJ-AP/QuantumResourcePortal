@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 from qre.services.svc02_identity.bootstrap import bootstrap_admin
+from tests._credentials import ADMIN_PW, LAB_PASSWORD_MIN_LEN
 
 pytestmark = pytest.mark.db
 
-ADMIN_PW = "Admin-Strong-Pw-2026"
 
 
 async def test_admin_registers_lists_and_lifecycle(client, migrated_db):
@@ -22,7 +22,7 @@ async def test_admin_registers_lists_and_lifecycle(client, migrated_db):
             tenant_code=code,
             tenant_name="InvTest",
             admin_username=admin_u,
-            password=ADMIN_PW,
+            password=ADMIN_PW, password_min_len=LAB_PASSWORD_MIN_LEN,
         )
 
     from sqlalchemy.ext.asyncio import create_async_engine
