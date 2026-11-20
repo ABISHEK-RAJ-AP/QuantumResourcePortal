@@ -1,26 +1,62 @@
+import { useId, useMemo } from 'react'
+
 import { GEMINI_WIRE_PATHS } from '@/components/cert-studio/geminiWirePaths'
 
 const DARK_STROKES = ['#2dffbe', '#5eead4', '#38bdf8', '#60a5fa', '#34d399', '#a78bfa']
 
-/** Cert Studio dark-mode wire backdrop (ported from qre-theme). */
+function fieldProgress(
+  email: string,
+  password: string,
+  captchaInput: string,
+  captchaCode: string,
+  fallback = 0.35,
+): number {
+  let score = 0
+  const user = email.trim()
+  if (user.includes('@') ? user.length > 3 : user.length >= 2) score += 1
+  if (password.length >= 4) score += 1
+  const capIn = captchaInput.trim()
+  const capLen = Math.max(4, captchaCode.length || 4)
+  if (capIn.length >= Math.min(capLen, 4)) score += 1
+  if (score === 0) return fallback
+  return score / 3
+}
+
+/** Cert Studio wire backdrop — animates as the user fills the auth form. */
 export function LoginWireBackdrop({
   variant = 'dark',
-  progress = 0.72,
+  progress: progressProp,
+  email = '',
+  password = '',
+  captchaInput = '',
+  captchaCode = '',
 }: {
   variant?: 'light' | 'dark'
   progress?: number
+  email?: string
+  password?: string
+  captchaInput?: string
+  captchaCode?: string
 }) {
   const isDark = variant === 'dark'
+  const uid = useId().replace(/:/g, '')
+  const blurId = `qrpLoginWireBlur-${uid}`
+  const glowId = `qrpLoginWireGlow-${uid}`
+
+  const progress = useMemo(() => {
+    if (typeof progressProp === 'number') return progressProp
+    return fieldProgress(email, password, captchaInput, captchaCode)
+  }, [captchaCode, captchaInput, email, password, progressProp])
 
   return (
     <div className={`login-wire-backdrop${isDark ? ' login-wire-backdrop--dark' : ''}`} aria-hidden>
       <svg viewBox="0 0 1440 890" preserveAspectRatio="xMidYMid slice" className="login-wire-backdrop__svg">
         <defs>
-          <filter id="qrpLoginWireBlur">
+          <filter id={blurId}>
             <feGaussianBlur in="SourceGraphic" stdDeviation={isDark ? 1.5 : 2.5} />
           </filter>
           {isDark ? (
-            <filter id="qrpLoginWireGlow">
+            <filter id={glowId}>
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -43,7 +79,7 @@ export function LoginWireBackdrop({
               pathLength={1}
               strokeDasharray="1"
               strokeDashoffset={1 - lineProgress}
-              filter={isDark ? 'url(#qrpLoginWireGlow)' : 'url(#qrpLoginWireBlur)'}
+              filter={isDark ? `url(#${glowId})` : `url(#${blurId})`}
               className="login-wire-backdrop__path"
               opacity={isDark ? 0.92 : 0.88}
             />

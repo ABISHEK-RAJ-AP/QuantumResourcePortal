@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
+import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { FormBanner } from '@/components/auth/FormAlerts'
 import { authCapabilitiesKey, fetchAuthCapabilities } from '@/api/authCapabilities'
@@ -152,6 +153,7 @@ export function RegisterPage() {
         subtitle="Organization sign-up is disabled on this deployment"
         footer={<AuthFooterLinks showForgot />}
       >
+        <AuthBackdropSync captchaInput={captchaCode} />
         <p className="text-base leading-relaxed text-muted-foreground">
           Your platform operator (for example CDAC) creates organizations and invites members. Complete verification
           below, then sign in once an administrator has provisioned your account.
@@ -183,10 +185,12 @@ export function RegisterPage() {
 
   return (
     <AuthPanel
+      wide
       title="Register your organization"
       subtitle="Create an isolated workspace on the quantum resource platform"
       footer={<AuthFooterLinks showForgot />}
     >
+      <AuthBackdropSync username={adminUsername} password={password} captchaInput={captchaCode} />
       <p className="text-sm leading-relaxed text-muted-foreground">
         Each organization is a separate tenant: own members, projects, quotas, and usage. CDAC operates the shared
         provider catalog; you govern people and workloads inside your org.

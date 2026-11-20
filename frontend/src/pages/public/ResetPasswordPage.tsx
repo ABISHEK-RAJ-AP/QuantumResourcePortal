@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
+import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
@@ -76,6 +77,7 @@ export function ResetPasswordPage() {
 
   return (
     <AuthPanel title="Set new password" subtitle="Use the token from your administrator" footer={<AuthFooterLinks />}>
+      <AuthBackdropSync password={password} captchaInput={captchaCode} />
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={error} />
         <AuthOutlineField label="Reset token" htmlFor="reset-token">

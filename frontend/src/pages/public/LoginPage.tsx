@@ -7,6 +7,7 @@ import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, FormShakeShell, mapApiFieldErrors } from '@/components/auth/FormAlerts'
+import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthDemoPresets } from '@/components/auth/AuthDemoPresets'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
@@ -36,7 +37,6 @@ export function LoginPage() {
         ? 'Sign in after your organization administrator has created your account.'
         : ''
   const captchaEnabled = useAuthCaptchaRequired()
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [captchaId, setCaptchaId] = useState('')
@@ -122,6 +122,7 @@ export function LoginPage() {
       }
     >
       <FormShakeShell shakeKey={banner} className="space-y-4">
+      <AuthBackdropSync username={username} password={password} captchaInput={captchaCode} />
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
         <AuthOutlineField label="Username" htmlFor="login-username">

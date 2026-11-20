@@ -1,0 +1,120 @@
+/* Cert Studio auth layout — centred card over intro + wire (ported from qre-theme public chrome) */
+
+.public-auth-page .login-wire-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .public-auth-page .login-wire-backdrop {
+  opacity: 0.72;
+}
+
+.cert-auth-page__main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 24px);
+  min-height: calc(100dvh - 7rem);
+  box-sizing: border-box;
+}
+
+.cert-auth-page__container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.cert-login-card,
+.cert-register-card {
+  box-sizing: border-box;
+  width: 100%;
+  margin-inline: auto;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  padding: clamp(1.5rem, 4vw, 2rem);
+  border-radius: var(--radius-xl, 1rem);
+  box-shadow: 0 16px 48px color-mix(in srgb, var(--foreground) 8%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme='dark'] .cert-login-card,
+[data-theme='dark'] .cert-register-card {
+  background: rgba(8, 16, 28, 0.92);
+  border-color: rgba(45, 255, 190, 0.15);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.cert-auth-card__wordmark {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+}
+
+.cert-login-card__logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.cert-login-card__head,
+.cert-register-card__head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.cert-login-card__head h1,
+.cert-register-card__head h1 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.cert-login-card__subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.cert-auth-card__footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.public-auth-page .qrp-public-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.public-auth-page.public-auth-page--wide .cert-register-card {
+  max-width: 540px;
+}
+
+.cert-auth-inline-back {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.cert-auth-inline-back:hover {
+  text-decoration: underline;
+}
+
+[data-theme='dark'] .cert-auth-inline-back {
+  color: #2dffbe;
+}
