@@ -84,9 +84,6 @@ function AuthPanelInner({
             {footer ? (
               <div className="cert-auth-card__footer qrp-auth-form-footer auth-panel-footer">{footer}</div>
             ) : null}
-            <Link to="/" className="cert-auth-inline-back">
-              ← Back to home
-            </Link>
           </div>
         </MarketingContainer>
       </main>
@@ -98,7 +95,7 @@ function AuthPanelInner({
 export function AuthFooterLinks({
   showForgot = false,
   showRegister = false,
-  showHome = true,
+  showHome = false,
 }: {
   showForgot?: boolean
   showRegister?: boolean

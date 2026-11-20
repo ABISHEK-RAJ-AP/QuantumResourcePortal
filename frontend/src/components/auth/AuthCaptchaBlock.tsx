@@ -25,7 +25,6 @@ export function AuthCaptchaBlock({
         onChange={onCodeChange}
         onChallenge={onChallenge}
         onAvailability={onAvailability}
-        showWhenDisabled
       />
       <FieldAlert message={fieldError} />
     </div>

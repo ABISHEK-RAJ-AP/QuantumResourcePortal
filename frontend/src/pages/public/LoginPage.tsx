@@ -119,11 +119,14 @@ export function LoginPage() {
       <form className="cert-auth-form" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
         {showLabCredentialsHint ? (
-          <p className="cert-login-card__lab-hint" role="note">
-            Lab: any tenant user (e.g. <span className="font-mono font-semibold text-foreground">{LAB_ADMIN_USER}</span>,{' '}
-            <span className="font-mono font-semibold text-foreground">demo_operator</span>) — password{' '}
-            <span className="font-mono font-semibold text-foreground">{LAB_UNIFIED_PASSWORD}</span>
-          </p>
+          <details className="cert-login-lab-details">
+            <summary>Lab sign-in credentials</summary>
+            <p className="cert-login-card__lab-hint" role="note">
+              Use <span className="font-mono font-semibold text-foreground">{LAB_ADMIN_USER}</span> or any{' '}
+              <span className="font-mono font-semibold text-foreground">demo_*</span> user with password{' '}
+              <span className="font-mono font-semibold text-foreground">{LAB_UNIFIED_PASSWORD}</span>.
+            </p>
+          </details>
         ) : null}
         <AuthOutlineField label="Username" htmlFor="login-username">
           <input

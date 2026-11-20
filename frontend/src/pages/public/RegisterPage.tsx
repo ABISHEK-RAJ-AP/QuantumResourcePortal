@@ -185,9 +185,13 @@ export function RegisterPage() {
         <p>{panelHead.subtitle}</p>
       </header>
       <RegisterStepTrail current={trail} />
-      <FormBanner message={banner} />
+      {banner ? (
+        <div className="reg-cert-banner">
+          <FormBanner message={banner} />
+        </div>
+      ) : null}
 
-      <div className="reg-stage reg-stage--flow reg-stage--detail">
+      <div className="reg-stage reg-stage--flow reg-stage--detail qrp-reg-stage">
         <div className="reg-stage__brand">
           <LogoMark className="reg-stage__logo h-12 w-auto max-w-[120px]" aria-hidden />
           <p className="reg-stage__wordmark">Quantum Resource Portal</p>
@@ -207,7 +211,11 @@ export function RegisterPage() {
               noValidate
             >
               <p className="reg-stage__label">Organization type</p>
-              <div className="reg-type-grid reg-type-grid--tiles" role="listbox" aria-label="Organization type">
+              <div
+                className="reg-type-grid reg-type-grid--tiles qrp-reg-type-grid--compact"
+                role="listbox"
+                aria-label="Organization type"
+              >
                 {ORG_KINDS.map((type) => {
                   const Icon = type.icon
                   const active = orgKind === type.id
