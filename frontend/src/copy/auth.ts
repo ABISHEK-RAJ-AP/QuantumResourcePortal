@@ -2,7 +2,8 @@
 
 export const AUTH_COPY = {
   signInSubtitle: 'Access your organization workspace with portal credentials.',
-  registerSubtitle: 'Choose organization type, tenant id, and the first administrator account.',
+  registerSubtitle:
+    'Provision an isolated organization workspace — members, projects, quotas, and usage on the quantum resource platform.',
   registerOrgStepSubtitle: 'Organization type, short tenant code, and legal name.',
   registerAdminStepSubtitle: 'Username and profile for the organization administrator.',
   registerSecurityStepSubtitle: 'Password for the administrator (platform policy applies).',

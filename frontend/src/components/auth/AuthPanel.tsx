@@ -17,16 +17,25 @@ export function AuthPanel({
   children,
   footer,
   wide = false,
+  showBackLink = false,
 }: {
   title: string
   subtitle?: string
   children: ReactNode
   footer?: ReactNode
   wide?: boolean
+  /** Cert Studio: “← Back to home” above the card */
+  showBackLink?: boolean
 }) {
   return (
     <AuthBackdropProvider>
-      <AuthPanelInner title={title} subtitle={subtitle} footer={footer} wide={wide}>
+      <AuthPanelInner
+        title={title}
+        subtitle={subtitle}
+        footer={footer}
+        wide={wide}
+        showBackLink={showBackLink}
+      >
         {children}
       </AuthPanelInner>
     </AuthBackdropProvider>
@@ -39,12 +48,14 @@ function AuthPanelInner({
   children,
   footer,
   wide,
+  showBackLink,
 }: {
   title: string
   subtitle?: string
   children: ReactNode
   footer?: ReactNode
   wide?: boolean
+  showBackLink?: boolean
 }) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -67,8 +78,13 @@ function AuthPanelInner({
         <MarketingContainer
           narrow
           className="cert-auth-page__container"
-          style={{ maxWidth: wide ? 540 : 460 }}
+          style={{ maxWidth: wide ? 520 : 460 }}
         >
+          {showBackLink ? (
+            <Link to="/" className="cert-auth-inline-back cert-auth-inline-back--above-card">
+              ← Back to home
+            </Link>
+          ) : null}
           <div className={`qrp-auth-shell ${cardClass}`}>
             <div className="cert-auth-card__brand">
               <div className="cert-login-card__logo-wrap">
@@ -76,7 +92,7 @@ function AuthPanelInner({
               </div>
               <p className="cert-auth-card__wordmark">Quantum Resource Portal</p>
             </div>
-            <header className="cert-login-card__head">
+            <header className={wide ? 'cert-register-card__head' : 'cert-login-card__head'}>
               <h1>{title}</h1>
               {subtitle ? <p className="cert-login-card__subtitle">{subtitle}</p> : null}
             </header>

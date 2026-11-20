@@ -1,19 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import {
-  Building2,
-  GraduationCap,
-  Landmark,
-  Layers,
-  Rocket,
-  UserRound,
-  type LucideIcon,
-} from 'lucide-react'
+import { Check } from 'lucide-react'
 
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
-import { AuthRegisterStudio } from '@/components/auth/AuthRegisterStudio'
-import { RegisterStepTrail, type RegisterTrailStep } from '@/components/auth/RegisterStepTrail'
+import { AuthPanel } from '@/components/auth/AuthPanel'
 import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFieldHint, AuthOutlineField, AuthPasswordField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
@@ -22,41 +13,64 @@ import { registerOrganization } from '@/api/orgRegister'
 import { validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { formatApiError } from '@/lib/apiMessage'
-import { LogoMark } from '@/components/brand/LogoMark'
 import { AUTH_COPY } from '@/copy/auth'
 
-const ORG_KINDS: {
-  id: 'startup' | 'academia' | 'student' | 'psu' | 'individual' | 'other'
-  label: string
-  hint: string
-  icon: LucideIcon
-}[] = [
-  { id: 'startup', label: 'Startup / company', hint: 'Product teams and private R&D using shared quantum capacity.', icon: Rocket },
-  { id: 'academia', label: 'University / research lab', hint: 'Campus labs, departments, and national programmes.', icon: GraduationCap },
-  { id: 'student', label: 'Student programme', hint: 'Training cohorts with scoped quotas and supervisors.', icon: UserRound },
-  { id: 'psu', label: 'PSU / government unit', hint: 'Public-sector programmes with governance requirements.', icon: Landmark },
-  { id: 'individual', label: 'Independent researcher', hint: 'Single-investigator workspace with personal quotas.', icon: Building2 },
-  { id: 'other', label: 'Other', hint: 'Partnerships and consortia that do not fit the categories above.', icon: Layers },
-]
+const ORG_KINDS = [
+  { id: 'startup', label: 'Startup / company' },
+  { id: 'academia', label: 'University / research lab' },
+  { id: 'student', label: 'Student programme' },
+  { id: 'psu', label: 'PSU / government unit' },
+  { id: 'individual', label: 'Independent researcher' },
+  { id: 'other', label: 'Other' },
+] as const
 
-const HEAD: Record<RegisterTrailStep, { title: string; subtitle: string }> = {
-  org: { title: 'Register your organization', subtitle: AUTH_COPY.registerOrgStepSubtitle },
-  admin: { title: 'Administrator account', subtitle: AUTH_COPY.registerAdminStepSubtitle },
-  security: { title: 'Security', subtitle: AUTH_COPY.registerSecurityStepSubtitle },
+const STEPS = ['Organization', 'Administrator', 'Security'] as const
+
+const STEP_SUBTITLE: Record<number, string> = {
+  1: AUTH_COPY.registerOrgStepSubtitle,
+  2: AUTH_COPY.registerAdminStepSubtitle,
+  3: AUTH_COPY.registerSecurityStepSubtitle,
 }
 
-const ASIDE: Record<RegisterTrailStep, string> = {
-  org: AUTH_COPY.registerOrgAside,
-  admin: AUTH_COPY.registerAdminAside,
-  security: AUTH_COPY.registerSecurityAside,
+function RegisterStepIndicator({ step }: { step: number }) {
+  return (
+    <ol className="cert-register-steps mb-6 justify-center" aria-label="Registration progress">
+      {STEPS.map((label, i) => {
+        const n = i + 1
+        const done = n < step
+        const active = n === step
+        return (
+          <li
+            key={label}
+            className={`cert-register-steps__item${active ? ' is-active' : ''}${done ? ' is-done' : ''}`}
+          >
+            <span className="cert-register-steps__dot" aria-hidden>
+              {done ? <Check className="size-3" /> : n}
+            </span>
+            <span className="cert-register-steps__label">{label}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
 }
 
-function stepToTrail(step: number): RegisterTrailStep {
-  if (step === 2) return 'admin'
-  if (step === 3) return 'security'
-  return 'org'
+function RegisterCertFooter() {
+  return (
+    <div className="cert-auth-footer">
+      <p>
+        Already have an account?{' '}
+        <Link to="/login" className="cert-auth-link">
+          Sign in here
+        </Link>
+      </p>
+    </div>
+  )
 }
 
+/**
+ * Cert Studio auth shell (centred register card) + QRP org-tenant stepped flow.
+ */
 export function RegisterPage() {
   const navigate = useNavigate()
   const caps = useQuery({ queryKey: authCapabilitiesKey, queryFn: fetchAuthCapabilities, staleTime: 60_000 })
@@ -77,14 +91,6 @@ export function RegisterPage() {
   const [banner, setBanner] = useState('')
   const [fieldError, setFieldError] = useState('')
   const [busy, setBusy] = useState(false)
-
-  const trail = stepToTrail(step)
-  const panelHead = HEAD[trail]
-  const footer = (
-    <>
-      Already have an account? <Link to="/login">Sign in</Link>
-    </>
-  )
 
   function nextFromOrg() {
     setBanner('')
@@ -161,211 +167,300 @@ export function RegisterPage() {
     }
   }
 
+  const panelSubtitle = step === 1 ? AUTH_COPY.registerSubtitle : STEP_SUBTITLE[step]
+
   if (caps.isSuccess && !selfReg) {
     return (
-      <AuthRegisterStudio footer={footer}>
-        <header className="reg-cert-head">
-          <h1>Request access</h1>
-          <p>{AUTH_COPY.registerClosed}</p>
-        </header>
-        <p className="reg-type-empty">
-          Your platform operator (for example CDAC) creates organizations and invites members. Sign in once an
-          administrator has provisioned your account.{' '}
-          <Link to="/login">Sign in</Link>
-        </p>
-      </AuthRegisterStudio>
+      <AuthPanel
+        wide
+        showBackLink
+        title="Request access"
+        subtitle={AUTH_COPY.registerClosed}
+        footer={<RegisterCertFooter />}
+      >
+        <p className="cert-auth-prose">{AUTH_COPY.registerOrgAside}</p>
+        <Link to="/login" className="btn-primary qrp-auth-submit auth-cta w-full text-center">
+          Continue to sign in
+        </Link>
+      </AuthPanel>
     )
   }
 
   return (
-    <AuthRegisterStudio footer={footer}>
+    <AuthPanel
+      wide
+      showBackLink
+      title="Register your organization"
+      subtitle={panelSubtitle}
+      footer={<RegisterCertFooter />}
+    >
       <AuthBackdropSync username={adminUsername} password={password} captchaInput={captchaCode} />
-      <header className="reg-cert-head">
-        <h1>{panelHead.title}</h1>
-        <p>{panelHead.subtitle}</p>
-      </header>
-      <RegisterStepTrail current={trail} />
-      {banner ? (
-        <div className="reg-cert-banner">
-          <FormBanner message={banner} />
-        </div>
+      <RegisterStepIndicator step={step} />
+      <FormBanner message={banner} />
+
+      {step === 1 ? (
+        <OrgStep
+          orgKind={orgKind}
+          setOrgKind={setOrgKind}
+          tenantCode={tenantCode}
+          setTenantCode={setTenantCode}
+          tenantName={tenantName}
+          setTenantName={setTenantName}
+          onNext={nextFromOrg}
+        />
       ) : null}
 
-      <div className="reg-stage reg-stage--flow reg-stage--detail qrp-reg-stage">
-        <div className="reg-stage__brand">
-          <LogoMark className="reg-stage__logo h-12 w-auto max-w-[120px]" aria-hidden />
-          <p className="reg-stage__wordmark">Quantum Resource Portal</p>
-          <aside className="reg-stage__aside" aria-label="Registration guidance">
-            <p className="reg-stage__aside-text">{ASIDE[trail]}</p>
-          </aside>
+      {step === 2 ? (
+        <AdminStep
+          tenantLabel={tenantName || tenantCode}
+          adminUsername={adminUsername}
+          setAdminUsername={setAdminUsername}
+          adminDisplayName={adminDisplayName}
+          setAdminDisplayName={setAdminDisplayName}
+          email={email}
+          setEmail={setEmail}
+          busy={busy}
+          onBack={() => setStep(1)}
+          onNext={nextFromAdmin}
+        />
+      ) : null}
+
+      {step === 3 ? (
+        <SecurityStep
+          adminUsername={adminUsername}
+          password={password}
+          setPassword={setPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+          captchaCode={captchaCode}
+          setCaptchaCode={setCaptchaCode}
+          captchaId={captchaId}
+          setCaptchaId={setCaptchaId}
+          setCaptchaOn={setCaptchaOn}
+          fieldError={fieldError}
+          busy={busy}
+          onBack={() => setStep(2)}
+          onSubmit={() => void submit()}
+        />
+      ) : null}
+    </AuthPanel>
+  )
+}
+
+function OrgStep({
+  orgKind,
+  setOrgKind,
+  tenantCode,
+  setTenantCode,
+  tenantName,
+  setTenantName,
+  onNext,
+}: {
+  orgKind: (typeof ORG_KINDS)[number]['id']
+  setOrgKind: (v: (typeof ORG_KINDS)[number]['id']) => void
+  tenantCode: string
+  setTenantCode: (v: string) => void
+  tenantName: string
+  setTenantName: (v: string) => void
+  onNext: () => void
+}) {
+  return (
+    <form
+      className="cert-auth-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onNext()
+      }}
+      noValidate
+    >
+      <fieldset className="cert-register-fieldset">
+        <legend className="cert-register-fieldset__legend">Organization type</legend>
+        <div className="cert-org-kind-grid">
+          {ORG_KINDS.map(({ id, label }) => (
+            <label key={id} className={`cert-org-kind-option${orgKind === id ? ' is-selected' : ''}`}>
+              <input type="radio" name="org_kind" checked={orgKind === id} onChange={() => setOrgKind(id)} />
+              {label}
+            </label>
+          ))}
         </div>
+      </fieldset>
+      <AuthOutlineField label="Organization code" htmlFor="register-tenant-code">
+        <input
+          id="register-tenant-code"
+          className={`${authOutlineControlClass} font-mono text-sm`}
+          placeholder="e.g. acme-quantum"
+          value={tenantCode}
+          onChange={(e) => setTenantCode(e.target.value)}
+          autoComplete="organization"
+        />
+      </AuthOutlineField>
+      <AuthFieldHint>Short id for URLs and support (2–32 chars).</AuthFieldHint>
+      <AuthOutlineField label="Legal / display name" htmlFor="register-tenant-name">
+        <input
+          id="register-tenant-name"
+          className={authOutlineControlClass}
+          placeholder="e.g. Acme Quantum Research Pvt Ltd"
+          value={tenantName}
+          onChange={(e) => setTenantName(e.target.value)}
+        />
+      </AuthOutlineField>
+      <button type="submit" className="btn-primary qrp-auth-submit auth-cta w-full">
+        Continue
+      </button>
+    </form>
+  )
+}
 
-        <div className="reg-stage__form">
-          {step === 1 ? (
-            <form
-              className="reg-form-stack"
-              onSubmit={(e) => {
-                e.preventDefault()
-                nextFromOrg()
-              }}
-              noValidate
-            >
-              <p className="reg-stage__label">Organization type</p>
-              <div
-                className="reg-type-grid reg-type-grid--tiles qrp-reg-type-grid--compact"
-                role="listbox"
-                aria-label="Organization type"
-              >
-                {ORG_KINDS.map((type) => {
-                  const Icon = type.icon
-                  const active = orgKind === type.id
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      role="option"
-                      aria-selected={active}
-                      className={`reg-type-tile${active ? ' reg-type-tile--active' : ''}${type.id === 'other' ? ' reg-type-tile--other' : ''}`}
-                      onClick={() => setOrgKind(type.id)}
-                    >
-                      <span className="reg-type-tile__row">
-                        <Icon className="reg-type-tile__icon" strokeWidth={2} aria-hidden />
-                        <span className="reg-type-tile__title">{type.label}</span>
-                      </span>
-                      <span className="reg-type-tile__hint">{type.hint}</span>
-                    </button>
-                  )
-                })}
-              </div>
-              <AuthOutlineField label="Organization code" htmlFor="register-tenant-code">
-                <input
-                  id="register-tenant-code"
-                  className={`${authOutlineControlClass} font-mono text-sm`}
-                  placeholder="e.g. acme-quantum"
-                  value={tenantCode}
-                  onChange={(e) => setTenantCode(e.target.value)}
-                  autoComplete="organization"
-                />
-              </AuthOutlineField>
-              <AuthFieldHint>Short id for URLs and support (2–32 chars).</AuthFieldHint>
-              <AuthOutlineField label="Legal / display name" htmlFor="register-tenant-name">
-                <input
-                  id="register-tenant-name"
-                  className={authOutlineControlClass}
-                  placeholder="e.g. Acme Quantum Research Pvt Ltd"
-                  value={tenantName}
-                  onChange={(e) => setTenantName(e.target.value)}
-                />
-              </AuthOutlineField>
-              <button type="submit" className="btn-primary qrp-auth-submit auth-cta w-full reg-flow-nav__next">
-                Continue
-              </button>
-            </form>
-          ) : null}
-
-          {step === 2 ? (
-            <form
-              className="reg-form-stack reg-form-stack--profile"
-              onSubmit={(e) => {
-                e.preventDefault()
-                nextFromAdmin()
-              }}
-              noValidate
-            >
-              <p className="reg-org-crumb" title={`${tenantName} (${tenantCode})`}>
-                <span className="reg-org-crumb__label">Organization</span>
-                {tenantName || tenantCode}
-              </p>
-              <AuthOutlineField label="Administrator username" htmlFor="register-admin-user">
-                <input
-                  id="register-admin-user"
-                  className={`${authOutlineControlClass} font-mono text-sm`}
-                  value={adminUsername}
-                  onChange={(e) => setAdminUsername(e.target.value)}
-                  autoComplete="username"
-                />
-              </AuthOutlineField>
-              <AuthOutlineField label="Full name" htmlFor="register-admin-name">
-                <input
-                  id="register-admin-name"
-                  className={authOutlineControlClass}
-                  value={adminDisplayName}
-                  onChange={(e) => setAdminDisplayName(e.target.value)}
-                  autoComplete="name"
-                />
-              </AuthOutlineField>
-              <AuthOutlineField label="Work email (optional)" htmlFor="register-admin-email">
-                <input
-                  id="register-admin-email"
-                  type="email"
-                  className={authOutlineControlClass}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                />
-              </AuthOutlineField>
-              <div className="reg-flow-nav">
-                <button type="button" className="reg-flow-nav__back" onClick={() => setStep(1)} disabled={busy}>
-                  Back
-                </button>
-                <button type="submit" className="btn-primary qrp-auth-submit auth-cta reg-flow-nav__next" disabled={busy}>
-                  Continue
-                </button>
-              </div>
-            </form>
-          ) : null}
-
-          {step === 3 ? (
-            <form
-              className="reg-form-stack"
-              onSubmit={(e) => {
-                e.preventDefault()
-                void submit()
-              }}
-              noValidate
-            >
-              <p className="reg-org-crumb" title={adminUsername}>
-                <span className="reg-org-crumb__label">Administrator</span>
-                {adminUsername || '—'}
-              </p>
-              <AuthCaptchaBlock
-                captchaCode={captchaCode}
-                onCodeChange={setCaptchaCode}
-                onChallenge={setCaptchaId}
-                onAvailability={setCaptchaOn}
-                fieldError={fieldError}
-              />
-              <AuthPasswordField
-                label="Password"
-                htmlFor="register-password"
-                autoComplete="new-password"
-                value={password}
-                onChange={setPassword}
-              />
-              <AuthPasswordField
-                label="Confirm password"
-                htmlFor="register-password-confirm"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-              />
-              <AuthFieldHint>At least 12 characters (platform policy).</AuthFieldHint>
-              <div className="reg-flow-nav">
-                <button type="button" className="reg-flow-nav__back" onClick={() => setStep(2)} disabled={busy}>
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary qrp-auth-submit auth-cta reg-flow-nav__next"
-                  disabled={busy}
-                >
-                  {busy ? 'Creating organization…' : 'Create organization'}
-                </button>
-              </div>
-            </form>
-          ) : null}
-        </div>
+function AdminStep({
+  tenantLabel,
+  adminUsername,
+  setAdminUsername,
+  adminDisplayName,
+  setAdminDisplayName,
+  email,
+  setEmail,
+  busy,
+  onBack,
+  onNext,
+}: {
+  tenantLabel: string
+  adminUsername: string
+  setAdminUsername: (v: string) => void
+  adminDisplayName: string
+  setAdminDisplayName: (v: string) => void
+  email: string
+  setEmail: (v: string) => void
+  busy: boolean
+  onBack: () => void
+  onNext: () => void
+}) {
+  return (
+    <form
+      className="cert-auth-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onNext()
+      }}
+      noValidate
+    >
+      <p className="cert-register-crumb" title={tenantLabel}>
+        <span className="cert-register-crumb__label">Organization</span>
+        {tenantLabel}
+      </p>
+      <p className="cert-auth-prose cert-auth-prose--tight">{AUTH_COPY.registerAdminAside}</p>
+      <AuthOutlineField label="Administrator username" htmlFor="register-admin-user">
+        <input
+          id="register-admin-user"
+          className={`${authOutlineControlClass} font-mono text-sm`}
+          value={adminUsername}
+          onChange={(e) => setAdminUsername(e.target.value)}
+          autoComplete="username"
+        />
+      </AuthOutlineField>
+      <AuthOutlineField label="Full name" htmlFor="register-admin-name">
+        <input
+          id="register-admin-name"
+          className={authOutlineControlClass}
+          value={adminDisplayName}
+          onChange={(e) => setAdminDisplayName(e.target.value)}
+          autoComplete="name"
+        />
+      </AuthOutlineField>
+      <AuthOutlineField label="Work email (optional)" htmlFor="register-admin-email">
+        <input
+          id="register-admin-email"
+          type="email"
+          className={authOutlineControlClass}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+        />
+      </AuthOutlineField>
+      <div className="cert-auth-actions">
+        <button type="button" className="btn-ghost" onClick={onBack} disabled={busy}>
+          Back
+        </button>
+        <button type="submit" className="btn-primary qrp-auth-submit auth-cta" disabled={busy}>
+          Continue
+        </button>
       </div>
-    </AuthRegisterStudio>
+    </form>
+  )
+}
+
+function SecurityStep({
+  adminUsername,
+  password,
+  setPassword,
+  confirmPassword,
+  setConfirmPassword,
+  captchaCode,
+  setCaptchaCode,
+  setCaptchaId,
+  setCaptchaOn,
+  fieldError,
+  busy,
+  onBack,
+  onSubmit,
+}: {
+  adminUsername: string
+  password: string
+  setPassword: (v: string) => void
+  confirmPassword: string
+  setConfirmPassword: (v: string) => void
+  captchaCode: string
+  setCaptchaCode: (v: string) => void
+  captchaId: string
+  setCaptchaId: (v: string) => void
+  setCaptchaOn: (v: boolean) => void
+  fieldError: string
+  busy: boolean
+  onBack: () => void
+  onSubmit: () => void
+}) {
+  return (
+    <form
+      className="cert-auth-form"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onSubmit()
+      }}
+      noValidate
+    >
+      <p className="cert-register-crumb" title={adminUsername}>
+        <span className="cert-register-crumb__label">Administrator</span>
+        {adminUsername || '—'}
+      </p>
+      <AuthCaptchaBlock
+        captchaCode={captchaCode}
+        onCodeChange={setCaptchaCode}
+        onChallenge={setCaptchaId}
+        onAvailability={setCaptchaOn}
+        fieldError={fieldError}
+      />
+      <AuthPasswordField
+        label="Password"
+        htmlFor="register-password"
+        autoComplete="new-password"
+        value={password}
+        onChange={setPassword}
+      />
+      <AuthPasswordField
+        label="Confirm password"
+        htmlFor="register-password-confirm"
+        autoComplete="new-password"
+        value={confirmPassword}
+        onChange={setConfirmPassword}
+      />
+      <AuthFieldHint>At least 12 characters (platform policy).</AuthFieldHint>
+      <div className="cert-auth-actions">
+        <button type="button" className="btn-ghost" onClick={onBack} disabled={busy}>
+          Back
+        </button>
+        <button type="submit" className="btn-primary qrp-auth-submit auth-cta" disabled={busy}>
+          {busy ? 'Creating organization…' : 'Create organization'}
+        </button>
+      </div>
+    </form>
   )
 }
