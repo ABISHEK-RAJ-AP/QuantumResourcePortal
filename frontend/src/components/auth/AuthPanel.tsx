@@ -115,7 +115,7 @@ export function AuthFooterLinks({
   if (showRegister) {
     links.push(
       <Link key="register" className="fs-link font-semibold text-primary" to="/register">
-        Register organization
+        Register
       </Link>,
     )
   }

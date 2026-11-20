@@ -13,6 +13,7 @@ import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
 import { parseForm } from '@/lib/validation/parseForm'
 import { safeReturnPath } from '@/lib/safeReturnPath'
 import { loginSchema } from '@/lib/validation/schemas'
+import { AUTH_COPY } from '@/copy/auth'
 
 const showLabCredentialsHint = import.meta.env.VITE_QRE_ENV !== 'production'
 
@@ -110,7 +111,7 @@ export function LoginPage() {
   return (
     <AuthPanel
       title="Sign in"
-      subtitle="Sign in to your organization workspace with portal credentials."
+      subtitle={AUTH_COPY.signInSubtitle}
       footer={<AuthFooterLinks showForgot showRegister />}
     >
       <FormShakeShell shakeKey={banner}>

@@ -57,11 +57,11 @@ export function MfaPage() {
         <p className="mt-4 font-mono text-xs text-muted-foreground">Challenge {challengeId.slice(0, 12)}…</p>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap items-center gap-4">
-        <button type="button" className="btn-primary qrp-auth-submit px-5" onClick={() => navigate(from)}>
+      <div className="cert-auth-form__actions">
+        <button type="button" className="btn-primary qrp-auth-submit w-full sm:w-auto" onClick={() => navigate(from)}>
           Continue to workspace
         </button>
-        <Link to="/login" className="fs-link text-sm">
+        <Link to="/login" className="cert-auth-form__secondary-link">
           Back to sign in
         </Link>
       </div>
