@@ -26,7 +26,6 @@ const CAPABILITIES = [
     icon: ClipboardCheck,
     title: 'Stage-gated approvals',
     body: 'Multi-step review with organization quota evaluation before authorise. Every decision is on the audit trail.',
-    span: 2 as const,
   },
   {
     icon: Gauge,
@@ -71,24 +70,9 @@ const FAQ = [
   },
 ]
 
-function BentoCard({
-  icon: Icon,
-  title,
-  body,
-  span,
-}: {
-  icon: LucideIcon
-  title: string
-  body: string
-  span?: 1 | 2
-}) {
+function FeatureCard({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   return (
-    <article
-      className={cn(
-        'landing-bento__card qrp-landing-tile--grid group',
-        span === 2 && 'landing-bento__card--span-2',
-      )}
-    >
+    <article className="qrp-landing-feature-card group">
       <Icon className="qrp-landing-tile__icon" aria-hidden />
       <h3 className="qrp-landing-tile__title">{title}</h3>
       <p className="qrp-landing-tile__body">{body}</p>
@@ -127,8 +111,16 @@ export function LandingPage() {
   return (
     <PublicShell>
       <LandingChrome />
-      <div className={cn('relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
-        <GridPulse className="qrp-landing-bg-grid absolute inset-0 z-0" cell={40} ambient={0.45} maxLit={36} reach={1.5} />
+      <div className={cn('qrp-landing-canvas relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
+        <div className="qrp-landing-bg-wash pointer-events-none absolute inset-0 z-0" aria-hidden />
+        <GridPulse
+          key={theme}
+          className="qrp-landing-bg-grid absolute inset-0 z-0 text-foreground"
+          cell={36}
+          ambient={1.1}
+          maxLit={64}
+          reach={2.2}
+        />
         <section className="qrp-landing-hero relative z-10 flex min-h-[min(88dvh,880px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
           <p className="qrp-landing-hero__eyebrow">Quantum Resource Portal</p>
           <h1 className="qrp-landing-hero__title type-trim text-balance max-w-5xl">
@@ -155,32 +147,30 @@ export function LandingPage() {
         </section>
 
         <main id="main-content" ref={mainRef} className="qrp-landing-main relative z-10 space-y-24 pb-24 lg:space-y-28">
-          <section id="capabilities" className="scroll-mt-28 qrp-landing-reveal">
-            <div className="qrp-landing-section-head qrp-landing-section-head--split">
-              <div>
-                <span className="qrp-landing-kicker qrp-landing-kicker--accent">Console</span>
-                <h2 className="qrp-landing-section__title mt-1">What you get</h2>
-              </div>
-              <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+          <section id="capabilities" className="qrp-landing-section scroll-mt-28 qrp-landing-reveal">
+            <div className="mx-auto max-w-3xl space-y-2 text-center">
+              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Console</span>
+              <h2 className="qrp-landing-section__title">What you get</h2>
+              <p className="text-base text-muted-foreground">
                 Per-organization policy stages, capacity ledgers, and exportable records — Q-TeleScope ops density.
               </p>
             </div>
-            <div className="landing-bento mt-10">
+            <div className="qrp-landing-feature-grid mt-12">
               {CAPABILITIES.map((item) => (
-                <BentoCard key={item.title} {...item} />
+                <FeatureCard key={item.title} {...item} />
               ))}
             </div>
           </section>
 
-          <section id="features" className="scroll-mt-28 qrp-landing-reveal">
+          <section id="features" className="qrp-landing-section scroll-mt-28 qrp-landing-reveal">
             <div className="mx-auto max-w-3xl space-y-2 text-center">
               <span className="qrp-landing-kicker qrp-landing-kicker--accent">Modules</span>
               <h2 className="qrp-landing-section__title">Approvals, quotas, audit</h2>
               <p className="text-base text-muted-foreground">Fleet inventory, dispatch, and project access.</p>
             </div>
-            <div className="landing-bento mt-12">
+            <div className="qrp-landing-feature-grid qrp-landing-feature-grid--modules mt-12">
               {FEATURES.map((item) => (
-                <BentoCard key={item.title} {...item} />
+                <FeatureCard key={item.title} {...item} />
               ))}
             </div>
           </section>

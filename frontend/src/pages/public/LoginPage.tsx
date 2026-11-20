@@ -105,6 +105,7 @@ export function LoginPage() {
               setUsername(user)
               setPassword(pass)
             }}
+            onSignIn={(user, pass) => doLogin(user, pass)}
           />
         </div>
       }

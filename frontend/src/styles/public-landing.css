@@ -191,29 +191,85 @@
   color: var(--primary);
 }
 
-/* Cert Studio landing-bento (marketing only) */
-.landing-bento {
+/* Landing background: theme tokens (--primary, --brand-cyan) */
+.qrp-landing-canvas {
+  overflow: clip;
+}
+
+.qrp-landing-bg-wash {
+  background:
+    radial-gradient(
+      72% 52% at 12% 8%,
+      color-mix(in srgb, var(--primary) 18%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      68% 48% at 88% 18%,
+      color-mix(in srgb, var(--brand-cyan) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      80% 60% at 50% 100%,
+      color-mix(in srgb, var(--primary) 8%, transparent),
+      transparent 55%
+    );
+}
+
+:root.dark .qrp-landing-bg-wash,
+.dark .qrp-landing-bg-wash {
+  background:
+    radial-gradient(
+      70% 50% at 10% 6%,
+      color-mix(in srgb, var(--primary) 28%, transparent),
+      transparent 65%
+    ),
+    radial-gradient(
+      65% 45% at 90% 12%,
+      color-mix(in srgb, var(--brand-cyan) 22%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      85% 55% at 50% 105%,
+      color-mix(in srgb, var(--primary) 14%, transparent),
+      transparent 50%
+    );
+}
+
+.qrp-landing-section {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border-radius: var(--radius-outer, 0.75rem);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--primary) 12%);
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+}
+
+.qrp-landing-feature-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: clamp(1rem, 2.5vw, 1.5rem);
+  gap: clamp(1rem, 2.5vw, 1.25rem);
   width: 100%;
+  align-items: stretch;
 }
 
 @media (min-width: 768px) {
-  .landing-bento {
+  .qrp-landing-feature-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.landing-bento__card {
+.qrp-landing-feature-grid--modules {
+  max-width: none;
+}
+
+.qrp-landing-feature-card {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 10.5rem;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
   border-radius: var(--radius-lg, 0.75rem);
   padding: clamp(1.25rem, 2.5vw, 1.5rem);
-  background: color-mix(in srgb, var(--card) 96%, var(--accent));
+  background: color-mix(in srgb, var(--card) 94%, var(--primary) 3%);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
   transition:
     box-shadow 0.2s ease,
@@ -222,21 +278,16 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .landing-bento__card:hover {
-    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
-    box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--primary) 22%, transparent);
+  .qrp-landing-feature-card:hover {
+    border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+    box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--primary) 26%, transparent);
     transform: translateY(-2px);
   }
 }
 
-@media (min-width: 768px) {
-  .landing-bento__card--span-2 {
-    grid-column: span 2;
-  }
-}
-
-.landing-bento__card .qrp-landing-tile__icon {
+.qrp-landing-feature-card .qrp-landing-tile__icon {
   margin-bottom: 0.75rem;
+  color: var(--primary);
 }
 
 .qrp-landing-workflow {
@@ -318,7 +369,14 @@
 }
 
 .qrp-landing-bg-grid {
-  opacity: 0.32;
+  opacity: 0.52;
+  mix-blend-mode: multiply;
+}
+
+:root.dark .qrp-landing-bg-grid,
+.dark .qrp-landing-bg-grid {
+  opacity: 0.62;
+  mix-blend-mode: screen;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1318,10 +1318,24 @@ html:not(.dark) .cyber-matrix-spot {
 }
 
 .qrp-auth-shell .auth-demo-presets__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   padding: 0 0.75rem 0.75rem;
+}
+
+.qrp-auth-shell .auth-demo-presets__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.qrp-auth-shell .auth-demo-presets__btn--signin {
+  padding-inline: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
 }
 
 .qrp-auth-shell .auth-demo-presets__btn {
