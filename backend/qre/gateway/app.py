@@ -76,10 +76,12 @@ def build_api_router(settings: Settings | None = None) -> APIRouter:
 # live on a separate router and are intentionally public, so they are not part of this check.
 PUBLIC_API_SUFFIXES = frozenset({
     "/auth/login",
+    "/auth/logout",
     "/auth/captcha",
     "/auth/capabilities",
     "/auth/password/reset",
     "/auth/session",
+    "/auth/register-organization",
 })
 
 
