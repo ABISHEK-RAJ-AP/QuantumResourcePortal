@@ -157,7 +157,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   // An authenticated session that has expired or been revoked: let the app send the user to login.
-  if (response.status === 401 && !init.method?.toString().includes('__login')) {
+  const isLoginAttempt = path.includes('/auth/login') && method === 'POST'
+  if (response.status === 401 && !isLoginAttempt) {
     _onUnauthorized?.()
   }
   if (!response.ok && !acceptStatuses.includes(response.status)) {

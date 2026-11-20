@@ -42,6 +42,7 @@ export function LoginPage() {
   const [captchaId, setCaptchaId] = useState('')
   const [captchaCode, setCaptchaCode] = useState('')
   const [captchaOn, setCaptchaOn] = useState(false)
+  const [captchaEpoch, setCaptchaEpoch] = useState(0)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [banner, setBanner] = useState(registeredNotice)
   const [busy, setBusy] = useState(false)
@@ -77,9 +78,19 @@ export function LoginPage() {
       if (err instanceof ApiError) {
         const mapped = mapApiFieldErrors(err.fieldErrors)
         setFields(mapped)
-        setBanner(Object.keys(mapped).length ? '' : err.detail || 'Sign in failed')
+        const generic =
+          err.status === 401
+            ? 'Sign-in failed. Check username and password. In lab, restart the API after migrate so demo admin sync runs.'
+            : err.detail || 'Sign in failed'
+        setBanner(Object.keys(mapped).length ? '' : generic)
       } else {
         setBanner(err instanceof Error ? err.message : 'Sign in failed')
+      }
+      if (captchaEnabled && captchaId) {
+        setCaptchaEpoch((n) => n + 1)
+        setCaptchaCode('')
+        setCaptchaId('')
+        setCaptchaOn(false)
       }
     } finally {
       setBusy(false)
@@ -139,6 +150,7 @@ export function LoginPage() {
         </AuthOutlineField>
         <FieldAlert message={fields.password} />
         <AuthCaptchaBlock
+          key={captchaEpoch}
           captchaCode={captchaCode}
           onCodeChange={setCaptchaCode}
           onChallenge={setCaptchaId}

@@ -135,12 +135,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if settings.is_lab:
             try:
                 async with app.state.db.sessionmaker() as session:
-                    from qre.seed.auto_bootstrap import run_auto_bootstrap_lab
+                    from qre.seed.auto_bootstrap import run_auto_bootstrap_lab, sync_lab_demo_passwords
                     from qre.seed.auto import run_auto_seed_demo
 
-                    await session.run_sync(
-                        lambda conn: (run_auto_bootstrap_lab(conn, settings), run_auto_seed_demo(conn, settings))
-                    )
+                    def _lab_startup(conn) -> None:
+                        run_auto_bootstrap_lab(conn, settings)
+                        run_auto_seed_demo(conn, settings)
+                        sync_lab_demo_passwords(conn, settings)
+
+                    await session.run_sync(_lab_startup)
                     await session.commit()
             except Exception:
                 log.warning("startup demo seed could not run (is PostgreSQL up?)", exc_info=True)
