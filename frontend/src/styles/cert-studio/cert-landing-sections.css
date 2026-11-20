@@ -1,0 +1,165 @@
+/* Landing sections, steps, FAQ — subset of Cert Studio public chrome */
+
+.landing-section {
+  padding: var(--space-12, 3rem) 0;
+}
+
+.landing-section--surface {
+  background: var(--surface);
+}
+
+.landing-section--cta {
+  background: linear-gradient(180deg, var(--surface-2, var(--muted)) 0%, var(--background) 100%);
+}
+
+.landing-section__title {
+  text-align: center;
+  font-family: var(--font-display, inherit);
+  font-size: var(--text-3xl, clamp(1.5rem, 3vw, 2rem));
+  font-weight: 800;
+  margin: 0 0 var(--space-3, 0.75rem);
+}
+
+.landing-section__lead {
+  text-align: center;
+  color: var(--text-secondary, var(--muted-foreground));
+  max-width: 560px;
+  margin: 0 auto var(--space-10, 2.5rem);
+  line-height: 1.6;
+}
+
+.landing-steps {
+  display: grid;
+  gap: var(--space-4, 1rem);
+}
+
+@media (min-width: 768px) {
+  .landing-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.landing-step-card {
+  display: flex;
+  gap: var(--space-5, 1.25rem);
+  align-items: flex-start;
+  padding: var(--space-5, 1.25rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 0.75rem);
+}
+
+.landing-step-card__num {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--border-strong, var(--primary));
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.landing-step-card__title {
+  margin: 0 0 var(--space-2, 0.5rem);
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: 700;
+}
+
+.landing-step-card__desc {
+  margin: 0;
+  color: var(--text-secondary, var(--muted-foreground));
+  line-height: 1.6;
+  font-size: var(--text-base, 1rem);
+}
+
+.landing-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.landing-faq-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 0.75rem);
+  overflow: hidden;
+}
+
+.landing-faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  background: none;
+  border: none;
+  font-family: var(--font-display, inherit);
+  font-size: var(--text-base, 1rem);
+  font-weight: 700;
+  text-align: left;
+  color: var(--text-primary, var(--foreground));
+  cursor: pointer;
+}
+
+.landing-faq-item__chev {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary, var(--muted-foreground));
+}
+
+.landing-faq-item__chev--open {
+  transform: rotate(180deg);
+}
+
+.landing-faq-item__body {
+  padding: 0 var(--space-5, 1.25rem) var(--space-4, 1rem);
+  color: var(--text-secondary, var(--muted-foreground));
+  line-height: 1.65;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3, 0.75rem);
+  margin-top: 0;
+}
+
+.qre-marketing-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.qre-marketing-container--narrow {
+  max-width: min(52rem, 100%);
+}
+
+.intro-scene-bg__layer {
+  transition: opacity 0.38s ease;
+}
+
+.intro-scene-bg__layer.is-fading-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landing-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  padding: 0 28px;
+  font-weight: 600;
+}
+
+.landing-page .qrp-public-shell > header {
+  background: color-mix(in srgb, var(--card) 78%, transparent) !important;
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+[data-theme='dark'] .landing-page .qrp-public-shell > header {
+  background: rgba(8, 16, 28, 0.82) !important;
+  border-color: rgba(45, 255, 190, 0.12);
+}
+
+[data-theme='dark'] .landing-page .qrp-public-header__nav a:hover {
+  color: #2dffbe;
+  background: rgba(45, 255, 190, 0.08);
+}

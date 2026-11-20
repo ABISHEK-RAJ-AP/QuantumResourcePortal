@@ -1,58 +1,112 @@
-import { useEffect, useRef, useState } from 'react'
+import './loadCertLandingStyles'
+
+import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import {
   ArrowRight,
-  ChevronDown,
-  ClipboardCheck,
-  Gauge,
-  ScrollText,
-  FileStack,
   BarChart3,
   Boxes,
-  Users,
+  ChevronDown,
+  ClipboardCheck,
+  FileStack,
+  Gauge,
+  ScrollText,
   Send,
   Shield,
-  type LucideIcon,
+  Users,
 } from 'lucide-react'
 
+import { IntroSceneBackground } from '@/components/cert-studio/IntroSceneBackground'
 import { LandingChrome } from '@/components/marketing/LandingChrome'
 import { PublicShell } from '@/components/marketing/PublicShell'
-import { GridPulse } from '@/components/ui/grid-pulse'
-import { useTheme } from '@/components/theme/ThemeProvider'
-import { cn } from '@/lib/utils'
+import { MarketingContainer } from '@/components/ui/MarketingContainer'
+import { StudioFeatureGrid, type StudioFeatureItem } from '@/components/ui/StudioFeatureGrid'
+import { prefersReducedMotion } from '@/lib/motionPrefs'
 
-const CAPABILITIES = [
+const ICON = 22
+
+const CAPABILITIES: StudioFeatureItem[] = [
   {
-    icon: ClipboardCheck,
+    icon: <ClipboardCheck size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--primary)',
     title: 'Stage-gated approvals',
-    body: 'Multi-step review with organization quota evaluation before authorise. Every decision is on the audit trail.',
+    description:
+      'Multi-step review with organization quota evaluation before authorise. Every decision is on the audit trail.',
   },
   {
-    icon: Gauge,
+    icon: <Gauge size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--accent, var(--brand-cyan, #06b6d4))',
     title: 'Capacity you can explain',
-    body: 'Daily shot ledger, reservations, and org-wide metering rollups.',
+    description: 'Daily shot ledger, reservations, and org-wide metering rollups.',
   },
   {
-    icon: ScrollText,
+    icon: <ScrollText size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--success, #059669)',
     title: 'Evidence on demand',
-    body: 'Governance events, dispatch attempts, and exports your auditors can verify.',
+    description: 'Governance events, dispatch attempts, and exports your auditors can verify.',
   },
 ]
 
-const FEATURES = [
-  { icon: FileStack, title: 'Approvals', body: 'Org review queue, stage history, quota gate at decide.' },
-  { icon: BarChart3, title: 'Quotas & metering', body: 'Organization ledger, caps, usage rollups.' },
-  { icon: Boxes, title: 'Inventory & pools', body: 'Fleet catalogue, pools, provider manifests.' },
-  { icon: Users, title: 'Organization & projects', body: 'People & access, roles, project-scoped workloads.' },
-  { icon: Send, title: 'Dispatch reconcile', body: 'Attempt ledger for authorise and reconcile outcomes.' },
-  { icon: Shield, title: 'Audit & evidence', body: 'Append-only governance events and exports.' },
+const MODULES: StudioFeatureItem[] = [
+  {
+    icon: <FileStack size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--primary)',
+    title: 'Approvals',
+    description: 'Org review queue, stage history, quota gate at decide.',
+  },
+  {
+    icon: <BarChart3 size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--warning, #d97706)',
+    title: 'Quotas & metering',
+    description: 'Organization ledger, caps, usage rollups.',
+  },
+  {
+    icon: <Boxes size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--success, #059669)',
+    title: 'Inventory & pools',
+    description: 'Fleet catalogue, pools, provider manifests.',
+  },
+  {
+    icon: <Users size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--accent, var(--brand-cyan, #06b6d4))',
+    title: 'Organization & projects',
+    description: 'People & access, roles, project-scoped workloads.',
+  },
+  {
+    icon: <Send size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--primary)',
+    title: 'Dispatch reconcile',
+    description: 'Attempt ledger for authorise and reconcile outcomes.',
+  },
+  {
+    icon: <Shield size={ICON} strokeWidth={1.75} />,
+    accent: 'var(--danger, #dc2626)',
+    title: 'Audit & evidence',
+    description: 'Append-only governance events and exports.',
+  },
 ]
 
 const WORKFLOW_STEPS = [
-  { n: '01', title: 'Register', body: 'Create your organization and first administrator, then invite members.' },
-  { n: '02', title: 'Submit', body: 'Open a research project and submit a workload to the org review queue.' },
-  { n: '03', title: 'Review', body: 'Policy stages run at organization scope; quota must pass before authorise.' },
-  { n: '04', title: 'Reconcile', body: 'Dispatch attempts and outcomes land on the org audit trail.' },
+  {
+    n: '01',
+    title: 'Register',
+    body: 'Create your organization and first administrator, then invite members.',
+  },
+  {
+    n: '02',
+    title: 'Submit',
+    body: 'Open a research project and submit a workload to the org review queue.',
+  },
+  {
+    n: '03',
+    title: 'Review',
+    body: 'Policy stages run at organization scope; quota must pass before authorise.',
+  },
+  {
+    n: '04',
+    title: 'Reconcile',
+    body: 'Dispatch attempts and outcomes land on the org audit trail.',
+  },
 ]
 
 const FAQ = [
@@ -70,181 +124,156 @@ const FAQ = [
   },
 ]
 
-function FeatureCard({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
-  return (
-    <article className="qrp-landing-feature-card group">
-      <Icon className="qrp-landing-tile__icon" aria-hidden />
-      <h3 className="qrp-landing-tile__title">{title}</h3>
-      <p className="qrp-landing-tile__body">{body}</p>
-    </article>
-  )
-}
-
 export function LandingPage() {
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
-  const [openFaq, setOpenFaq] = useState(0)
-  const mainRef = useRef<HTMLElement>(null)
+  const heroTileRef = useRef<HTMLDivElement>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const onHeroMouseMove = (e: React.MouseEvent) => {
+    if (prefersReducedMotion()) return
+    const el = heroTileRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    el.style.setProperty('--mouse-x', `${x}%`)
+    el.style.setProperty('--mouse-y', `${y}%`)
+  }
 
-  useEffect(() => {
-    const root = mainRef.current
-    if (!root) return undefined
-    const nodes = root.querySelectorAll('.qrp-landing-reveal')
-    if (!nodes.length) return undefined
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
-      nodes.forEach((n) => n.classList.add('is-visible'))
-      return undefined
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add('is-visible')
-        })
-      },
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
-    )
-    nodes.forEach((n) => io.observe(n))
-    return () => io.disconnect()
-  }, [])
+  const onHeroMouseLeave = () => {
+    heroTileRef.current?.style.setProperty('--mouse-x', '50%')
+    heroTileRef.current?.style.setProperty('--mouse-y', '40%')
+  }
 
   return (
-    <PublicShell>
+    <PublicShell className="landing-page">
+      <IntroSceneBackground />
       <LandingChrome />
-      <div className={cn('qrp-landing-canvas relative isolate flex-1', dark ? 'bg-background' : 'bg-surface')}>
-        <div className="qrp-landing-bg-wash pointer-events-none absolute inset-0 z-0" aria-hidden />
-        <GridPulse
-          key={theme}
-          className="qrp-landing-bg-grid absolute inset-0 z-0 text-foreground"
-          cell={36}
-          ambient={1.1}
-          maxLit={64}
-          reach={2.2}
-        />
-        <section className="qrp-landing-hero relative z-10 flex min-h-[min(88dvh,880px)] w-full flex-col items-center justify-center px-6 py-20 text-center sm:px-10 sm:py-28 lg:py-32">
-          <p className="qrp-landing-hero__eyebrow">Quantum Resource Portal</p>
-          <h1 className="qrp-landing-hero__title type-trim text-balance max-w-5xl">
-            Quantum resource governance for{' '}
-            <span className="qrp-landing-hero__accent">every organization on the platform</span>
-          </h1>
-          <p className="qrp-landing-hero__lead hyphenate mx-auto mt-8 max-w-3xl text-pretty">
-            CDAC operates the shared provider fabric; your org gets isolated projects, approvals, quotas, metering, and
-            audit exports — Cert Studio–grade access and Q-TeleScope–grade ops density.
-          </p>
-          <div className="qrp-landing-hero__actions mt-12">
-            <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
-              Sign in
-              <ArrowRight className="size-5" aria-hidden />
-            </Link>
-          </div>
-          <p className="mt-6 text-sm text-muted-foreground">
-            Need an account?{' '}
-            <Link to="/register" className="fs-link font-semibold text-primary">
-              Register your organization
-            </Link>
-          </p>
-          <div className="qrp-landing-hero__fade pointer-events-none absolute inset-x-0 bottom-0 h-32" aria-hidden />
-        </section>
-
-        <main id="main-content" ref={mainRef} className="qrp-landing-main relative z-10 space-y-24 pb-24 lg:space-y-28">
-          <section id="capabilities" className="qrp-landing-section scroll-mt-28 qrp-landing-reveal">
-            <div className="mx-auto max-w-3xl space-y-2 text-center">
-              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Console</span>
-              <h2 className="qrp-landing-section__title">What you get</h2>
-              <p className="text-base text-muted-foreground">
-                Per-organization policy stages, capacity ledgers, and exportable records — Q-TeleScope ops density.
-              </p>
-            </div>
-            <div className="qrp-landing-feature-grid mt-12">
-              {CAPABILITIES.map((item) => (
-                <FeatureCard key={item.title} {...item} />
-              ))}
-            </div>
-          </section>
-
-          <section id="features" className="qrp-landing-section scroll-mt-28 qrp-landing-reveal">
-            <div className="mx-auto max-w-3xl space-y-2 text-center">
-              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Modules</span>
-              <h2 className="qrp-landing-section__title">Approvals, quotas, audit</h2>
-              <p className="text-base text-muted-foreground">Fleet inventory, dispatch, and project access.</p>
-            </div>
-            <div className="qrp-landing-feature-grid qrp-landing-feature-grid--modules mt-12">
-              {FEATURES.map((item) => (
-                <FeatureCard key={item.title} {...item} />
-              ))}
-            </div>
-          </section>
-
-          <section id="workflow" className="qrp-landing-workflow scroll-mt-28 qrp-landing-reveal p-8 sm:p-12">
-            <div className="max-w-2xl">
-              <span className="qrp-landing-kicker qrp-landing-kicker--accent">Workflow</span>
-              <h2 className="qrp-landing-section__title mt-1">From request to audit</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Submit, review, authorise, then reconcile dispatch.</p>
-            </div>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {WORKFLOW_STEPS.map((s) => (
-                <article key={s.n} className="qrp-landing-tile qrp-landing-tile--step">
-                  <span className="qrp-landing-tile__step">{s.n}</span>
-                  <h3 className="qrp-landing-tile__title">{s.title}</h3>
-                  <p className="qrp-landing-tile__body">{s.body}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section id="faq" className="scroll-mt-28 qrp-landing-reveal mx-auto max-w-3xl">
-            <div className="space-y-2 text-center">
-              <span className="qrp-landing-kicker qrp-landing-kicker--accent">FAQ</span>
-              <h2 className="qrp-landing-section__title">Questions</h2>
-            </div>
-            <div className="mt-10 divide-y divide-border border-y border-border">
-              {FAQ.map((item, idx) => {
-                const open = openFaq === idx
-                const answerId = `faq-answer-${idx}`
-                return (
-                  <div key={item.q}>
-                    <button
-                      type="button"
-                      className="flex w-full cursor-pointer items-center justify-between gap-4 py-6 text-left text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                      onClick={() => setOpenFaq(open ? -1 : idx)}
-                      aria-expanded={open}
-                      aria-controls={answerId}
-                    >
-                      <span className="type-title-clamp">{item.q}</span>
-                      <ChevronDown
-                        className={cn(
-                          'size-5 shrink-0 text-muted-foreground transition-transform duration-200',
-                          open && 'rotate-180 text-primary',
-                        )}
-                      />
-                    </button>
-                    {open ? (
-                      <p id={answerId} className="hyphenate pb-6 text-sm leading-relaxed text-muted-foreground">
-                        {item.a}
-                      </p>
-                    ) : null}
+      <div className="landing-page__content">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+        >
+          <section className="landing-hero" aria-labelledby="landing-hero-title">
+            <MarketingContainer narrow className="landing-hero__container">
+              <div className="landing-hero__float">
+                <div
+                  ref={heroTileRef}
+                  className="landing-hero__glass-panel"
+                  onMouseMove={onHeroMouseMove}
+                  onMouseLeave={onHeroMouseLeave}
+                >
+                  <div className="landing-hero__glass-glow" aria-hidden />
+                  <h1 id="landing-hero-title" className="landing-hero__title landing-hero__title--glass">
+                    Quantum resource governance
+                    <br />
+                    <span className="landing-hero__title-accent">for every organization on the platform</span>
+                  </h1>
+                  <p className="landing-hero__lead landing-hero__lead--glass">
+                    CDAC operates the shared provider fabric; your org gets isolated projects, approvals, quotas,
+                    metering, and audit exports — the same public marketing craft as Cert Studio, with Q-TeleScope ops
+                    density inside the workspace.
+                  </p>
+                  <div className="landing-hero__ctas">
+                    <Link to="/login" className="btn-primary landing-cta-primary">
+                      Sign in <ArrowRight size={18} aria-hidden />
+                    </Link>
+                    <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
+                      Register organization
+                    </Link>
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              </div>
+            </MarketingContainer>
           </section>
 
-          <section className="qrp-landing-cta qrp-landing-reveal p-10 text-center sm:p-14">
-            <div className="mx-auto max-w-2xl space-y-4">
-              <h2 className="qrp-landing-section__title">Open the workspace</h2>
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Sign in to your organization workspace, or register a new org on lab deployments.
+          <section id="capabilities" className="landing-section landing-section--surface" aria-labelledby="capabilities-title">
+            <MarketingContainer>
+              <h2 id="capabilities-title" className="landing-section__title">
+                What you get
+              </h2>
+              <p className="landing-section__lead">
+                Per-organization policy stages, capacity ledgers, and exportable records for accountable quantum ops.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 pt-4">
-                <Link to="/login" className="btn-primary landing-hero-cta inline-flex items-center gap-2">
-                  Sign in
-                  <ArrowRight className="size-4" aria-hidden />
-                </Link>
-                <Link to="/register" className="btn-secondary landing-hero-cta inline-flex items-center gap-2">
-                  Register organization
-                </Link>
+              <StudioFeatureGrid items={CAPABILITIES} className="studio-feature-grid--tri" />
+            </MarketingContainer>
+          </section>
+
+          <section id="features" className="landing-section" aria-labelledby="features-title">
+            <MarketingContainer>
+              <h2 id="features-title" className="landing-section__title">
+                Approvals, quotas, audit
+              </h2>
+              <p className="landing-section__lead">Fleet inventory, dispatch, and project access after sign-in.</p>
+              <StudioFeatureGrid items={MODULES} />
+            </MarketingContainer>
+          </section>
+
+          <section id="workflow" className="landing-section landing-section--surface" aria-labelledby="workflow-title">
+            <MarketingContainer narrow>
+              <h2 id="workflow-title" className="landing-section__title">
+                From request to audit
+              </h2>
+              <p className="landing-section__lead">Submit, review, authorise, then reconcile dispatch.</p>
+              <div className="landing-steps">
+                {WORKFLOW_STEPS.map((s) => (
+                  <div key={s.n} className="landing-step-card">
+                    <div className="landing-step-card__num">{s.n}</div>
+                    <div>
+                      <h3 className="landing-step-card__title">{s.title}</h3>
+                      <p className="landing-step-card__desc">{s.body}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </MarketingContainer>
+          </section>
+
+          <section id="faq" className="landing-section" aria-labelledby="faq-title">
+            <MarketingContainer narrow className="landing-faq-wrap">
+              <h2 id="faq-title" className="landing-section__title">
+                Questions
+              </h2>
+              <div className="landing-faq-list">
+                {FAQ.map((item, idx) => {
+                  const open = openFaq === idx
+                  return (
+                    <div key={item.q} className="landing-faq-item">
+                      <button
+                        type="button"
+                        className="landing-faq-item__trigger"
+                        onClick={() => setOpenFaq(open ? null : idx)}
+                        aria-expanded={open}
+                      >
+                        {item.q}
+                        <ChevronDown
+                          size={18}
+                          className={`landing-faq-item__chev${open ? ' landing-faq-item__chev--open' : ''}`}
+                          aria-hidden
+                        />
+                      </button>
+                      {open ? <div className="landing-faq-item__body">{item.a}</div> : null}
+                    </div>
+                  )
+                })}
+              </div>
+            </MarketingContainer>
+          </section>
+
+          <section className="landing-section landing-section--cta" aria-labelledby="final-cta-title">
+            <MarketingContainer narrow>
+              <div className="landing-final-cta">
+                <h2 id="final-cta-title">Open the workspace</h2>
+                <p>Sign in to your organization workspace, or register a new org on lab deployments.</p>
+                <div className="landing-hero__ctas">
+                  <Link to="/login" className="btn-primary landing-cta-primary">
+                    Sign in <ArrowRight size={18} aria-hidden />
+                  </Link>
+                  <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
+                    Register organization
+                  </Link>
+                </div>
+              </div>
+            </MarketingContainer>
           </section>
         </main>
       </div>

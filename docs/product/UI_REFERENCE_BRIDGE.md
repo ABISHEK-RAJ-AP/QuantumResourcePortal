@@ -13,7 +13,7 @@
 
 **Not imported:** marketing bento motion, CeG commercial UI, AGPL vendor bundles.
 
-**Landing:** Uniform `qrp-landing-feature-grid` cards (equal height/width); `GridPulse` + `qrp-landing-bg-wash` for theme-aware colour — **no** Cert marketing bento spans.
+**Landing:** Cert Studio stack — `IntroSceneBackground` (particle web / neon wire), glass hero, `StudioFeatureGrid`, `cert-studio/*.css` under `frontend/src/styles/cert-studio/`. No marketing bento spans.
 
 **Governance copy pass:** Approvals, Inventory, Providers, Policies, Reservations, Audit, Support — `screens.tsx` / `continue.tsx`.
 

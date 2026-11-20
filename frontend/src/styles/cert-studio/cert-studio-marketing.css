@@ -1,0 +1,368 @@
+/* Ported from Cert Studio cert-studio-frontend/src/App.css (+ login-wire subset) */
+
+.landing-page {
+  min-height: 100vh;
+  background: transparent;
+  position: relative;
+  overflow-x: clip;
+}
+
+.landing-page__content {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-hero {
+  padding: clamp(40px, 7vw, 88px) var(--space-4) clamp(56px, 9vw, 112px);
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+}
+
+.landing-page:not(:has(.landing-hero--wire)) .landing-hero {
+  min-height: 0;
+}
+
+.landing-hero--wire {
+  --spot-x: 50%;
+  --spot-y: 40%;
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100vh - 72px);
+  padding: clamp(80px, 12vw, 120px) var(--space-4) clamp(64px, 8vw, 96px);
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a8a 0%, #0f172a 55%, #020617 100%);
+  color: #fff;
+}
+
+.landing-hero__float {
+  animation: qre-landing-hero-float 8s ease-in-out infinite;
+  width: 100%;
+}
+
+.landing-hero__glass-panel {
+  --landing-glass-bg: rgba(255, 255, 255, 0.78);
+  --landing-glass-border: rgba(255, 255, 255, 0.92);
+  --landing-glass-text: #0f172a;
+  --landing-glass-muted: #475569;
+  --landing-glass-accent: #1a56db;
+  --mouse-x: 50%;
+  --mouse-y: 40%;
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  border-radius: 24px;
+  padding: clamp(36px, 6vw, 56px) clamp(24px, 5vw, 48px);
+  text-align: center;
+  background: var(--landing-glass-bg);
+  backdrop-filter: blur(20px) saturate(1.35);
+  border: 1px solid var(--landing-glass-border);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  overflow: hidden;
+  animation: qre-landing-hero-enter 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-hero__glass-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(480px circle at var(--mouse-x) var(--mouse-y), rgba(59, 130, 246, 0.14), transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-hero__glass-panel > :not(.landing-hero__glass-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-hero__title--glass {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4.8vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0 0 var(--space-5);
+  color: var(--landing-glass-text) !important;
+}
+
+.landing-hero__title-accent {
+  color: var(--landing-glass-accent) !important;
+}
+
+.landing-hero__lead--glass {
+  font-size: clamp(1rem, 2.1vw, 1.15rem);
+  line-height: 1.65;
+  color: var(--landing-glass-muted) !important;
+  max-width: 640px;
+  margin: 0 auto var(--space-8);
+}
+
+.landing-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.landing-wire-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-wire-backdrop__svg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8%;
+  width: 100%;
+  height: auto;
+  min-height: 72%;
+  display: block;
+  will-change: transform;
+}
+
+.landing-wire-backdrop__path {
+  transition: stroke-dashoffset 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-hero__wire-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(560px circle at var(--spot-x) var(--spot-y), rgba(59, 130, 246, 0.3), transparent 52%);
+}
+
+.landing-hero--wire .landing-hero__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.intro-scene-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.intro-scene-bg__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.intro-scene-bg__layer--dark .login-wire-backdrop {
+  opacity: 1;
+}
+
+.intro-scene-bg__light-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(165deg, #fafbff 0%, #eef3ff 50%, #f8fafc 100%);
+}
+
+.blue-particle-web__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.blue-particle-web__static {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(26, 86, 219, 0.08), transparent 55%),
+    linear-gradient(165deg, #ffffff 0%, #eef3ff 45%, #f8fafc 100%);
+}
+
+.landing-hero-canvas-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(165deg, #ffffff 0%, #eef3ff 45%, #f8fafc 100%);
+}
+
+.landing-hero-canvas-fallback--dark {
+  background: linear-gradient(165deg, #0a192f 0%, #000000 55%, #020617 100%);
+}
+
+.login-wire-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.78;
+}
+
+.login-wire-backdrop--dark {
+  opacity: 0.95;
+}
+
+.login-wire-backdrop__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.login-wire-backdrop__path {
+  transition: stroke-dashoffset 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='dark'] .landing-page .landing-hero__glass-panel {
+  --landing-glass-bg: rgba(8, 16, 28, 0.78);
+  --landing-glass-border: rgba(45, 255, 190, 0.2);
+  --landing-glass-text: #f1f5f9;
+  --landing-glass-muted: #94a3b8;
+  --landing-glass-accent: #2dffbe;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(45, 255, 190, 0.1) inset;
+}
+
+[data-theme='dark'] .landing-page .landing-hero__glass-glow {
+  background: radial-gradient(480px circle at var(--mouse-x) var(--mouse-y), rgba(45, 255, 190, 0.14), transparent 62%);
+}
+
+@keyframes qre-landing-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes qre-landing-hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.landing-cta-secondary--glass {
+  padding: 0 28px !important;
+  min-height: 52px !important;
+  font-size: var(--text-base) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: var(--landing-glass-text) !important;
+  border: 1px solid rgba(26, 86, 219, 0.22) !important;
+  backdrop-filter: blur(6px);
+}
+
+.landing-cta-secondary--glass:hover {
+  transform: translateY(-2px);
+  color: var(--landing-glass-accent) !important;
+  border-color: rgba(26, 86, 219, 0.4) !important;
+}
+
+.landing-final-cta {
+  text-align: center;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.landing-final-cta h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  margin: 0 0 var(--space-4);
+}
+
+.landing-final-cta p {
+  margin: 0 0 var(--space-8);
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+[data-theme='dark'] .landing-page {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .landing-page .landing-cta-secondary--glass {
+  background: rgba(10, 18, 28, 0.72) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(45, 255, 190, 0.28) !important;
+}
+
+[data-theme='dark'] .landing-page .landing-cta-secondary--glass:hover {
+  color: #2dffbe !important;
+  border-color: rgba(45, 255, 190, 0.45) !important;
+}
+
+[data-theme='dark'] .landing-section--surface {
+  background: rgba(10, 18, 28, 0.72);
+}
+
+[data-theme='dark'] .landing-section:not(.landing-section--surface) {
+  background: transparent;
+}
+
+[data-theme='light'] .landing-section--surface {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+[data-theme='dark'] .landing-section__title,
+[data-theme='dark'] .landing-step-card__title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .landing-step-card {
+  background: rgba(8, 16, 28, 0.85);
+  border-color: rgba(45, 255, 190, 0.12);
+}
+
+[data-theme='dark'] .landing-step-card__desc,
+[data-theme='dark'] .landing-faq-item__body {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .landing-faq-item {
+  background: rgba(8, 16, 28, 0.85);
+  border-color: rgba(45, 255, 190, 0.12);
+}
+
+[data-theme='dark'] .landing-faq-item__trigger {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .cert-login-card,
+[data-theme='dark'] .cert-register-card {
+  background: rgba(8, 16, 28, 0.92);
+  border-color: rgba(45, 255, 190, 0.15);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='dark'] .cert-auth-inline-back {
+  color: #2dffbe;
+}
+
+[data-theme='dark'] .cert-auth-card__wordmark {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .public-auth-page .login-wire-backdrop {
+  opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero__float,
+  .landing-hero__glass-panel,
+  .landing-wire-backdrop__path,
+  .login-wire-backdrop__path {
+    animation: none !important;
+    transition: none !important;
+  }
+}

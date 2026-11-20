@@ -15,12 +15,17 @@ export function PublicShell({
 }) {
   const { theme } = useTheme()
   const dark = theme === 'dark'
+  const isLanding = className?.includes('landing-page')
 
   return (
     <div
       className={cn(
         'qrp-public-shell relative flex min-h-svh flex-col',
-        dark ? 'bg-background text-white' : 'bg-surface text-foreground',
+        isLanding
+          ? 'landing-page bg-transparent text-foreground'
+          : dark
+            ? 'bg-background text-white'
+            : 'bg-surface text-foreground',
         className,
       )}
     >

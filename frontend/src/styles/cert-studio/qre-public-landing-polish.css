@@ -1,0 +1,556 @@
+/* Govern public marketing — Cert Studio landing rail (one gutter, one max-width) */
+
+.landing-page {
+  font-size: var(--text-base);
+  --landing-gutter: clamp(24px, 4vw, 56px);
+  --landing-max: 1200px;
+  --landing-grid-gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.landing-page .qre-marketing-container,
+.landing-page .qre-marketing-container--narrow {
+  max-width: var(--landing-max);
+}
+
+.landing-page__content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.landing-page__footer {
+  margin-top: auto;
+}
+
+/* —— Header: full-bleed bar, logo left, actions right —— */
+.landing-page .cert-public-header {
+  width: 100%;
+}
+
+.landing-page .cert-public-header__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px var(--landing-gutter);
+  min-height: 80px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+@media (max-width: 1023px) {
+  .landing-page .cert-public-header__inner {
+    padding: 12px var(--landing-gutter);
+    min-height: 68px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.landing-page .cert-public-header__brand {
+  min-width: 0;
+  justify-self: start;
+}
+
+.landing-page .cert-public-header__logo {
+  height: 56px;
+  max-width: 148px;
+}
+
+.landing-page .cert-public-header__title--product {
+  white-space: nowrap;
+  font-size: clamp(1.35rem, 2.1vw, 1.75rem);
+}
+
+.landing-page .cert-public-header__nav {
+  justify-self: center;
+}
+
+.landing-page .cert-public-header__nav-link {
+  font-size: 1.0625rem;
+  padding: 10px 16px;
+}
+
+.landing-page .cert-public-header__actions {
+  justify-self: end;
+}
+
+.landing-page .cert-public-header__auth-link {
+  font-size: 1rem;
+  min-height: 46px;
+  padding: 10px 18px;
+}
+
+.landing-page .cert-public-header__auth-link--primary {
+  min-height: 46px;
+  padding: 10px 20px;
+}
+
+@media (min-width: 1024px) {
+  [data-theme='dark'] .landing-page .cert-public-header__nav-link:hover {
+    color: #2dffbe;
+    background: rgba(45, 255, 190, 0.08);
+  }
+}
+
+/* —— Hero (Cert Studio: narrow container + centred glass card) —— */
+.landing-page .landing-hero {
+  padding-top: clamp(48px, 8vw, 88px);
+  padding-bottom: clamp(56px, 9vw, 112px);
+  padding-left: 0;
+  padding-right: 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.landing-page .landing-hero__container {
+  display: block;
+  width: 100%;
+}
+
+.landing-page .landing-hero__float {
+  width: 100%;
+  max-width: min(52rem, 100%);
+  margin-inline: auto;
+}
+
+.landing-page .landing-hero__glass-panel {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
+  margin-inline: auto;
+  text-align: left;
+  padding: clamp(2rem, 4vw, 3.25rem) clamp(1.5rem, 3vw, 2.5rem);
+  overflow: visible;
+}
+
+.landing-page .landing-hero__title--glass {
+  font-size: clamp(2.35rem, 5.4vw, 3.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0 0 var(--space-5);
+  text-align: left;
+}
+
+.landing-page .landing-hero__title-accent {
+  display: inline;
+  color: var(--landing-glass-accent, #1a56db) !important;
+}
+
+.landing-page .landing-hero__lead--glass {
+  font-size: clamp(1.125rem, 2.2vw, 1.3125rem);
+  line-height: 1.65;
+  max-width: 44rem;
+  margin: 0 0 var(--space-8);
+  text-align: left;
+}
+
+.landing-page .landing-hero__ctas {
+  gap: var(--space-3);
+  justify-content: flex-start;
+}
+
+.landing-page .landing-hero__ctas .landing-cta-primary,
+.landing-page .landing-hero__ctas .landing-cta-secondary--glass {
+  min-height: 56px !important;
+  padding: 0 32px !important;
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+}
+
+/* —— Sections (vertical padding only; gutter on container) —— */
+.landing-page .landing-section {
+  padding: clamp(64px, 9vw, 96px) 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.landing-page .landing-section--surface,
+.landing-page .landing-section--cta {
+  width: 100%;
+}
+
+.landing-page .landing-section__title {
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin: 0 0 var(--space-3);
+  text-align: left;
+  text-wrap: balance;
+}
+
+.landing-page .landing-section__lead {
+  font-size: clamp(1.125rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  color: var(--text-secondary);
+  max-width: 44rem;
+  margin: 0 0 var(--space-10);
+  text-align: left;
+}
+
+.landing-page .landing-section .studio-feature-grid,
+.landing-page .landing-section .landing-bento,
+.landing-page .landing-section .landing-steps,
+.landing-page .landing-section .landing-faq-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.landing-page .landing-section .studio-feature-grid,
+.landing-page .landing-section .landing-bento {
+  gap: var(--landing-grid-gap);
+}
+
+.landing-page .studio-feature-card__body {
+  text-align: left;
+}
+
+.landing-page .landing-bento__card {
+  text-align: left;
+}
+
+/* —— Feature cards (legacy qre-feature-grid) —— */
+.landing-page .qre-feature-grid {
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 640px) {
+  .landing-page .qre-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-page .qre-feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .landing-page .qre-feature-grid--modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.landing-page .qre-feature-card__body {
+  padding: var(--space-6);
+}
+
+.landing-page .qre-feature-card__meta {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-2);
+}
+
+.landing-page .qre-feature-card__title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: var(--space-3);
+}
+
+.landing-page .qre-feature-card__desc {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+
+/* —— Steps —— */
+.landing-page .landing-step-card {
+  padding: var(--space-6);
+  gap: var(--space-6);
+}
+
+.landing-page .landing-step-card__num {
+  font-size: 2.5rem;
+}
+
+.landing-page .landing-step-card__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.landing-page .landing-step-card__desc {
+  font-size: 1.125rem;
+  line-height: 1.65;
+}
+
+/* —— FAQ —— */
+.landing-page .landing-faq-item__trigger {
+  font-size: 1.125rem;
+  padding: var(--space-5) var(--space-6);
+}
+
+.landing-page .landing-faq-item__body {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  padding: var(--space-4) var(--space-6) var(--space-6);
+}
+
+.landing-page .landing-final-cta {
+  text-align: left;
+  max-width: none;
+  margin-inline: 0;
+}
+
+.landing-page .landing-final-cta .landing-hero__ctas {
+  justify-content: flex-start;
+}
+
+.landing-page .landing-final-cta h2 {
+  font-size: clamp(2rem, 3.4vw, 2.5rem);
+}
+
+.landing-page .landing-final-cta p {
+  font-size: 1.125rem;
+}
+
+/* —— Footer (same rail as main) —— */
+.landing-page .cert-public-footer {
+  font-size: var(--text-base);
+}
+
+.landing-page .cert-public-footer__container {
+  max-width: var(--landing-max);
+  margin-inline: auto;
+  padding: clamp(3rem, 6vw, 4.5rem) var(--landing-gutter) clamp(2rem, 4vw, 2.5rem);
+  box-sizing: border-box;
+}
+
+.landing-page .cert-public-footer__main {
+  gap: var(--space-10);
+}
+
+.landing-page .cert-public-footer__brand {
+  max-width: 32rem;
+  gap: var(--space-5);
+}
+
+.landing-page .cert-public-footer__title {
+  font-size: clamp(1.375rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+}
+
+.landing-page .cert-public-footer__desc {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.landing-page .cert-public-footer__col-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+}
+
+.landing-page .cert-public-footer__col-links {
+  gap: var(--space-3);
+}
+
+.landing-page .cert-public-footer__link {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 2px 0;
+}
+
+.landing-page .cert-public-footer__bar {
+  margin-top: var(--space-10);
+  padding-top: var(--space-8);
+  font-size: 0.9375rem;
+}
+
+.landing-page .cert-public-footer__copy {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  max-width: 36rem;
+}
+
+.landing-page .cert-public-footer__gov-logos a {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.landing-page .cert-public-footer__gov-logos img {
+  height: 40px;
+  max-width: 96px;
+  background: transparent;
+}
+
+/* —— Bento + quad grids —— */
+.landing-page .landing-bento {
+  gap: var(--space-4);
+}
+
+.landing-page .landing-bento__card {
+  padding: var(--space-5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-page .landing-bento__card h3 {
+  font-size: 1.25rem;
+}
+
+.landing-page .landing-bento__card p {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.landing-page .landing-bento__icon {
+  width: 44px;
+  height: 44px;
+}
+
+/* Portal tools: stable 2×2 on the 1200px marketing rail (no 4-across clip) */
+.landing-page .studio-feature-grid--quad {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .landing-page .studio-feature-grid--quad {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* —— Auth —— */
+.landing-page .cert-auth-inline-back {
+  font-size: var(--text-base);
+}
+
+.landing-page .cert-login-card,
+.landing-page .cert-register-card {
+  padding: clamp(2rem, 4vw, 2.5rem);
+}
+
+.landing-page .cert-login-card__head h1,
+.landing-page .cert-register-card__head h1 {
+  font-size: clamp(1.75rem, 3vw, 2rem);
+}
+
+.landing-page .cert-login-card__subtitle,
+.landing-page .cert-auth-card__wordmark {
+  font-size: 1rem;
+}
+
+.landing-page .qre-field__label {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.landing-page .qre-field__input {
+  font-size: var(--text-base);
+  min-height: 46px;
+  padding: 12px 14px;
+}
+
+.landing-page .qre-btn {
+  font-size: var(--text-base);
+  min-height: 46px;
+  padding: 12px 20px;
+}
+
+.landing-page .qre-inline-sign-in__submit {
+  width: 100%;
+  min-height: 48px;
+  font-size: 1.0625rem;
+}
+
+.landing-page .qre-dev-auth-panel__select {
+  font-size: var(--text-base);
+  min-height: 46px;
+}
+
+.landing-page .qre-alert {
+  font-size: var(--text-base);
+}
+
+.landing-page .cert-auth-page__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 4vw, 48px) var(--landing-gutter);
+  gap: var(--space-4);
+  min-height: calc(100vh - var(--cert-public-header-height, 72px) - 80px);
+}
+
+.landing-page .cert-auth-page__container {
+  width: 100%;
+  margin-inline: auto;
+}
+
+.landing-page .cert-auth-page__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.landing-page .cert-auth-page__stage--with-dev {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.landing-page .cert-auth-page__stage .cert-auth-inline-back {
+  grid-column: 1 / -1;
+}
+
+.landing-page .cert-auth-page__stage .cert-login-card,
+.landing-page .cert-auth-page__stage .cert-register-card {
+  width: 100%;
+  margin: 0;
+}
+
+@media (min-width: 800px) {
+  .landing-page .cert-auth-page__stage--with-dev {
+    grid-template-columns: minmax(0, 480px) minmax(200px, 240px);
+    justify-content: center;
+    gap: var(--space-5) var(--space-6);
+  }
+}
+
+.landing-page .qre-dev-auth-host {
+  min-width: 0;
+}
+
+.landing-page .qre-dev-auth-host .qre-dev-auth-panel {
+  height: 100%;
+}
+
+.landing-page .cert-auth-inline-back {
+  width: auto;
+  margin-bottom: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.landing-page .cert-login-card,
+.landing-page .cert-register-card {
+  box-shadow: var(--shadow-lg);
+}
+
+.landing-page .qre-inline-sign-in,
+.landing-page .qre-auth-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.landing-page .qre-dev-auth-panel {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .landing-page .landing-hero__ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-page .landing-hero__ctas .qre-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
