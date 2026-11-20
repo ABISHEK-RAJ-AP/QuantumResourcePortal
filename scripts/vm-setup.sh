@@ -32,13 +32,15 @@ vm_ensure_env_files "$ROOT"
 source "$ROOT/scripts/vm-ensure-redis-cache.sh"
 ensure_qre_redis_cache "$ROOT"
 
-if ! vm_postgres_ready; then
-  vm_log "WARN: PostgreSQL not responding on localhost:5432"
+# shellcheck source=scripts/vm-ensure-postgres.sh
+source "$ROOT/scripts/vm-ensure-postgres.sh"
+if ! ensure_qrp_postgres "$ROOT"; then
   vm_postgres_hint
+  vm_die "PostgreSQL not ready — install/start Postgres (see [qrp-pg] hint above) then re-run make dev-vm"
 fi
 
 vm_log "Database migrate"
-make migrate || vm_die "alembic failed — fix Postgres then re-run (see README Quick start)"
+make migrate || vm_die "alembic failed — if revision 0010 partial: bash scripts/fix-alembic-0010-partial.sh"
 
 command -v npm >/dev/null || vm_die "npm missing (install Node 20+ or nvm)"
 if [[ ! -d "$ROOT/frontend/node_modules" ]]; then

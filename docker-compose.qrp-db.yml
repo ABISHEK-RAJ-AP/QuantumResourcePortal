@@ -1,0 +1,22 @@
+# QRP-only PostgreSQL (lab VM). Published on host :5434 so Q-TeleScope can keep :5432/:5433.
+services:
+  qrp-postgres:
+    image: postgres:16-alpine
+    container_name: qrp-postgres-lab
+    restart: unless-stopped
+    ports:
+      - "${QRP_PG_PORT:-5434}:5432"
+    environment:
+      POSTGRES_USER: qre_app
+      POSTGRES_PASSWORD: qre_dev_password
+      POSTGRES_DB: qre
+    volumes:
+      - qrp_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qre_app -d qre"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  qrp_pg_data:

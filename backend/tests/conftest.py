@@ -31,7 +31,7 @@ def _read_env_file(path: Path) -> dict[str, str]:
 _file_env = _read_env_file(BACKEND_DIR / ".env")
 TEST_DATABASE_URL = os.environ.get("QRE_TEST_DATABASE_URL") or _file_env.get(
     "QRE_TEST_DATABASE_URL",
-    "postgresql+asyncpg://qre_app:qre_dev_password@localhost:5432/qre_test",
+    "postgresql+asyncpg://qre_app:qre_dev_password@127.0.0.1:5434/qre_test",
 )
 os.environ["QRE_DATABASE_URL"] = TEST_DATABASE_URL
 os.environ.setdefault("QRE_ENV", "lab")

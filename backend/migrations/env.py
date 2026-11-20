@@ -52,11 +52,33 @@ def _run_sync(connection: Connection) -> None:
         context.run_migrations()
 
 
+def _dsn_host_hint(url: str) -> str:
+    if "@" in url:
+        return url.split("@", 1)[1]
+    return url
+
+
 async def run_migrations_online() -> None:
-    engine = create_async_engine(_database_url(), poolclass=pool.NullPool)
-    async with engine.connect() as connection:
-        await connection.run_sync(_run_sync)
-    await engine.dispose()
+    url = _database_url()
+    engine = create_async_engine(url, poolclass=pool.NullPool)
+    try:
+        async with engine.connect() as connection:
+            await connection.run_sync(_run_sync)
+    except Exception as exc:
+        import sys
+
+        print(
+            "\n[alembic] Database connection failed for "
+            f"{_dsn_host_hint(url)}\n"
+            "  • Start PostgreSQL (systemctl start postgresql)\n"
+            "  • Create role/databases per README Quick start\n"
+            "  • VM lab: bash scripts/vm-ensure-postgres.sh\n"
+            f"  • Detail: {exc!r}\n",
+            file=sys.stderr,
+        )
+        raise
+    finally:
+        await engine.dispose()
 
 
 if context.is_offline_mode():

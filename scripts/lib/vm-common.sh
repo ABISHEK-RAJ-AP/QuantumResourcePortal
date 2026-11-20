@@ -33,6 +33,7 @@ vm_ensure_env_files() {
   local root="$1"
   local file pair k
   [[ -f "$root/backend/.env" ]] || cp "$root/backend/.env.example" "$root/backend/.env"
+  # DB port/host: vm-ensure-postgres.sh syncs QRE_* URLs (default :5434, not Q-TeleScope :5433).
   [[ -f "$root/frontend/.env.local" ]] || cp "$root/frontend/.env.example" "$root/frontend/.env.local"
   for pair in 'QRE_ENV=lab' 'QRE_CAPTCHA_ENABLED=true'; do
     k="${pair%%=*}"
@@ -75,7 +76,7 @@ vm_postgres_hint() {
 }
 
 vm_postgres_ready() {
-  command -v pg_isready >/dev/null 2>&1 && pg_isready -h localhost -p 5432 -q 2>/dev/null
+  command -v pg_isready >/dev/null 2>&1 && pg_isready -h 127.0.0.1 -p 5432 -q 2>/dev/null
 }
 
 vm_kill_port() {

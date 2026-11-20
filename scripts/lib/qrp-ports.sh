@@ -53,3 +53,10 @@ if [[ "${QRP_ALLOW_TELESCOPE_PORTS:-}" != "1" ]] && [[ "$QRP_API_TARGET" == *":8
   _qrp_warn "QRP_API_TARGET pointed at :8000 — resetting to http://127.0.0.1:${QRP_API_PORT}"
   export QRP_API_TARGET="http://127.0.0.1:${QRP_API_PORT}"
 fi
+
+# PostgreSQL — Q-TeleScope often uses native :5432 or Docker Timescale from :5433 upward.
+# QRP lab DB is a separate instance on :5434 by default (see docker-compose.qrp-db.yml).
+QRP_TELESCOPE_PG_PORT="${QRP_TELESCOPE_PG_PORT:-5433}"
+QRP_PG_HOST="${QRP_PG_HOST:-127.0.0.1}"
+QRP_PG_PORT="${QRP_PG_PORT:-5434}"
+export QRP_PG_HOST QRP_PG_PORT QRP_TELESCOPE_PG_PORT

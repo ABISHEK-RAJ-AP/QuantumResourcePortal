@@ -27,10 +27,15 @@ Session bell + panel sync queue/approvals from governance APIs. See [`docs/NOTIF
 Prerequisites: Python 3.12+, Node.js 20.19+ or 22.12+, PostgreSQL 16. The full walkthrough is [`docs/PHASE_1_GUIDE.md`](docs/PHASE_1_GUIDE.md).
 
 ```bash
-# 1. Database (once)
-sudo -u postgres psql -c "CREATE ROLE qre_app WITH LOGIN PASSWORD 'qre_dev_password';"
-sudo -u postgres psql -c "CREATE DATABASE qre OWNER qre_app;"
-sudo -u postgres psql -c "CREATE DATABASE qre_test OWNER qre_app;"
+# 1. Database
+# Lab VM (recommended): QRP Postgres on host :5434 — separate from Q-TeleScope (:5432 / Docker :5433+)
+bash scripts/vm-ensure-postgres.sh   # docker-compose.qrp-db.yml + fixes backend/.env
+
+# Or native Postgres on :5432 (same server, different DB names than TeleScope):
+# sudo -u postgres psql -c "CREATE ROLE qre_app WITH LOGIN PASSWORD 'qre_dev_password';"
+# sudo -u postgres psql -c "CREATE DATABASE qre OWNER qre_app;"
+# sudo -u postgres psql -c "CREATE DATABASE qre_test OWNER qre_app;"
+# QRP_USE_SYSTEM_PG=1 bash scripts/vm-ensure-postgres.sh
 
 # 2. Dependencies, config and schema
 make setup        # venv + pip install, npm ci, creates backend/.env
