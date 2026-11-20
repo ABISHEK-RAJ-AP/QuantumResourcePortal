@@ -15,7 +15,7 @@
 
 **Landing:** Cert Studio stack — `IntroSceneBackground` (particle web / neon wire), glass hero, `StudioFeatureGrid`, `cert-studio/*.css` under `frontend/src/styles/cert-studio/`. No marketing bento spans.
 
-**Auth (login / register / reset):** Same `IntroSceneBackground` + form-driven `LoginWireBackdrop`, centred `cert-login-card` / `cert-register-card` via `AuthPanel` — no two-column fridge layout.
+**Auth (login / register / forgot / reset / MFA):** `frontend/src/styles/cert-studio/cert-auth-pages.css` + `AuthPanel` / `AuthOutlineField` — `IntroSceneBackground`, `LoginWireBackdrop`, centred cards (460px login, 540px register), outlined fields, password reveal, centred footer links; patterns from `apps/shared/qre-theme/cert-studio/cert-studio-public-chrome.css` and Q-TeleScope `AuthShell`.
 
 **Governance copy pass:** Approvals, Inventory, Providers, Policies, Reservations, Audit, Support — `screens.tsx` / `continue.tsx`.
 

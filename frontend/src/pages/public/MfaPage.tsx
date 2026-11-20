@@ -38,6 +38,11 @@ export function MfaPage() {
         />
       ) : null}
 
+      <p className="cert-auth-prose text-sm text-muted-foreground">
+        Complete multi-factor verification when your deployment enables it. Lab environments typically use password-only
+        sign-in.
+      </p>
+
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">Status</span>
         {ready ? (
