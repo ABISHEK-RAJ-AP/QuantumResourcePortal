@@ -17,7 +17,7 @@
 
 **Auth (login / forgot / reset / MFA):** `cert-auth-pages.css` + `AuthPanel` / `AuthOutlineField` — intro scene, wire backdrop, centred login card (~460px).
 
-**Auth (register):** Cert Studio `BuildRegisterPage` / `CertAuthShell` — centred `cert-register-card` (~520px), `AuthPanel` + `showBackLink`, `cert-register-steps`, `cert-org-kind-grid`, `cert-auth-footer` (“Sign in here”). QRP keeps org tenant 3-step flow inside the card (not Q-TeleScope `register-studio`).
+**Auth (register):** Wide panel `qrp-register-flow` + `AuthRegisterWideShell` — back “← Back to sign in”, 4-step bar, 3× org type tiles (`register-cert.css`), “Continue →”, footer sign-in. Flow: type → your details → security → verify (lab: no OTP). Login: `AuthPanel` centred card + `showBackLink`.
 
 **Governance copy pass:** Approvals, Inventory, Providers, Policies, Reservations, Audit, Support — `screens.tsx` / `continue.tsx`.
 

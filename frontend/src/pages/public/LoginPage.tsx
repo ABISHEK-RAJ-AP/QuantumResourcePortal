@@ -112,6 +112,7 @@ export function LoginPage() {
     <AuthPanel
       title="Sign in"
       subtitle={AUTH_COPY.signInSubtitle}
+      showBackLink
       footer={<AuthFooterLinks showForgot showRegister />}
     >
       <FormShakeShell shakeKey={banner}>

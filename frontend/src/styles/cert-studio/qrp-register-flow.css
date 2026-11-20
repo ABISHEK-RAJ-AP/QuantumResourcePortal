@@ -1,0 +1,248 @@
+/* QRP organisation register — wide panel + 4-step bar (Q-TeleScope / gov reference UI) */
+
+.qrp-register-flow__main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1rem, 3vw, 2rem) clamp(1rem, 4vw, 2rem) clamp(2rem, 5vw, 3rem);
+  min-height: calc(100dvh - 4.75rem);
+  box-sizing: border-box;
+}
+
+.qrp-register-flow__back {
+  width: 100%;
+  max-width: min(56rem, 96vw);
+  margin: 0 auto 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.qrp-register-flow__back:hover {
+  text-decoration: underline;
+}
+
+.qrp-register-flow__panel {
+  width: 100%;
+  max-width: min(56rem, 96vw);
+  margin-inline: auto;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.75rem, 4vw, 2.75rem);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  box-shadow: 0 20px 50px color-mix(in srgb, var(--foreground) 7%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+[data-theme='dark'] .qrp-register-flow__panel {
+  background: rgba(8, 16, 28, 0.94);
+  border-color: rgba(45, 255, 190, 0.12);
+}
+
+.qrp-register-flow__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.qrp-register-flow__title-row h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.qrp-register-flow__info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  cursor: help;
+}
+
+/* 4-step connected bar */
+.qrp-reg-step-trail-wrap {
+  width: 100%;
+  margin: 0 0 1.5rem;
+}
+
+.qrp-reg-step-trail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+}
+
+.qrp-reg-step-trail__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.35rem;
+  border: 1px solid var(--border);
+  border-right-width: 0;
+  background: color-mix(in srgb, var(--card) 96%, var(--muted));
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.qrp-reg-step-trail__step:first-child {
+  border-radius: 0.65rem 0 0 0.65rem;
+}
+
+.qrp-reg-step-trail__step:last-child {
+  border-radius: 0 0.65rem 0.65rem 0;
+  border-right-width: 1px;
+}
+
+.qrp-reg-step-trail__step--active {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--primary) 10%, var(--card));
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  z-index: 1;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.qrp-reg-step-trail__step--done {
+  color: var(--primary);
+}
+
+.qrp-reg-step-trail__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--border);
+  color: var(--muted-foreground);
+}
+
+.qrp-reg-step-trail__step--active .qrp-reg-step-trail__num {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.qrp-reg-step-trail__step--done .qrp-reg-step-trail__num {
+  background: color-mix(in srgb, var(--primary) 28%, var(--card));
+  color: var(--primary);
+}
+
+.qrp-reg-step-trail__label {
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qrp-register-flow__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.qrp-register-flow__section-head h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.qrp-register-flow__meta-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.qrp-register-flow__meta-link:hover {
+  text-decoration: underline;
+}
+
+.qrp-register-flow .reg-type-grid--tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.65rem, 1.5vw, 0.85rem);
+  min-height: 0;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .qrp-register-flow .reg-type-grid--tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qrp-reg-step-trail__label {
+    font-size: 0.65rem;
+  }
+}
+
+.qrp-register-flow {
+  --reg-surface: var(--card);
+  --reg-border: var(--border);
+  --reg-text: var(--foreground);
+  --reg-muted: var(--muted-foreground);
+  --reg-accent: var(--primary);
+}
+
+.qrp-register-flow .reg-type-tile {
+  min-height: 5.5rem;
+}
+
+.qrp-register-flow__continue {
+  width: 100%;
+  min-height: 2.85rem;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.qrp-register-flow__footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--muted-foreground);
+}
+
+.qrp-register-flow__footer a {
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.qrp-register-flow__footer a:hover {
+  text-decoration: underline;
+}
