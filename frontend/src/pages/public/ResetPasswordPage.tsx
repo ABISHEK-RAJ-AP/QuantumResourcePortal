@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import { ApiError } from '@/api/client'
 import { authFetch } from '@/api/qre'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
-import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
+import { AuthOutlineField, AuthPasswordField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
 import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
@@ -78,7 +78,7 @@ export function ResetPasswordPage() {
   return (
     <AuthPanel title="Set new password" subtitle="Use the token from your administrator" footer={<AuthFooterLinks />}>
       <AuthBackdropSync password={password} captchaInput={captchaCode} />
-      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <form className="cert-auth-form" onSubmit={onSubmit} noValidate>
         <FormBanner message={error} />
         <AuthOutlineField label="Reset token" htmlFor="reset-token">
           <input
@@ -91,33 +91,23 @@ export function ResetPasswordPage() {
           />
         </AuthOutlineField>
         <FieldAlert message={fields.token} />
-        <AuthOutlineField label="New password" htmlFor="reset-password">
-          <input
-            id="reset-password"
-            required
-            type="password"
-            minLength={8}
-            autoComplete="new-password"
-            className={cn(authOutlineControlClass, fieldErrorClass(Boolean(fields.password)))}
-            value={password}
-            aria-invalid={Boolean(fields.password)}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </AuthOutlineField>
+        <AuthPasswordField
+          label="New password"
+          htmlFor="reset-password"
+          autoComplete="new-password"
+          value={password}
+          invalid={Boolean(fields.password)}
+          onChange={setPassword}
+        />
         <FieldAlert message={fields.password} />
-        <AuthOutlineField label="Confirm password" htmlFor="reset-confirm">
-          <input
-            id="reset-confirm"
-            required
-            type="password"
-            minLength={8}
-            autoComplete="new-password"
-            className={cn(authOutlineControlClass, fieldErrorClass(Boolean(fields.confirm)))}
-            value={confirm}
-            aria-invalid={Boolean(fields.confirm)}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-        </AuthOutlineField>
+        <AuthPasswordField
+          label="Confirm password"
+          htmlFor="reset-confirm"
+          autoComplete="new-password"
+          value={confirm}
+          invalid={Boolean(fields.confirm)}
+          onChange={setConfirm}
+        />
         <FieldAlert message={fields.confirm} />
         <AuthCaptchaBlock
           captchaCode={captchaCode}
@@ -126,13 +116,10 @@ export function ResetPasswordPage() {
           onAvailability={setCaptchaOn}
           fieldError={captchaFieldError}
         />
-        <button type="submit" disabled={busy} className="btn-primary qrp-auth-submit w-full">
+        <button type="submit" disabled={busy} className="btn-primary qrp-auth-submit auth-cta w-full">
           {busy ? 'Saving…' : 'Update password'}
         </button>
       </form>
-      <Link className="mt-4 inline-block text-base font-medium text-primary hover:underline" to="/login">
-        Back to sign in
-      </Link>
     </AuthPanel>
   )
 }

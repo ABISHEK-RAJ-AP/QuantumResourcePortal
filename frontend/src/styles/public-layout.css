@@ -194,7 +194,7 @@
 }
 
 .qrp-auth-form-footer {
-  text-align: left;
+  text-align: center;
   font-size: 0.875rem;
   color: var(--muted-foreground);
 }
@@ -203,7 +203,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0.5rem 1rem;
-  text-align: left;
+  text-align: center;
 }

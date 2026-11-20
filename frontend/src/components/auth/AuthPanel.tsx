@@ -67,20 +67,24 @@ function AuthPanelInner({
         <MarketingContainer
           narrow
           className="cert-auth-page__container"
-          style={{ maxWidth: wide ? 540 : 424 }}
+          style={{ maxWidth: wide ? 540 : 460 }}
         >
           <div className={`qrp-auth-shell ${cardClass}`}>
-            <div className="cert-login-card__logo-wrap">
-              <LogoMark className="h-14 w-auto max-w-[140px]" aria-hidden />
+            <div className="cert-auth-card__brand">
+              <div className="cert-login-card__logo-wrap">
+                <LogoMark className="h-14 w-auto max-w-[140px]" aria-hidden />
+              </div>
+              <p className="cert-auth-card__wordmark">Quantum Resource Portal</p>
             </div>
-            <p className="cert-auth-card__wordmark">Quantum Resource Portal</p>
-            <div className="cert-login-card__head">
+            <header className="cert-login-card__head">
               <h1>{title}</h1>
               {subtitle ? <p className="cert-login-card__subtitle">{subtitle}</p> : null}
-            </div>
+            </header>
             {children}
-            {footer ? <div className="cert-auth-card__footer qrp-auth-form-footer auth-panel-footer">{footer}</div> : null}
-            <Link to="/" className="cert-auth-inline-back mt-4 inline-block text-sm font-semibold text-primary">
+            {footer ? (
+              <div className="cert-auth-card__footer qrp-auth-form-footer auth-panel-footer">{footer}</div>
+            ) : null}
+            <Link to="/" className="cert-auth-inline-back">
               ← Back to home
             </Link>
           </div>

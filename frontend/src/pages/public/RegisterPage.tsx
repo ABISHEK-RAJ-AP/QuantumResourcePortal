@@ -6,6 +6,7 @@ import { Check } from 'lucide-react'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
+import { AuthFieldHint, AuthOutlineField, AuthPasswordField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FormBanner } from '@/components/auth/FormAlerts'
 import { authCapabilitiesKey, fetchAuthCapabilities } from '@/api/authCapabilities'
 import { registerOrganization } from '@/api/orgRegister'
@@ -154,9 +155,9 @@ export function RegisterPage() {
         footer={<AuthFooterLinks showForgot />}
       >
         <AuthBackdropSync captchaInput={captchaCode} />
-        <p className="text-base leading-relaxed text-muted-foreground">
-          Your platform operator (for example CDAC) creates organizations and invites members. Complete verification
-          below, then sign in once an administrator has provisioned your account.
+        <p className="cert-auth-prose">
+          Your platform operator (for example CDAC) creates organizations and invites members. Sign in once an
+          administrator has provisioned your account.
         </p>
         <AuthCaptchaBlock
           captchaCode={captchaCode}
@@ -165,7 +166,7 @@ export function RegisterPage() {
           onAvailability={setCaptchaOn}
           fieldError={fieldError}
         />
-        <div className="mt-6 space-y-4">
+        <div className="cert-auth-form">
           <button
             type="button"
             className="btn-primary qrp-auth-submit auth-cta w-full"
@@ -173,11 +174,6 @@ export function RegisterPage() {
           >
             Continue to sign in
           </button>
-          <p className="text-center text-sm text-muted-foreground">
-            <Link className="fs-link font-semibold text-primary" to="/login">
-              Back to sign in
-            </Link>
-          </p>
         </div>
       </AuthPanel>
     )
@@ -188,10 +184,20 @@ export function RegisterPage() {
       wide
       title="Register your organization"
       subtitle="Create an isolated workspace on the quantum resource platform"
-      footer={<AuthFooterLinks showForgot />}
+      footer={
+        <>
+          <AuthFooterLinks showForgot showHome />
+          <p className="mt-3 text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link className="cert-auth-link" to="/login">
+              Sign in
+            </Link>
+          </p>
+        </>
+      }
     >
       <AuthBackdropSync username={adminUsername} password={password} captchaInput={captchaCode} />
-      <p className="text-sm leading-relaxed text-muted-foreground">
+      <p className="cert-auth-prose">
         Each organization is a separate tenant: own members, projects, quotas, and usage. CDAC operates the shared
         provider catalog; you govern people and workloads inside your org.
       </p>
@@ -232,34 +238,29 @@ export function RegisterPage() {
             onAvailability={setCaptchaOn}
             fieldError={fieldError}
           />
-          <div className="mt-4 space-y-4">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Password</span>
-              <input
-                type="password"
-                className="qrp-auth-input field-input w-full"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Confirm password</span>
-              <input
-                type="password"
-                className="qrp-auth-input field-input w-full"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </label>
-            <div className="flex flex-wrap gap-2 pt-2">
+          <div className="cert-auth-form">
+            <AuthPasswordField
+              label="Password"
+              htmlFor="register-password"
+              autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
+            />
+            <AuthPasswordField
+              label="Confirm password"
+              htmlFor="register-password-confirm"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+            />
+            <AuthFieldHint>At least 12 characters (platform policy).</AuthFieldHint>
+            <div className="cert-auth-actions">
               <button type="button" className="btn-ghost" onClick={() => setStep(2)}>
                 Back
               </button>
               <button
                 type="button"
-                className="btn-primary qrp-auth-submit flex-1"
+                className="btn-primary qrp-auth-submit auth-cta"
                 disabled={busy}
                 onClick={() => void submit()}
               >
@@ -269,13 +270,6 @@ export function RegisterPage() {
           </div>
         </>
       ) : null}
-
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link className="fs-link font-semibold text-primary" to="/login">
-          Sign in
-        </Link>
-      </p>
     </AuthPanel>
   )
 }
@@ -298,21 +292,20 @@ function RequestOrgStep({
   onNext: () => void
 }) {
   return (
-    <div className="space-y-4">
+    <div className="cert-auth-form">
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Organization type</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <legend className="mb-2 block w-full text-center text-sm font-semibold text-foreground">
+          Organization type
+        </legend>
+        <div className="cert-org-kind-grid">
           {ORG_KINDS.map(({ id, label }) => (
             <label
               key={id}
-              className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
-                orgKind === id ? 'border-primary bg-primary/5' : 'border-border'
-              }`}
+              className={`cert-org-kind-option${orgKind === id ? ' is-selected' : ''}`}
             >
               <input
                 type="radio"
                 name="org_kind"
-                className="sr-only"
                 checked={orgKind === id}
                 onChange={() => setOrgKind(id)}
               />
@@ -321,27 +314,27 @@ function RequestOrgStep({
           ))}
         </div>
       </fieldset>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium">Organization code</span>
+      <AuthOutlineField label="Organization code" htmlFor="register-tenant-code">
         <input
-          className="qrp-auth-input field-input w-full font-mono text-sm"
+          id="register-tenant-code"
+          className={`${authOutlineControlClass} font-mono text-sm`}
           placeholder="e.g. acme-quantum"
           value={tenantCode}
           onChange={(e) => setTenantCode(e.target.value)}
           autoComplete="organization"
         />
-        <span className="mt-1 block text-xs text-muted-foreground">Short id for URLs and support (2–32 chars).</span>
-      </label>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium">Legal / display name</span>
+      </AuthOutlineField>
+      <AuthFieldHint>Short id for URLs and support (2–32 chars).</AuthFieldHint>
+      <AuthOutlineField label="Legal / display name" htmlFor="register-tenant-name">
         <input
-          className="qrp-auth-input field-input w-full"
+          id="register-tenant-name"
+          className={authOutlineControlClass}
           placeholder="e.g. Acme Quantum Research Pvt Ltd"
           value={tenantName}
           onChange={(e) => setTenantName(e.target.value)}
         />
-      </label>
-      <button type="button" className="btn-primary qrp-auth-submit w-full" onClick={onNext}>
+      </AuthOutlineField>
+      <button type="button" className="btn-primary qrp-auth-submit auth-cta w-full" onClick={onNext}>
         Continue
       </button>
     </div>
@@ -368,44 +361,43 @@ function AdminStep({
   onNext: () => void
 }) {
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        This person becomes the organization administrator: invite members, assign roles, and configure access (Cert
-        Studio “Org admin” pattern).
+    <div className="cert-auth-form">
+      <p className="cert-auth-prose">
+        This person becomes the organization administrator: invite members, assign roles, and configure access.
       </p>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium">Administrator username</span>
+      <AuthOutlineField label="Administrator username" htmlFor="register-admin-user">
         <input
-          className="qrp-auth-input field-input w-full font-mono text-sm"
+          id="register-admin-user"
+          className={`${authOutlineControlClass} font-mono text-sm`}
           value={adminUsername}
           onChange={(e) => setAdminUsername(e.target.value)}
           autoComplete="username"
         />
-      </label>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium">Full name</span>
+      </AuthOutlineField>
+      <AuthOutlineField label="Full name" htmlFor="register-admin-name">
         <input
-          className="qrp-auth-input field-input w-full"
+          id="register-admin-name"
+          className={authOutlineControlClass}
           value={adminDisplayName}
           onChange={(e) => setAdminDisplayName(e.target.value)}
           autoComplete="name"
         />
-      </label>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium">Work email (optional)</span>
+      </AuthOutlineField>
+      <AuthOutlineField label="Work email (optional)" htmlFor="register-admin-email">
         <input
+          id="register-admin-email"
           type="email"
-          className="qrp-auth-input field-input w-full"
+          className={authOutlineControlClass}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
         />
-      </label>
-      <div className="flex flex-wrap gap-2">
+      </AuthOutlineField>
+      <div className="cert-auth-actions">
         <button type="button" className="btn-ghost" onClick={onBack}>
           Back
         </button>
-        <button type="button" className="btn-primary qrp-auth-submit flex-1" onClick={onNext}>
+        <button type="button" className="btn-primary qrp-auth-submit auth-cta" onClick={onNext}>
           Continue
         </button>
       </div>

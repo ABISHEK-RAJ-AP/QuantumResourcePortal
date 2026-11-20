@@ -20,10 +20,9 @@ export function ForgotPasswordPage() {
       footer={<AuthFooterLinks showRegister />}
     >
       <AuthBackdropSync captchaInput={captchaCode} />
-      <p className="text-base leading-relaxed text-muted-foreground">
-        Self-service email reset is not enabled on this deployment. Contact your organization administrator for a reset token,
-        then use Set new password with that token. Image verification below matches the sign-in flow when self-service is
-        turned on later.
+      <p className="cert-auth-prose">
+        Self-service email reset is not enabled on this deployment. Contact your organization administrator for a reset
+        token, then use Set new password with that token.
       </p>
       {captchaEnabled ? (
         <AuthCaptchaBlock
@@ -33,7 +32,7 @@ export function ForgotPasswordPage() {
           onAvailability={setCaptchaOn}
         />
       ) : null}
-      <Link className="btn-primary qrp-auth-submit mt-6 inline-flex w-full justify-center" to="/login">
+      <Link className="btn-primary qrp-auth-submit auth-cta w-full" to="/login">
         Back to sign in
       </Link>
     </AuthPanel>

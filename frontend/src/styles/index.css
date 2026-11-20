@@ -1275,7 +1275,7 @@ html:not(.dark) .cyber-matrix-spot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0.5rem 0.25rem;
 }
 

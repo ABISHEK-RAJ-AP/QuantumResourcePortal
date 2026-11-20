@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/hooks'
 import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
-import { AuthOutlineField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
+import { AuthOutlineField, AuthPasswordField, authOutlineControlClass } from '@/components/auth/AuthOutlineField'
 import { FieldAlert, FormBanner, FormShakeShell, mapApiFieldErrors } from '@/components/auth/FormAlerts'
 import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { buildCaptchaPayload, validateCaptchaBeforeSubmit } from '@/lib/authCaptcha'
@@ -113,9 +113,9 @@ export function LoginPage() {
       subtitle="Sign in to your organization workspace with portal credentials."
       footer={<AuthFooterLinks showForgot showRegister />}
     >
-      <FormShakeShell shakeKey={banner} className="space-y-4">
+      <FormShakeShell shakeKey={banner}>
       <AuthBackdropSync username={username} password={password} captchaInput={captchaCode} />
-      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+      <form className="cert-auth-form" onSubmit={onSubmit} noValidate>
         <FormBanner message={banner} />
         {showLabCredentialsHint ? (
           <p className="cert-login-card__lab-hint" role="note">
@@ -136,18 +136,14 @@ export function LoginPage() {
           />
         </AuthOutlineField>
         <FieldAlert message={fields.username} />
-        <AuthOutlineField label="Password" htmlFor="login-password">
-          <input
-            id="login-password"
-            required
-            type="password"
-            autoComplete="current-password"
-            className={authOutlineControlClass}
-            value={password}
-            aria-invalid={Boolean(fields.password)}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </AuthOutlineField>
+        <AuthPasswordField
+          label="Password"
+          htmlFor="login-password"
+          autoComplete="current-password"
+          value={password}
+          invalid={Boolean(fields.password)}
+          onChange={setPassword}
+        />
         <FieldAlert message={fields.password} />
         <AuthCaptchaBlock
           key={captchaEpoch}
