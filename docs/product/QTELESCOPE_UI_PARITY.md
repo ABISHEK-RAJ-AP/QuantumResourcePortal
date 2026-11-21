@@ -32,7 +32,8 @@ QRP reuses **layout, flow, and alignment** from mature Q-TeleScope (`Quantum_Mon
 - [x] Nav visible from `md` (768px), hamburger below that (TeleScope pattern).
 - [x] Footer: brand column + link grid + bottom bar (TeleScope layout).
 - [x] Landing section headers aligned (`landing-section__header`).
-- [x] SPA hash navigation without full reload (`hashNav.ts`); footer hash links use same helper.
+- [x] Landing hash nav via `PublicHashLink` + `hashNav.ts` (SPA on `/`; auth/legal routes use full navigation so URL and route stay aligned).
+- [x] Home links from auth/legal/error use `reloadDocument` where needed (header brand, footer overview, back links).
 - [x] Legal + route error pages use `PublicShell` + `landing-page` + Cert Studio styles.
 
 ### Auth
@@ -51,7 +52,7 @@ QRP reuses **layout, flow, and alignment** from mature Q-TeleScope (`Quantum_Mon
 ### Verification
 
 - [x] `npm run typecheck`, `npm run build`, `npm run test` (incl. `hashNav.test.ts`)
-- [x] Playwright: `e2e/public-marketing.spec.ts` (landing hash + auth footer hash)
+- [x] Playwright: `e2e/public-marketing.spec.ts` (landing hash, auth footer + header hash, `e2e/public-explore.spec.ts`)
 - [ ] `npm run test:e2e:smoke` full stack when API + DB up
 
 ## When adding a new public or auth screen

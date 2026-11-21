@@ -5,10 +5,11 @@ import type { Page } from '@playwright/test'
  * The old localStorage token/role seeding is gone (that trust model was removed in RBAC-6/7). Set
  * E2E_ADMIN_USER / E2E_ADMIN_PW (and the researcher pair) to accounts in your test deployment.
  */
+/** Defaults match lab bootstrap (`quantum2026`) — override in CI via env. */
 const ADMIN_USER = process.env.E2E_ADMIN_USER ?? 'admin'
-const ADMIN_PW = process.env.E2E_ADMIN_PW ?? 'change-me-admin-123'
-const RESEARCHER_USER = process.env.E2E_RESEARCHER_USER ?? 'researcher'
-const RESEARCHER_PW = process.env.E2E_RESEARCHER_PW ?? 'change-me-researcher-123'
+const ADMIN_PW = process.env.E2E_ADMIN_PW ?? 'quantum2026'
+const RESEARCHER_USER = process.env.E2E_RESEARCHER_USER ?? 'demo_researcher'
+const RESEARCHER_PW = process.env.E2E_RESEARCHER_PW ?? 'quantum2026'
 
 /** Log in through the real API; the session cookie is stored in the page's browser context. */
 export async function login(page: Page, username: string, password: string): Promise<string> {

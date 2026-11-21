@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 
 import { LogoMark } from '@/components/brand/LogoMark'
 import { PublicHashLink } from '@/components/marketing/PublicHashLink'
@@ -49,6 +49,7 @@ type PublicFooterProps = {
 
 /** Q-TeleScope footer: brand column · link grid · copyright left / legal right. */
 export function PublicFooter({ variant = 'dark', className, compact = false }: PublicFooterProps) {
+  const { pathname } = useLocation()
   const year = new Date().getFullYear()
   const dark = variant === 'dark'
   const { allowed: registrationOpen } = usePublicRegistration()
@@ -90,7 +91,7 @@ export function PublicFooter({ variant = 'dark', className, compact = false }: P
         {!compact ? (
           <div className="qrp-public-footer__grid">
             <div className="qrp-public-footer__brand space-y-4">
-              <Link to="/" className="flex items-center gap-3">
+              <Link to="/" reloadDocument={pathname !== '/'} className="flex items-center gap-3">
                 <LogoMark className={cn('h-10 w-auto shrink-0', dark && 'brightness-0 invert')} />
                 <div className="flex flex-col text-left">
                   <span className="text-xl font-extrabold tracking-tight">Quantum Resource Portal</span>

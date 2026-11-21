@@ -136,7 +136,7 @@ export function AuthFooterLinks({
   }
   if (showHome) {
     links.push(
-      <Link key="home" className="fs-link font-semibold text-primary" to="/">
+      <Link key="home" className="fs-link font-semibold text-primary" to="/" reloadDocument>
         Home
       </Link>,
     )
