@@ -12,6 +12,7 @@ import { Card, Page, RelatedNav } from '@/components/layout/Page'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { demoActionsAllowed } from '@/lib/demo'
 import { formatPrincipalId, formatRole } from '@/lib/display'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { cn } from '@/lib/utils'
 
 import '@/styles/settings-workspace.css'
@@ -67,7 +68,7 @@ export function SettingsPage() {
     <Page
       crumbs={[{ label: 'Admin' }, { label: 'Settings' }]}
       title="Settings"
-      description="Personal account and device preferences for your signed-in user — organization profile and people live under Organization."
+      {...opsPageGuidance.settings}
     >
       <div className="qrp-settings">
         <div className="qrp-settings__shell">

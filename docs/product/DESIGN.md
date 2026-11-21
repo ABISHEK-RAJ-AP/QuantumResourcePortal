@@ -4,6 +4,8 @@ Visual direction for `/qrp/*` workspace routes. Operate mode: scan, decide, act.
 
 **Public/auth shell:** Same **layout and flow** as Q-TeleScope (header, footer, login, register, landing sections); **Cert Studio** theme on marketing/auth; **QRP** copy and routes only. See [QTELESCOPE_UI_PARITY.md](./QTELESCOPE_UI_PARITY.md).
 
+**Flows and standards:** Auth guards, governance pipeline, nav by workspace, and Operate rules — [QRP_FLOW_AND_STANDARDS.md](./QRP_FLOW_AND_STANDARDS.md).
+
 ## Intent
 
 - **Audience:** lab admins, project leads, provider operators (CDAC demo).

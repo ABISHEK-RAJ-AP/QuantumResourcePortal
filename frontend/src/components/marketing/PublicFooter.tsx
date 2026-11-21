@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 
 import { LogoMark } from '@/components/brand/LogoMark'
 import { parsePublicHashHref, scrollToLandingSection } from '@/components/marketing/hashNav'
+import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import { cn } from '@/lib/utils'
 
 type FooterLink = { name: string; to?: string; href?: string }
@@ -89,6 +90,7 @@ function FooterHashLink({
 export function PublicFooter({ variant = 'dark', className, compact = false }: PublicFooterProps) {
   const year = new Date().getFullYear()
   const dark = variant === 'dark'
+  const { allowed: registrationOpen } = usePublicRegistration()
 
   const linkClass = cn(
     'fs-link text-sm transition',
@@ -162,9 +164,11 @@ export function PublicFooter({ variant = 'dark', className, compact = false }: P
                     {section.title}
                   </h3>
                   <ul className="space-y-2">
-                    {section.links.map((link) => (
-                      <li key={link.name}>{renderLink(link)}</li>
-                    ))}
+                    {section.links
+                      .filter((link) => link.to !== '/register' || registrationOpen)
+                      .map((link) => (
+                        <li key={link.name}>{renderLink(link)}</li>
+                      ))}
                   </ul>
                 </div>
               ))}

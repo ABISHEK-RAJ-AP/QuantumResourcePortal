@@ -24,6 +24,7 @@ import { LandingChrome } from '@/components/marketing/LandingChrome'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import { MarketingContainer } from '@/components/ui/MarketingContainer'
 import { StudioFeatureGrid, type StudioFeatureItem } from '@/components/ui/StudioFeatureGrid'
+import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import { prefersReducedMotion } from '@/lib/motionPrefs'
 
 const ICON = 22
@@ -129,6 +130,7 @@ const FAQ = [
 
 export function LandingPage() {
   const location = useLocation()
+  const { allowed: registrationOpen } = usePublicRegistration()
   const heroTileRef = useRef<HTMLDivElement>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
@@ -246,9 +248,11 @@ export function LandingPage() {
 
           <section id="faq" className="landing-section" aria-labelledby="faq-title">
             <MarketingContainer narrow className="landing-faq-wrap">
-              <h2 id="faq-title" className="landing-section__title">
-                Questions
-              </h2>
+              <header className="landing-section__header">
+                <h2 id="faq-title" className="landing-section__title">
+                  Questions
+                </h2>
+              </header>
               <div className="landing-faq-list">
                 {FAQ.map((item, idx) => {
                   const open = openFaq === idx
@@ -279,14 +283,23 @@ export function LandingPage() {
             <MarketingContainer narrow>
               <div className="landing-final-cta">
                 <h2 id="final-cta-title">Open the workspace</h2>
-                <p>Sign in to your organization workspace, or register a new org on lab deployments.</p>
+                <p>
+                  Sign in to your organization workspace
+                  {registrationOpen ? ', or register a new org on lab deployments.' : '.'}
+                </p>
                 <div className="landing-hero__ctas">
                   <Link to="/login" className="btn-primary landing-cta-primary">
                     Sign in <ArrowRight size={18} aria-hidden />
                   </Link>
-                  <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
-                    Register organization
-                  </Link>
+                  {registrationOpen ? (
+                    <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
+                      Register organization
+                    </Link>
+                  ) : (
+                    <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
+                      Request access
+                    </Link>
+                  )}
                 </div>
               </div>
             </MarketingContainer>

@@ -189,6 +189,7 @@ export function RegisterPage() {
       <AuthBackdropSync username={adminUsername} password={password} captchaInput={captchaCode} />
       <header className="reg-cert-head qrp-register-flow__title-row">
         <h1>Register your organisation</h1>
+        <p>{AUTH_COPY.registerSubtitle}</p>
         <button type="button" className="qrp-register-flow__info" title={AUTH_COPY.registerOrgAside} aria-label="About organisation registration">
           i
         </button>

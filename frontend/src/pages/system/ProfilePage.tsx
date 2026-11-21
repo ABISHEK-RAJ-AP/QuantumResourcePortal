@@ -7,6 +7,7 @@ import { PaginatedSlice } from '@/components/data/PaginatedSlice'
 import { Card, Page, RelatedNav } from '@/components/layout/Page'
 import { useAuth } from '@/auth/hooks'
 import { formatPrincipalId, formatRole } from '@/lib/display'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 
 export function ProfilePage() {
   const { user, permissions, roles } = useAuth()
@@ -28,7 +29,7 @@ export function ProfilePage() {
     <Page
       crumbs={[{ label: 'Admin', to: '/qrp/settings' }, { label: 'Profile' }]}
       title="My profile"
-      description="Your identity, roles, and effective permissions within the organization you are signed into."
+      {...opsPageGuidance.profile}
       actions={
         <>
           <Link to="/qrp/organization" className="btn-ghost text-sm">

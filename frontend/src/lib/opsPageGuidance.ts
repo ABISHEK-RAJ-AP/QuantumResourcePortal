@@ -198,4 +198,17 @@ export const opsPageGuidance = {
     description: 'Effective capabilities.',
     descriptionHelp: 'Resolved from active role assignments at organization, project, or provider scope.',
   },
+  organization: {
+    description: 'Tenant identity and people.',
+    descriptionHelp:
+      'Organization profile, members, and invitations. Workloads, quotas, and audit stay scoped to this tenant on the CDAC platform.',
+  },
+  settings: {
+    description: 'Account and workspace preferences.',
+    descriptionHelp: 'Personal security and UI density. Organization profile and people live under Organization.',
+  },
+  profile: {
+    description: 'Roles and effective permissions.',
+    descriptionHelp: 'Capabilities resolved from assignments at organization, project, or provider scope.',
+  },
 } as const satisfies Record<string, PageGuidance>

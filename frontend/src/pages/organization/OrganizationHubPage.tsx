@@ -11,6 +11,7 @@ import { useAuth } from '@/auth/hooks'
 import { PermissionGate } from '@/auth/PermissionGate'
 import { Card, Page, RelatedNav } from '@/components/layout/Page'
 import { StatusBadge } from '@/components/status/StatusBadge'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { cn } from '@/lib/utils'
 
 import '@/styles/settings-workspace.css'
@@ -60,7 +61,7 @@ export function OrganizationHubPage() {
         { label: 'Organization' },
       ]}
       title="Organization"
-      description="Customer tenant on the CDAC platform — identity, people, projects, and consumption (Cert Studio Organisation hub)."
+      {...opsPageGuidance.organization}
     >
       <div className="qrp-settings">
         <div className="qrp-settings__shell">

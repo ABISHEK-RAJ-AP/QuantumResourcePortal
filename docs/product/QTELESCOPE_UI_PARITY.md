@@ -60,3 +60,5 @@ QRP reuses **layout, flow, and alignment** from mature Q-TeleScope (`Quantum_Mon
 2. Prefer existing auth primitives: `AuthPanel`, `AuthOutlineField`, `AuthRegisterWideShell`.
 3. Pull structure from TeleScope; swap strings to QRP `AUTH_COPY` / `opsPageGuidance`.
 4. Theme: Cert Studio CSS under `frontend/src/styles/cert-studio/`—do not copy TeleScope cyan hero into `/qrp/*`.
+
+**Flows and RBAC:** [QRP_FLOW_AND_STANDARDS.md](./QRP_FLOW_AND_STANDARDS.md).

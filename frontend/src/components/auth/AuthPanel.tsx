@@ -8,6 +8,7 @@ import { LogoMark } from '@/components/brand/LogoMark'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { MarketingContainer } from '@/components/ui/MarketingContainer'
+import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import '@/pages/public/loadCertLandingStyles'
 
 /** Cert Studio auth shell — intro scene + form-driven wire + centred glass card. */
@@ -117,6 +118,7 @@ export function AuthFooterLinks({
   showRegister?: boolean
   showHome?: boolean
 }) {
+  const { allowed: registrationOpen } = usePublicRegistration()
   const links: ReactNode[] = []
   if (showForgot) {
     links.push(
@@ -125,7 +127,7 @@ export function AuthFooterLinks({
       </Link>,
     )
   }
-  if (showRegister) {
+  if (showRegister && registrationOpen) {
     links.push(
       <Link key="register" className="fs-link font-semibold text-primary" to="/register">
         Register
