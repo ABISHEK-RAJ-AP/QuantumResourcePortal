@@ -61,7 +61,7 @@ export function PublicFooter({ variant = 'dark', className, compact = false }: P
   const renderLink = (link: FooterLink) => {
     if (link.to) {
       return (
-        <Link to={link.to} className={linkClass}>
+        <Link to={link.to} reloadDocument={compact && link.to === '/'} className={linkClass}>
           {link.name}
         </Link>
       )

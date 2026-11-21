@@ -43,7 +43,12 @@ export function PublicHeader({ className }: { className?: string }) {
     >
       <div className="qrp-public-header__inner">
         <div className="qrp-public-header__brand">
-          <Link to="/" className="group flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
+          <Link
+            to="/"
+            reloadDocument={pathname !== '/'}
+            className="group flex min-w-0 items-center gap-3"
+            onClick={() => setOpen(false)}
+          >
             <LogoMark className={cn('h-10 w-auto shrink-0 transition-transform group-hover:scale-105', dark && 'brightness-0 invert')} />
             <div className="flex min-w-0 flex-col text-left">
               <span className="truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-xl">
