@@ -10,6 +10,7 @@ import type { WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { parseForm } from '@/lib/validation/parseForm'
 import { assetImportSchema, assetRegisterSchema } from '@/lib/validation/schemas'
 import { cn } from '@/lib/utils'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { message } from '@/pages/workspace/screens'
 
 type Row = Record<string, unknown>
@@ -156,11 +157,7 @@ export function AssetRegisterWorkflow() {
     <Page
       crumbs={crumbs}
       title="Register asset"
-      description={
-        mode === 'bulk'
-          ? 'Bulk CSV import with validate-then-commit semantics.'
-          : 'One asset, one provider, one native id — then lifecycle under the asset record.'
-      }
+      {...opsPageGuidance.registerAsset}
       steps={WORKFLOW}
       stepIndex={step}
       workflowGuide={step < 3}

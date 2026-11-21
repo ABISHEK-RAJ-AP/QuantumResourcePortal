@@ -24,6 +24,7 @@ import { LandingChrome } from '@/components/marketing/LandingChrome'
 import { PublicShell } from '@/components/marketing/PublicShell'
 import { MarketingContainer } from '@/components/ui/MarketingContainer'
 import { StudioFeatureGrid, type StudioFeatureItem } from '@/components/ui/StudioFeatureGrid'
+import { useAuth } from '@/auth/hooks'
 import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import { prefersReducedMotion } from '@/lib/motionPrefs'
 
@@ -130,7 +131,10 @@ const FAQ = [
 
 export function LandingPage() {
   const location = useLocation()
+  const { user } = useAuth()
   const { allowed: registrationOpen } = usePublicRegistration()
+  const exploreTarget = user ? '/qrp/inventory' : '/login'
+  const exploreState = user ? undefined : { from: '/qrp/inventory' }
   const heroTileRef = useRef<HTMLDivElement>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
@@ -186,7 +190,7 @@ export function LandingPage() {
                     governance platform operated by C-DAC for Indian research infrastructure.
                   </p>
                   <div className="landing-hero__ctas">
-                    <Link to="/qrp/inventory" className="btn-primary landing-cta-primary">
+                    <Link to={exploreTarget} state={exploreState} className="btn-primary landing-cta-primary">
                       Explore resources <ArrowRight size={18} aria-hidden />
                     </Link>
                     <Link to="/login" className="btn-secondary landing-cta-secondary--glass">

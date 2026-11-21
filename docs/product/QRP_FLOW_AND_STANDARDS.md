@@ -6,8 +6,8 @@ Q-TeleScope patterns for **structure and operator UX**; **QRP domain** for route
 
 | Step | Route | Guard | Outcome |
 | --- | --- | --- | --- |
-| Marketing | `/` | — | Hash sections `#capabilities`, `#features`, `#workflow`, `#faq` |
-| Sign in | `/login` | `PublicOnly` | Session cookie → `safeReturnPath(from)` default `/qrp` |
+| Marketing | `/` | — | Hash sections `#capabilities`, `#features`, `#workflow`, `#faq`. **Explore resources** → `/qrp/inventory` when signed in, else `/login` with `from=/qrp/inventory`. |
+| Sign in | `/login` | `PublicOnly` | Session cookie → `safeReturnPath(from)` default `/qrp` (anonymous deep links pass `state.from`, e.g. inventory). |
 | Register org | `/register` | `PublicOnly` | Gated by API `organization_registration` / `self_registration`; closed → “Request access” copy |
 | Forgot / reset | `/forgot-password`, `/reset-password` | Public | Admin-assisted reset; token form when API enables it |
 | MFA | `/mfa` | Session partial | Shown when login returns `MFA_REQUIRED` |

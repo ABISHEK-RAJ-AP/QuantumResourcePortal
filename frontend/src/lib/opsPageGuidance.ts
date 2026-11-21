@@ -43,6 +43,10 @@ export const opsPageGuidance = {
     description: 'Register fleet before scheduling.',
     descriptionHelp: 'Catalogue assets and backends on the shared provider fabric.',
   },
+  registerAsset: {
+    description: 'Add assets to the catalogue.',
+    descriptionHelp: 'Single record or validated CSV import. Lifecycle and holds continue on the asset detail page.',
+  },
   backends: {
     description: 'Platform backend catalogue.',
     descriptionHelp: 'Queue telemetry and operational status visible to your organization.',
