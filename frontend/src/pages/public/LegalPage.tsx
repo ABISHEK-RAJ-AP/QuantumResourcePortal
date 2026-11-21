@@ -48,7 +48,7 @@ export function PrivacyPage() {
             Sign in
           </Link>
           {' · '}
-          <Link className="fs-link font-semibold" to="/">
+          <Link className="fs-link font-semibold" to="/" reloadDocument>
             Home
           </Link>
         </>
@@ -75,7 +75,7 @@ export function TermsPage() {
             Privacy (draft)
           </Link>
           {' · '}
-          <Link className="fs-link font-semibold" to="/">
+          <Link className="fs-link font-semibold" to="/" reloadDocument>
             Home
           </Link>
         </>
