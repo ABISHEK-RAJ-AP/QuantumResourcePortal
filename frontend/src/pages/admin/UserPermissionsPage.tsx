@@ -5,8 +5,9 @@ import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
 
 import * as rbac from '@/api/rbac'
-import { Card, Notice, Page, RelatedNav } from '@/components/layout/Page'
+import { Card, Notice, Page, PanelHeader, RelatedNav } from '@/components/layout/Page'
 import { moduleLabel } from '@/lib/rbacDisplay'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { cn } from '@/lib/utils'
 
 import '@/styles/access-workspace.css'
@@ -50,7 +51,7 @@ export function UserPermissionsPage() {
         { label: eff.data?.username ?? 'User' },
       ]}
       title={eff.data ? `Access · ${eff.data.username}` : 'User access'}
-      description="Effective organization capabilities from active role assignments (org, project, or provider scope)."
+      {...opsPageGuidance.adminUserPermissions}
       actions={
         <Link to="/qrp/admin/users" className="btn-ghost text-sm">
           Back to directory
@@ -66,14 +67,12 @@ export function UserPermissionsPage() {
       ) : (
         <div className="qrp-access max-w-3xl space-y-4">
           <Card>
-            <header className="mb-3">
-              <h2 className="text-base font-semibold">Capability areas</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                High-level modules this principal can use. Open technical scopes for permission codes.
-              </p>
-            </header>
+            <PanelHeader
+              title="Capability areas"
+              tip="High-level modules this principal can use. Open technical scopes for permission codes."
+            />
             {fullAccess ? (
-              <p className="text-sm text-muted-foreground">Full platform access — all capability areas enabled.</p>
+              <Notice tone="info">Full platform access — all capability areas enabled.</Notice>
             ) : (
               <ul className="qrp-access__caps" aria-label="Capability areas">
                 {capabilityCards.map((cap) => (

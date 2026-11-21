@@ -10,12 +10,14 @@ import { cn } from '@/lib/utils'
 export function ChartPanel({
   title,
   action,
+  tip,
   children,
   className,
   empty,
 }: {
   title: string
   action?: ReactNode
+  tip?: ReactNode
   children: (height: number) => ReactNode
   className?: string
   empty?: boolean
@@ -41,6 +43,7 @@ export function ChartPanel({
       <Card className={cn('space-y-2', className)}>
         <PanelHeader
           title={title}
+          tip={tip}
           action={
             <span className="flex flex-wrap items-center gap-1">
               {action}

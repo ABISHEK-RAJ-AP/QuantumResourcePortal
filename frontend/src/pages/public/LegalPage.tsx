@@ -8,7 +8,7 @@ export function PrivacyPage() {
   return (
     <PublicShell>
       <main id="main-content" className="qrp-landing-main mx-auto max-w-2xl py-10 text-left">
-        <h1 className="type-page-title type-trim">Privacy (draft)</h1>
+        <h1 className="type-page-title type-trim">Privacy</h1>
         <Card className="hyphenate mt-4 space-y-3 text-left text-sm leading-relaxed text-muted-foreground">
           <p>
             <strong className="text-foreground">Quantum Resource Portal</strong> stores account identifiers, role
@@ -20,7 +20,7 @@ export function PrivacyPage() {
         </Card>
         <p className="mt-4 text-sm">
           <Link className="fs-link" to="/legal/terms">
-            Terms (draft)
+            Terms of use
           </Link>
           {' · '}
           <Link className="fs-link" to="/login">
@@ -36,7 +36,7 @@ export function TermsPage() {
   return (
     <PublicShell>
       <main id="main-content" className="qrp-landing-main mx-auto max-w-2xl py-10 text-left">
-        <h1 className="type-page-title type-trim">Terms of use (draft)</h1>
+        <h1 className="type-page-title type-trim">Terms of use</h1>
         <Card className="hyphenate mt-4 space-y-3 text-left text-sm leading-relaxed text-muted-foreground">
           <p>
             Use this portal only if you are authorised by your organisation. Do not share credentials. Operational actions

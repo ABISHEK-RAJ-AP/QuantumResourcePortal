@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { startDemoSimulation } from '@/api/demoSimulation'
 import { seedPortalDemo } from '@/api/seedDemo'
 import { asList, qre } from '@/api/qre'
 import { useAuth } from '@/auth/hooks'
@@ -67,10 +68,20 @@ export function QrpQuickActionDock() {
   })
 
   const seed = useMutation({
-    mutationFn: seedPortalDemo,
+    mutationFn: async () => {
+      const r = await seedPortalDemo({ force: true })
+      if (r.source === 'backend') {
+        try {
+          await startDemoSimulation(1)
+        } catch {
+          /* optional */
+        }
+      }
+      return r
+    },
     onSuccess: (r) => {
       const src = r.source === 'backend' ? 'DB' : 'API'
-      setSeedMsg(`Demo (${src}): ${r.projects}p · ${r.approvals}w · ${r.reservations}r · ${r.members}u`)
+      setSeedMsg(`Demo (${src}): ${r.projects}p · ${r.approvals}w · ${r.reservations}r · ${r.members}u · sim on`)
       void client.invalidateQueries()
       setExpanded(false)
     },

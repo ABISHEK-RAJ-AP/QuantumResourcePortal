@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router'
 
@@ -17,6 +18,13 @@ export function MfaPage() {
 
   const ready = caps.data?.mfa_verification_available === true
   const required = caps.data?.mfa_required === true
+
+  useEffect(() => {
+    if (caps.isPending) return
+    if (!required && !challengeId) {
+      navigate(from, { replace: true })
+    }
+  }, [caps.isPending, challengeId, from, navigate, required])
 
   return (
     <AuthPanel
@@ -58,9 +66,11 @@ export function MfaPage() {
       ) : null}
 
       <div className="cert-auth-form__actions">
-        <button type="button" className="btn-primary qrp-auth-submit w-full sm:w-auto" onClick={() => navigate(from)}>
-          Continue to workspace
-        </button>
+        {required && challengeId ? (
+          <p className="cert-auth-prose text-sm text-muted-foreground">
+            Complete verification when your identity provider enables MFA challenge handling.
+          </p>
+        ) : null}
         <Link to="/login" className="cert-auth-form__secondary-link">
           Back to sign in
         </Link>

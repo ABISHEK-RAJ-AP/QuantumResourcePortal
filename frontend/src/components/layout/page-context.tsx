@@ -6,6 +6,8 @@ export type PageChrome = {
   eyebrow?: string
   title?: string
   description?: string
+  /** Longer guidance — shown in header InfoTip, not as a subtitle paragraph. */
+  descriptionHelp?: ReactNode
   crumbs?: Crumb[]
   /** Query refresh time — rendered once in the app header, not in page body. */
   updatedAt?: number
@@ -41,15 +43,24 @@ export function useOptionalPageChromeTitle() {
 }
 
 /** Publishes title/description/freshness into the app header. No-op outside the shell provider. */
-export function useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, actions, skip }: PageChrome) {
+export function useSetPageChrome({
+  eyebrow,
+  title,
+  description,
+  descriptionHelp,
+  crumbs,
+  updatedAt,
+  actions,
+  skip,
+}: PageChrome) {
   const ctx = useContext(PageChromeContext)
   const setChrome = ctx?.setChrome
   const crumbKey = crumbs?.map((c) => `${c.label}:${c.to ?? ''}`).join('|') ?? ''
   useEffect(() => {
     if (!setChrome || skip) return
-    setChrome({ eyebrow, title, description, crumbs, updatedAt, actions })
+    setChrome({ eyebrow, title, description, descriptionHelp, crumbs, updatedAt, actions })
     return () => setChrome({})
     // crumbs serialized via crumbKey to avoid identity churn
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eyebrow, title, description, crumbKey, updatedAt, actions, skip, setChrome])
+  }, [eyebrow, title, description, descriptionHelp, crumbKey, updatedAt, actions, skip, setChrome])
 }

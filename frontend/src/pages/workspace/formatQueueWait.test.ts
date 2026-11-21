@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatQueueWait } from '@/pages/workspace/continue'
+import { formatQueueWait } from '@/pages/workspace/operations/queue-wait'
 
 describe('formatQueueWait', () => {
   it('labels missing wait as Unavailable, never zero', () => {

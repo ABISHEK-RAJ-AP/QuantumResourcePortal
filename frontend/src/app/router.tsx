@@ -4,7 +4,6 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { AppShell } from '@/components/layout/chrome'
 import {
-  ApprovalHistoryPage,
   AlertDetailPage,
   AssetDetailPage,
   BackendDetailPage,
@@ -28,6 +27,7 @@ import {
 } from '@/pages/workspace/continue'
 import {
   ApprovalDetailPage,
+  ApprovalHistoryPage,
   ApprovalsPage,
   AuditPage,
   InventoryPage,

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { text } from '@/api/qre'
-import { EmptyState } from '@/components/layout/Page'
+import { EmptyState } from '@/components/data/EmptyState'
 import { ListPager } from '@/components/data/ListPager'
+import { cn } from '@/lib/utils'
 
 export type DataTableRow = Record<string, unknown>
 
@@ -12,6 +13,7 @@ export type DataTableColumn<T extends object = DataTableRow> = {
   render?: (row: T) => ReactNode
   /** Client-side sort by raw field value when true. */
   sortable?: boolean
+  align?: 'left' | 'right' | 'mono'
 }
 
 const PAGE_SIZES = [10, 20, 50, 100] as const
@@ -83,20 +85,26 @@ export function DataTable<T extends object = DataTableRow>({
   }, [sorted, page, pageSize, paginate])
 
   if (rows.length === 0) {
-    return <EmptyState title={emptyTitle} body={emptyBody} />
+    const emptyType =
+      typeof emptyBody === 'string' && emptyBody.toLowerCase().includes('filter') ? 'filtered' : 'first-time'
+    return <EmptyState type={emptyType} title={emptyTitle} description={emptyBody} />
   }
 
   return (
     <div className="space-y-0">
       <div className="scroll-bar-hidden overflow-x-auto">
-        <table className="data-table w-full text-left text-sm">
+        <table className="data-table w-full text-left">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>
-            <tr className="border-b border-border text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
+            <tr className="type-caption border-b border-border tracking-[0.12em] text-muted-foreground">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-3 py-2.5 font-semibold first:ps-0 last:pe-0"
+                  className={cn(
+                    'px-3 py-2.5 font-semibold first:ps-0 last:pe-0',
+                    col.align === 'right' && 'text-right',
+                    col.align === 'mono' && 'col-mono',
+                  )}
                   aria-sort={
                     col.sortable && sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined
                   }
@@ -132,7 +140,14 @@ export function DataTable<T extends object = DataTableRow>({
             {visible.map((row, index) => (
               <tr key={rowKey(row as DataTableRow, index)} className="border-b border-border/70 last:border-0">
                 {columns.map((col) => (
-                  <td key={col.key} className="px-3 py-2.5 align-middle first:ps-0 last:pe-0">
+                  <td
+                    key={col.key}
+                    className={cn(
+                      'px-3 py-2.5 align-middle first:ps-0 last:pe-0',
+                      col.align === 'right' && 'col-numeric',
+                      col.align === 'mono' && 'col-mono',
+                    )}
+                  >
                     {col.render ? col.render(row as T) : text(row as DataTableRow, col.key)}
                   </td>
                 ))}

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import * as rbac from '@/api/rbac'
 import { PaginatedSlice } from '@/components/data/PaginatedSlice'
 import { Card, EmptyState, Notice, Page, RelatedNav } from '@/components/layout/Page'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 
 export function PermissionsPage() {
   const permissions = useQuery({ queryKey: ['permissions'], queryFn: rbac.listPermissions })
@@ -28,7 +29,7 @@ export function PermissionsPage() {
         { label: 'Permissions' },
       ]}
       title="Permissions"
-      description="Organization capability catalogue (read-only). Grant permissions by editing a custom role."
+      {...opsPageGuidance.adminPermissions}
     >
       <Card>
         <input

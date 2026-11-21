@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -49,6 +49,27 @@ const ORG_TILES: {
   { id: 'other', label: 'Other', hint: 'Consortia and partnerships', icon: Layers },
 ]
 
+const REGISTER_DRAFT_KEY = 'qrp:register-draft:v1'
+
+type RegisterDraft = {
+  phase: RegisterFlowPhase
+  orgTypeId: OrgKindId
+  tenantCode: string
+  tenantName: string
+  adminUsername: string
+  adminDisplayName: string
+  email: string
+}
+
+function readRegisterDraft(): Partial<RegisterDraft> | null {
+  try {
+    const raw = sessionStorage.getItem(REGISTER_DRAFT_KEY)
+    return raw ? (JSON.parse(raw) as Partial<RegisterDraft>) : null
+  } catch {
+    return null
+  }
+}
+
 function mapOrgKind(id: OrgKindId): string {
   if (id === 'central_gov' || id === 'state_gov' || id === 'judiciary' || id === 'cag' || id === 'bfsi' || id === 'ngo') {
     return id === 'central_gov' || id === 'state_gov' ? 'psu' : 'other'
@@ -64,13 +85,14 @@ export function RegisterPage() {
   const caps = useQuery({ queryKey: authCapabilitiesKey, queryFn: fetchAuthCapabilities, staleTime: 60_000 })
   const selfReg = caps.data?.organization_registration ?? caps.data?.self_registration
   const captchaEnabled = useAuthCaptchaRequired()
-  const [phase, setPhase] = useState<RegisterFlowPhase>('type')
-  const [orgTypeId, setOrgTypeId] = useState<OrgKindId>('central_gov')
-  const [tenantCode, setTenantCode] = useState('')
-  const [tenantName, setTenantName] = useState('')
-  const [adminUsername, setAdminUsername] = useState('')
-  const [adminDisplayName, setAdminDisplayName] = useState('')
-  const [email, setEmail] = useState('')
+  const saved = readRegisterDraft()
+  const [phase, setPhase] = useState<RegisterFlowPhase>(saved?.phase ?? 'type')
+  const [orgTypeId, setOrgTypeId] = useState<OrgKindId>(saved?.orgTypeId ?? 'central_gov')
+  const [tenantCode, setTenantCode] = useState(saved?.tenantCode ?? '')
+  const [tenantName, setTenantName] = useState(saved?.tenantName ?? '')
+  const [adminUsername, setAdminUsername] = useState(saved?.adminUsername ?? '')
+  const [adminDisplayName, setAdminDisplayName] = useState(saved?.adminDisplayName ?? '')
+  const [email, setEmail] = useState(saved?.email ?? '')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [captchaId, setCaptchaId] = useState('')
@@ -79,6 +101,23 @@ export function RegisterPage() {
   const [banner, setBanner] = useState('')
   const [fieldError, setFieldError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const draft: RegisterDraft = {
+      phase,
+      orgTypeId,
+      tenantCode,
+      tenantName,
+      adminUsername,
+      adminDisplayName,
+      email,
+    }
+    try {
+      sessionStorage.setItem(REGISTER_DRAFT_KEY, JSON.stringify(draft))
+    } catch {
+      /* quota / private mode */
+    }
+  }, [phase, orgTypeId, tenantCode, tenantName, adminUsername, adminDisplayName, email])
 
   async function createOrg() {
     setBanner('')
@@ -111,6 +150,11 @@ export function RegisterPage() {
         captcha_id: captchaId || undefined,
         captcha_code: captchaCode || undefined,
       })
+      try {
+        sessionStorage.removeItem(REGISTER_DRAFT_KEY)
+      } catch {
+        /* ignore */
+      }
       navigate('/login', {
         replace: true,
         state: {

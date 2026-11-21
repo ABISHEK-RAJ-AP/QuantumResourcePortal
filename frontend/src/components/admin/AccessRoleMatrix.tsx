@@ -37,10 +37,10 @@ export function AccessRoleMatrix() {
 
   return (
     <Card className="space-y-3">
-      <PanelHeader title="Role capability matrix" />
-      <p className="text-sm text-muted-foreground">
-        Module coverage per active role. Assign roles in the user directory below.
-      </p>
+      <PanelHeader
+        title="Role capability matrix"
+        tip="Module coverage per active role. Assign roles from the Users tab."
+      />
       <DataState
         pending={pending}
         error={error ?? undefined}

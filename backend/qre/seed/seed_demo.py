@@ -18,7 +18,7 @@ from qre.seed.lab_credentials import LAB_UNIFIED_PASSWORD
 from qre.seed.validate import SeedValidationError, validate_demo_seed
 from qre.services.svc17_audit.service import write_audit
 
-DEMO_SEED_VERSION = "2026.11.demo.v1"
+DEMO_SEED_VERSION = "2026.11.demo.v2"
 DEMO_PASSWORD = LAB_UNIFIED_PASSWORD
 DEFAULT_STAGES = [
     {"id": "technical", "label": "Technical review"},
@@ -27,43 +27,154 @@ DEFAULT_STAGES = [
 ]
 
 PROJECT_SPECS = [
-    ("DEMO-PRJ-0001", "Quantum Materials Simulation", "active", "Density-functional VQE benchmarks on superconducting QPUs."),
-    ("DEMO-PRJ-0002", "Quantum Chemistry Benchmarking", "active", "Lithium hydride ground-state studies."),
-    ("DEMO-PRJ-0003", "Quantum Error Correction Evaluation", "active", "Surface-code memory experiments."),
-    ("DEMO-PRJ-0004", "Variational Quantum Algorithms", "active", "Hardware-aware ansatz compilation."),
-    ("DEMO-PRJ-0005", "Quantum Optimisation Research", "pending", "MaxCut approximations with QAOA."),
-    ("DEMO-PRJ-0006", "Quantum Machine Learning Experiments", "active", "Kernel methods on NISQ devices."),
-    ("DEMO-PRJ-0007", "Quantum Circuit Compilation Study", "active", "Routing constraints on heavy-hex topology."),
-    ("DEMO-PRJ-0008", "Quantum Hardware Characterisation", "active", "RB and T1 surveys across backends."),
-    ("DEMO-PRJ-0009", "Near Expiry Allocation Study", "expiring", "Final allocation burn-down before renewal."),
+    (
+        "DEMO-PRJ-0001",
+        "Quantum Materials Simulation",
+        "active",
+        "Density-functional VQE benchmarks on superconducting QPUs.",
+    ),
+    (
+        "DEMO-PRJ-0002",
+        "Quantum Chemistry Benchmarking",
+        "active",
+        "Lithium hydride ground-state studies.",
+    ),
+    (
+        "DEMO-PRJ-0003",
+        "Quantum Error Correction Evaluation",
+        "active",
+        "Surface-code memory experiments.",
+    ),
+    (
+        "DEMO-PRJ-0004",
+        "Variational Quantum Algorithms",
+        "active",
+        "Hardware-aware ansatz compilation.",
+    ),
+    (
+        "DEMO-PRJ-0005",
+        "Quantum Optimisation Research",
+        "pending",
+        "MaxCut approximations with QAOA.",
+    ),
+    (
+        "DEMO-PRJ-0006",
+        "Quantum Machine Learning Experiments",
+        "active",
+        "Kernel methods on NISQ devices.",
+    ),
+    (
+        "DEMO-PRJ-0007",
+        "Quantum Circuit Compilation Study",
+        "active",
+        "Routing constraints on heavy-hex topology.",
+    ),
+    (
+        "DEMO-PRJ-0008",
+        "Quantum Hardware Characterisation",
+        "active",
+        "RB and T1 surveys across backends.",
+    ),
+    (
+        "DEMO-PRJ-0009",
+        "Near Expiry Allocation Study",
+        "expiring",
+        "Final allocation burn-down before renewal.",
+    ),
     ("DEMO-PRJ-0010", "Completed Outreach Programme", "completed", "Archived teaching workloads."),
 ]
 
 PROVIDER_SPECS = [
-    ("demo-ibm", "IBM Quantum (demonstration)", "active", {"stage": "I3", "manifest_registered": True, "label": "DEMO — not production-connected"}),
-    ("demo-ionq", "IonQ (demonstration)", "active", {"stage": "I2", "manifest_registered": False, "label": "configured-not-verified"}),
-    ("demo-rigetti", "Rigetti (demonstration)", "suspended", {"stage": "I1", "manifest_registered": False, "label": "unavailable"}),
-    ("demo-quantinuum", "Quantinuum (demonstration)", "active", {"stage": "I4", "manifest_registered": True, "label": "connected-test-adapter"}),
-    ("demo-cdac-sim", "C-DAC local simulator", "active", {"stage": "I5", "manifest_registered": True, "label": "simulator"}),
-    ("demo-institutional", "Institutional test simulator", "active", {"stage": "I5", "manifest_registered": True, "label": "demonstration-only"}),
+    (
+        "demo-ibm",
+        "IBM Quantum (demonstration)",
+        "active",
+        {"stage": "I3", "manifest_registered": True, "label": "DEMO — not production-connected"},
+    ),
+    (
+        "demo-ionq",
+        "IonQ (demonstration)",
+        "active",
+        {"stage": "I2", "manifest_registered": False, "label": "configured-not-verified"},
+    ),
+    (
+        "demo-rigetti",
+        "Rigetti (demonstration)",
+        "suspended",
+        {"stage": "I1", "manifest_registered": False, "label": "unavailable"},
+    ),
+    (
+        "demo-quantinuum",
+        "Quantinuum (demonstration)",
+        "active",
+        {"stage": "I4", "manifest_registered": True, "label": "connected-test-adapter"},
+    ),
+    (
+        "demo-cdac-sim",
+        "C-DAC local simulator",
+        "active",
+        {"stage": "I5", "manifest_registered": True, "label": "simulator"},
+    ),
+    (
+        "demo-institutional",
+        "Institutional test simulator",
+        "active",
+        {"stage": "I5", "manifest_registered": True, "label": "demonstration-only"},
+    ),
 ]
 
 BACKEND_TEMPLATE = [
     ("demo-ibm-torino", "demo-ibm", "ibm_torino", 133, "superconducting", "ONLINE", 1024, 100),
     ("demo-ibm-kyoto", "demo-ibm", "ibm_kyoto", 127, "superconducting", "ONLINE", 8192, 80),
     ("demo-ionq-forte", "demo-ionq", "ionq_forte", 36, "trapped_ion", "ONLINE", 4096, 60),
-    ("demo-rigetti-aspen", "demo-rigetti", "aspen_m3", 79, "superconducting", "MAINTENANCE", 2048, 50),
+    (
+        "demo-rigetti-aspen",
+        "demo-rigetti",
+        "aspen_m3",
+        79,
+        "superconducting",
+        "MAINTENANCE",
+        2048,
+        50,
+    ),
     ("demo-quantinuum-h2", "demo-quantinuum", "h2", 56, "trapped_ion", "ONLINE", 8192, 40),
     ("demo-cdac-qsim32", "demo-cdac-sim", "qsim32", 32, "simulator", "ONLINE", 1_000_000, 999),
     ("demo-cdac-qsim64", "demo-cdac-sim", "qsim64", 64, "simulator", "ONLINE", 1_000_000, 999),
     ("demo-cdac-qsim128", "demo-cdac-sim", "qsim128", 128, "simulator", "ONLINE", 500_000, 999),
-    ("demo-inst-qasm", "demo-institutional", "qasm_simulator", 40, "simulator", "ONLINE", 2_000_000, 999),
+    (
+        "demo-inst-qasm",
+        "demo-institutional",
+        "qasm_simulator",
+        40,
+        "simulator",
+        "ONLINE",
+        2_000_000,
+        999,
+    ),
     ("demo-ibm-mumbai", "demo-ibm", "ibm_mumbai", 27, "superconducting", "OFFLINE", 4096, 30),
     ("demo-ionq-aria", "demo-ionq", "ionq_aria", 25, "trapped_ion", "ONLINE", 4096, 55),
     ("demo-quantinuum-h1", "demo-quantinuum", "h1", 20, "trapped_ion", "ONLINE", 4096, 35),
-    ("demo-ibm-sherbrooke", "demo-ibm", "ibm_sherbrooke", 127, "superconducting", "ONLINE", 8192, 75),
+    (
+        "demo-ibm-sherbrooke",
+        "demo-ibm",
+        "ibm_sherbrooke",
+        127,
+        "superconducting",
+        "ONLINE",
+        8192,
+        75,
+    ),
     ("demo-cdac-noisy", "demo-cdac-sim", "noisy_density", 20, "simulator", "ONLINE", 500_000, 999),
-    ("demo-inst-analog", "demo-institutional", "analog_demo", 8, "simulator", "ONLINE", 100_000, 999),
+    (
+        "demo-inst-analog",
+        "demo-institutional",
+        "analog_demo",
+        8,
+        "simulator",
+        "ONLINE",
+        100_000,
+        999,
+    ),
 ]
 
 DEMO_USERS = [
@@ -89,16 +200,20 @@ def _demo_topology_for_qubits(qubit_count: int) -> dict[str, Any]:
 
 
 def _enrich_demo_backend_topologies(conn: Connection, tenant_id: str) -> int:
-    rows = conn.execute(
-        text(
-            """
+    rows = (
+        conn.execute(
+            text(
+                """
             SELECT backend_id, qubit_count, topology
             FROM catalogue_backend
             WHERE tenant_id = :t AND backend_id LIKE 'demo-%'
             """
-        ),
-        {"t": tenant_id},
-    ).mappings().all()
+            ),
+            {"t": tenant_id},
+        )
+        .mappings()
+        .all()
+    )
     updated = 0
     for row in rows:
         topo = row.get("topology") if isinstance(row.get("topology"), dict) else {}
@@ -140,10 +255,14 @@ def _env_blocks_seed() -> None:
 
 
 def _resolve_tenant(conn: Connection, tenant_code: str) -> tuple[str, str]:
-    row = conn.execute(
-        text("SELECT tenant_id, code FROM tenant WHERE lower(code) = lower(:c)"),
-        {"c": tenant_code.strip()},
-    ).mappings().first()
+    row = (
+        conn.execute(
+            text("SELECT tenant_id, code FROM tenant WHERE lower(code) = lower(:c)"),
+            {"c": tenant_code.strip()},
+        )
+        .mappings()
+        .first()
+    )
     if not row:
         raise SeedDemoError(
             f"Tenant '{tenant_code}' not found — bootstrap first "
@@ -153,7 +272,9 @@ def _resolve_tenant(conn: Connection, tenant_code: str) -> tuple[str, str]:
 
 
 def _seed_marker(conn: Connection, tenant_id: str) -> str | None:
-    raw = conn.execute(text("SELECT settings FROM tenant WHERE tenant_id = :t"), {"t": tenant_id}).scalar()
+    raw = conn.execute(
+        text("SELECT settings FROM tenant WHERE tenant_id = :t"), {"t": tenant_id}
+    ).scalar()
     settings = raw if isinstance(raw, dict) else {}
     val = settings.get("demo_seed_version")
     return str(val) if val else None
@@ -184,7 +305,9 @@ def _set_seed_marker(conn: Connection, tenant_id: str) -> None:
 
 
 def _role_id(conn: Connection, code: str) -> str:
-    rid = conn.execute(text("SELECT role_id FROM role WHERE code = :c AND is_system"), {"c": code}).scalar()
+    rid = conn.execute(
+        text("SELECT role_id FROM role WHERE code = :c AND is_system"), {"c": code}
+    ).scalar()
     if not rid:
         raise SeedDemoError(f"System role {code} missing — run migrations.")
     return str(rid)
@@ -278,6 +401,157 @@ def _grant_role(
             "g": granted_by,
         },
     )
+
+
+def _seed_demo_operations(conn: Connection, tenant_id: str) -> None:
+    """Incidents and alerts — idempotent by title; safe to run on partial legacy seeds."""
+
+    incident_specs = [
+        (
+            "[DEMO] Queue congestion on demo-ibm-torino",
+            "INVESTIGATING",
+            "WARNING",
+            "demo-ibm-torino",
+            "Elevated pending_jobs snapshot — demonstration only.",
+        ),
+        (
+            "[DEMO] Dispatch failures on demo-rigetti-aspen",
+            "ACKNOWLEDGED",
+            "CRITICAL",
+            "demo-rigetti-aspen",
+            "Repeated dispatch_failed rows during maintenance window.",
+        ),
+        (
+            "[DEMO] Simulator saturation on demo-cdac-qsim64",
+            "OPEN",
+            "WARNING",
+            "demo-cdac-qsim64",
+            "Synthetic queue depth exceeds lab comfort threshold.",
+        ),
+        (
+            "[DEMO] Credential rotation rehearsal",
+            "RESOLVED",
+            "INFO",
+            None,
+            "Closed after connector manifest re-check (demo).",
+        ),
+        (
+            "[DEMO] Quota burn-down on DEMO-PRJ-0009",
+            "INVESTIGATING",
+            "WARNING",
+            "demo-ionq-forte",
+            "Near-expiry project approaching daily simulation cap.",
+        ),
+        (
+            "[DEMO] Offline backend demo-ibm-mumbai",
+            "OPEN",
+            "CRITICAL",
+            "demo-ibm-mumbai",
+            "Operational status OFFLINE — fleet mix sample.",
+        ),
+        (
+            "[DEMO] Provider adapter latency",
+            "ACKNOWLEDGED",
+            "INFO",
+            "demo-quantinuum-h2",
+            "Elevated round-trip on test adapter — not production.",
+        ),
+        (
+            "[DEMO] Reservation overlap triage",
+            "CLOSED",
+            "INFO",
+            "demo-ibm-sherbrooke",
+            "Overlapping holds resolved during seed scenario.",
+        ),
+    ]
+    primary_incident_id: str | None = None
+    incident_ids: list[str] = []
+    for title, status, severity, backend, summary in incident_specs:
+        existing = conn.execute(
+            text(
+                """
+              SELECT incident_id FROM ops_incident
+              WHERE tenant_id = :t AND title = :title
+              LIMIT 1
+              """
+            ),
+            {"t": tenant_id, "title": title},
+        ).scalar()
+        if existing:
+            iid = str(existing)
+        else:
+            iid = new_ulid()
+            conn.execute(
+                text(
+                    """
+                  INSERT INTO ops_incident (
+                      incident_id, tenant_id, title, summary, status, severity, backend_id, owner
+                  ) VALUES (
+                      :id, :t, :title, :sum, :st, :sev, :b, 'demo_operator'
+                  )
+                  """
+                ),
+                {
+                    "id": iid,
+                    "t": tenant_id,
+                    "title": title,
+                    "sum": summary,
+                    "st": status,
+                    "sev": severity,
+                    "b": backend,
+                },
+            )
+        incident_ids.append(iid)
+        if primary_incident_id is None and status == "INVESTIGATING":
+            primary_incident_id = iid
+
+    if primary_incident_id is None and incident_ids:
+        primary_incident_id = incident_ids[0]
+
+    alert_specs = [
+        ("CRITICAL", "ACTIVE", "Calibration staleness", "demo-quantinuum-h2", True),
+        ("WARNING", "ACTIVE", "Quota threshold warning", None, False),
+        ("INFO", "ACKNOWLEDGED", "Provider degradation", "demo-ionq", False),
+        ("WARNING", "ACTIVE", "Queue depth rising", "demo-ibm-torino", True),
+        ("CRITICAL", "ACTIVE", "Dispatch failure burst", "demo-rigetti-aspen", True),
+        ("INFO", "RESOLVED", "Maintenance window ended", "demo-rigetti-aspen", False),
+        ("WARNING", "ACKNOWLEDGED", "Simulator backlog", "demo-cdac-qsim64", False),
+        ("INFO", "ACTIVE", "Connector manifest drift", None, False),
+        ("WARNING", "ACTIVE", "Reservation overlap", "demo-ibm-sherbrooke", False),
+        ("CRITICAL", "ACTIVE", "Backend offline", "demo-ibm-mumbai", True),
+    ]
+    for severity, status, title, backend, link_incident in alert_specs:
+        demo_title = f"[DEMO] {title}"
+        exists = conn.execute(
+            text("SELECT 1 FROM ops_alert WHERE tenant_id = :t AND title = :title LIMIT 1"),
+            {"t": tenant_id, "title": demo_title},
+        ).scalar()
+        if exists:
+            continue
+        conn.execute(
+            text(
+                """
+              INSERT INTO ops_alert (
+                  alert_id, tenant_id, backend_id, incident_id, severity, status,
+                  title, message, current_value, threshold_value
+              ) VALUES (
+                  :id, :t, :b, :inc, :sev, :st, :title, :msg, :cur, :thr
+              )
+              """
+            ),
+            {
+                "id": new_ulid(),
+                "t": tenant_id,
+                "b": backend,
+                "inc": primary_incident_id if link_incident else None,
+                "sev": severity,
+                "st": status,
+                "title": demo_title,
+                "msg": "Demonstration alert — not live provider telemetry.",
+                "cur": 87 + (hash(title) % 10),
+                "thr": 80,
+            },
+        )
 
 
 def seed_demo_reset(conn: Connection, *, tenant_code: str) -> dict[str, int]:
@@ -378,7 +652,14 @@ def seed_demo(
 
     marker = _seed_marker(conn, tenant_id)
     if marker == DEMO_SEED_VERSION and not force:
-        counts = validate_demo_seed(conn, tenant_id) if not skip_validate else {}
+        if skip_validate:
+            counts: dict[str, int] = {}
+        else:
+            try:
+                counts = validate_demo_seed(conn, tenant_id)
+            except SeedValidationError:
+                _seed_demo_operations(conn, tenant_id)
+                counts = validate_demo_seed(conn, tenant_id)
         return SeedDemoResult(tenant_id, code, False, counts, [u[0] for u in DEMO_USERS])
 
     if force:
@@ -492,9 +773,7 @@ def seed_demo(
 
     for prov_id, name, status, integration in PROVIDER_SPECS:
         exists = conn.execute(
-            text(
-                "SELECT 1 FROM catalogue_provider WHERE tenant_id = :t AND provider_id = :p"
-            ),
+            text("SELECT 1 FROM catalogue_provider WHERE tenant_id = :t AND provider_id = :p"),
             {"t": tenant_id, "p": prov_id},
         ).scalar()
         if exists:
@@ -528,9 +807,7 @@ def seed_demo(
         queue_depth,
     ) in BACKEND_TEMPLATE:
         exists = conn.execute(
-            text(
-                "SELECT 1 FROM catalogue_backend WHERE tenant_id = :t AND backend_id = :b"
-            ),
+            text("SELECT 1 FROM catalogue_backend WHERE tenant_id = :t AND backend_id = :b"),
             {"t": tenant_id, "b": backend_id},
         ).scalar()
         if exists:
@@ -865,64 +1142,16 @@ def seed_demo(
                 "tl": json.dumps(
                     [
                         {"state": "QUEUED", "at": submitted_at.isoformat()},
-                        {"state": jstatus, "at": (submitted_at + timedelta(minutes=15)).isoformat()},
+                        {
+                            "state": jstatus,
+                            "at": (submitted_at + timedelta(minutes=15)).isoformat(),
+                        },
                     ]
                 ),
             },
         )
 
-    incident_id = new_ulid()
-    conn.execute(
-        text(
-            """
-            INSERT INTO ops_incident (
-                incident_id, tenant_id, title, summary, status, severity, backend_id, owner
-            ) VALUES (
-                :id, :t, :title, :sum, 'INVESTIGATING', 'WARNING', :b, 'demo_operator'
-            )
-            ON CONFLICT DO NOTHING
-            """
-        ),
-        {
-            "id": incident_id,
-            "t": tenant_id,
-            "title": "[DEMO] Queue congestion on demo-ibm-torino",
-            "sum": "Elevated pending_jobs snapshot — demonstration only.",
-            "b": "demo-ibm-torino",
-        },
-    )
-
-    alert_specs = [
-        ("CRITICAL", "ACTIVE", "Calibration staleness", "demo-quantinuum-h2"),
-        ("WARNING", "ACTIVE", "Quota threshold warning", None),
-        ("INFO", "ACKNOWLEDGED", "Provider degradation", "demo-ionq"),
-    ]
-    for severity, status, title, backend in alert_specs:
-        conn.execute(
-            text(
-                """
-                INSERT INTO ops_alert (
-                    alert_id, tenant_id, backend_id, incident_id, severity, status,
-                    title, message, current_value, threshold_value
-                ) VALUES (
-                    :id, :t, :b, :inc, :sev, :st, :title, :msg, :cur, :thr
-                )
-                ON CONFLICT DO NOTHING
-                """
-            ),
-            {
-                "id": new_ulid(),
-                "t": tenant_id,
-                "b": backend,
-                "inc": incident_id if "congestion" in title.lower() else None,
-                "sev": severity,
-                "st": status,
-                "title": f"[DEMO] {title}",
-                "msg": "Demonstration alert — not live provider telemetry.",
-                "cur": 87,
-                "thr": 80,
-            },
-        )
+    _seed_demo_operations(conn, tenant_id)
 
     if hero_workload_id:
         write_audit(

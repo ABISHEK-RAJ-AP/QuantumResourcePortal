@@ -31,6 +31,11 @@ migrate:  ## Apply database migrations to the development database
 seed-demo:  ## Load interconnected demo dataset (QRE_ENV=lab, existing tenant)
 	cd backend && QRE_ENV=lab .venv/bin/python -m qre seed-demo --tenant-code $(QRE_DEMO_TENANT_CODE)
 
+demo-data:  ## Postgres (if available) → migrate → full demo seed — populates all workspace APIs
+	bash scripts/vm-ensure-postgres.sh
+	$(MAKE) migrate
+	cd backend && QRE_ENV=lab .venv/bin/python -m qre seed-demo --tenant-code $(QRE_DEMO_TENANT_CODE) --force
+
 dev-api:  ## Run the FastAPI backend with auto-reload on :8010 (not Q-TeleScope :8000)
 	cd backend && .venv/bin/uvicorn qre.main:app --reload --host 127.0.0.1 --port $(QRP_API_PORT)
 

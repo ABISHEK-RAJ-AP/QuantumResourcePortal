@@ -32,8 +32,7 @@ export function AccessRolesPanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">System roles are fixed; create organization roles from the catalogue.</p>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <PermissionGate permission="role:create">
           <Link to="/qrp/admin/roles/new" className="btn-primary text-sm">
             New role

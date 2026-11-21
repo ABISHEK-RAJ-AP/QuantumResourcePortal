@@ -1,37 +1,23 @@
 import { Link } from 'react-router'
 
-import { AuthCaptchaBlock } from '@/components/auth/AuthCaptchaBlock'
-import { AuthBackdropSync } from '@/components/auth/authBackdrop'
 import { AuthFooterLinks, AuthPanel } from '@/components/auth/AuthPanel'
-import { useAuthCaptchaRequired } from '@/hooks/useAuthCaptchaRequired'
-import { useState } from 'react'
 
-/** Self-service reset lands in a later identity slice; captcha shown for parity with login. */
+/** Backend password reset is not enabled (501); no captcha or submit until API ships. */
 export function ForgotPasswordPage() {
-  const captchaEnabled = useAuthCaptchaRequired()
-  const [captchaCode, setCaptchaCode] = useState('')
-  const [, setCaptchaId] = useState('')
-  const [, setCaptchaOn] = useState(false)
-
   return (
     <AuthPanel
       title="Password reset"
       subtitle="Administrator-assisted password reset"
       footer={<AuthFooterLinks showRegister />}
     >
-      <AuthBackdropSync captchaInput={captchaCode} />
       <p className="cert-auth-prose">
-        Self-service email reset is not enabled on this deployment. Contact your organization administrator for a reset
-        token, then use Set new password with that token.
+        Self-service password reset is not available on this deployment. Contact your system administrator to request a
+        reset. If your administrator issued a reset token, open{' '}
+        <Link to="/reset-password" className="fs-link">
+          Set new password
+        </Link>{' '}
+        and follow their instructions.
       </p>
-      {captchaEnabled ? (
-        <AuthCaptchaBlock
-          captchaCode={captchaCode}
-          onCodeChange={setCaptchaCode}
-          onChallenge={setCaptchaId}
-          onAvailability={setCaptchaOn}
-        />
-      ) : null}
       <Link className="btn-primary qrp-auth-submit auth-cta w-full" to="/login">
         Back to sign in
       </Link>

@@ -157,7 +157,7 @@
 .type-desc-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
@@ -168,9 +168,9 @@
 }
 
 .qrp-page-desc {
-  max-width: 42rem;
-  font-size: 0.875rem;
-  line-height: 1.55;
+  max-width: 36rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
   color: var(--muted-foreground);
 }
 

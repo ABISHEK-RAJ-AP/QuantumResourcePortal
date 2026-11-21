@@ -85,7 +85,7 @@ export function LoginPage() {
         const generic =
           err.status === 401
             ? showLabCredentialsHint
-              ? `Sign-in failed. Use ${LAB_ADMIN_USER} or any demo role with password ${LAB_UNIFIED_PASSWORD}. Restart the API after migrate if the account was just created.`
+              ? 'Sign-in failed. Check username and password, or expand Lab sign-in credentials below.'
               : 'Sign-in failed. Check username and password.'
             : err.detail || 'Sign in failed'
         setBanner(Object.keys(mapped).length ? '' : generic)

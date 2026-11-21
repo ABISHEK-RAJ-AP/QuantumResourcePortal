@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { asList, qre } from '@/api/qre'
+import { startDemoSimulation } from '@/api/demoSimulation'
 import { seedPortalDemo } from '@/api/seedDemo'
 import { useAuth } from '@/auth/hooks'
 import { demoActionsAllowed } from '@/lib/demo'
@@ -32,7 +33,12 @@ export function useEnsureDemoData() {
         const empty =
           projects.length === 0 && inventory.length === 0 && Number(summary.queue ?? 0) === 0
         if (!empty) return
-        await seedPortalDemo()
+        await seedPortalDemo({ force: true })
+        try {
+          await startDemoSimulation(1)
+        } catch {
+          /* simulation optional */
+        }
         sessionStorage.setItem(SESSION_KEY, '1')
         await queryClient.invalidateQueries()
       } catch {

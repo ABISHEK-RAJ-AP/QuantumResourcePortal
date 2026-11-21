@@ -18,7 +18,10 @@ export type RelatedLink = {
 
 export type NextAction = {
   title: string
-  body: string
+  /** One-line sidebar copy; put detail in `help`. */
+  body?: string
+  /** InfoTip on the Next action panel. */
+  help?: ReactNode
   primary?: { to?: string; label: string; onClick?: () => void; disabled?: boolean }
   secondary?: { to?: string; label: string; onClick?: () => void }
   blockers?: string[]
@@ -87,9 +90,9 @@ export function RecordWorkspace({
       <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
         {nextAction ? (
           <Card className="space-y-3">
-            <PanelHeader title="Next action" />
+            <PanelHeader title="Next action" tip={nextAction.help} />
             <p className="text-sm font-semibold">{nextAction.title}</p>
-            <p className="text-sm text-muted-foreground">{nextAction.body}</p>
+            {nextAction.body ? <p className="text-sm text-muted-foreground">{nextAction.body}</p> : null}
             {nextAction.blockers && nextAction.blockers.length > 0 ? (
               <ul className="space-y-1 text-xs text-critical">
                 {nextAction.blockers.map((b) => (

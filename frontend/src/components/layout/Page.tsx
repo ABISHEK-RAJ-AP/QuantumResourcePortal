@@ -7,12 +7,14 @@ import type { StatusTone } from '@/components/status/StatusBadge'
 import { WorkflowGuide } from '@/components/workflow/WorkflowGuide'
 import { WorkflowSteps, type WorkflowStep } from '@/components/workflow/WorkflowSteps'
 import { useSetPageChrome } from '@/components/layout/page-context'
+import { InfoTip } from '@/components/ui/InfoTip'
 import { cn } from '@/lib/utils'
 
 export function Page({
   eyebrow,
   title,
   description,
+  descriptionHelp,
   crumbs,
   updatedAt,
   steps,
@@ -24,6 +26,7 @@ export function Page({
   eyebrow?: string
   title: string
   description?: string
+  descriptionHelp?: ReactNode
   crumbs?: Crumb[]
   /** Shown in shell header only — do not also render DataFreshness in the body. */
   updatedAt?: number
@@ -36,7 +39,7 @@ export function Page({
   actions?: ReactNode
   children?: ReactNode
 }) {
-  useSetPageChrome({ eyebrow, title, description, crumbs, updatedAt, actions })
+  useSetPageChrome({ eyebrow, title, description, descriptionHelp, crumbs, updatedAt, actions })
 
   const activeStep =
     workflowGuide && steps && steps.length > 0 && stepIndex != null && stepIndex >= 0
@@ -44,7 +47,7 @@ export function Page({
       : undefined
 
   return (
-    <div className="flex w-full max-w-none flex-col gap-3">
+    <div className="page-stack flex w-full flex-col gap-[var(--section-gap)]">
       {steps && steps.length > 0 ? (
         <section className="craft-card rounded-xl border border-border bg-card px-4 py-3 shadow-card">
           <WorkflowSteps steps={steps} current={stepIndex ?? null} />
@@ -66,6 +69,7 @@ export function MetricTile({
   label,
   value,
   hint,
+  labelTip,
   tone = 'neutral',
   compact = false,
   to,
@@ -75,6 +79,8 @@ export function MetricTile({
   label: string
   value: unknown
   hint?: string
+  /** Detail for the label — InfoTip beside the label (hint stays one short line under the value). */
+  labelTip?: ReactNode
   tone?: 'neutral' | 'primary' | 'success' | 'warning' | 'critical'
   compact?: boolean
   /** When set, tile is a full-surface link (keyboard + pointer). */
@@ -103,7 +109,14 @@ export function MetricTile({
   const body = (
     <>
       <p className={cn('acr font-semibold text-muted-foreground', compact ? 'text-[11px]' : 'text-xs')}>
-        {label}
+        <span className="inline-flex items-center gap-0.5">
+          {label}
+          {labelTip ? (
+            <InfoTip label={`About ${label}`} className="-my-1">
+              {labelTip}
+            </InfoTip>
+          ) : null}
+        </span>
       </p>
       <p
         className={cn(
@@ -144,16 +157,26 @@ export function RelatedNav(_props: { items: RelatedNavItem[]; className?: string
 export function PanelHeader({
   title,
   action,
+  tip,
   children,
 }: {
   title: string
   action?: ReactNode
+  /** Optional detail beside the section title (InfoTip). */
+  tip?: ReactNode
   /** When set, nested tables inherit this caption unless they pass their own. */
   children?: ReactNode
 }) {
   const head = (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="type-section-title type-title-clamp">{title}</h2>
+      <div className="flex min-w-0 items-center gap-1">
+        <h2 className="type-section-title type-title-clamp">{title}</h2>
+        {tip ? (
+          <InfoTip label={title} className="-my-0.5 shrink-0">
+            {tip}
+          </InfoTip>
+        ) : null}
+      </div>
       {action}
     </div>
   )
@@ -166,30 +189,34 @@ export function PanelHeader({
   )
 }
 
-export function EmptyState({
+export function PageHeader({
   title,
-  body,
-  action,
+  description,
+  actions,
+  badge,
+  className,
 }: {
   title: string
-  body: ReactNode
-  action?: ReactNode
+  description?: string
+  actions?: ReactNode
+  badge?: ReactNode
+  className?: string
 }) {
-  const showBody =
-    body != null &&
-    body !== '' &&
-    body !== '—' &&
-    !(typeof body === 'string' && body.trim() === '—')
   return (
-    <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-muted/15 px-3 py-2.5">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold leading-snug">{title}</p>
-        {showBody ? <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{body}</div> : null}
+    <header className={cn('flex flex-wrap items-start justify-between gap-3', className)}>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="type-page-title type-trim">{title}</h2>
+          {badge}
+        </div>
+        {description ? <p className="qrp-page-desc type-desc-clamp mt-1">{description}</p> : null}
       </div>
-      {action}
-    </div>
+      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+    </header>
   )
 }
+
+export { EmptyState, type EmptyStateProps, type EmptyStateType } from '@/components/data/EmptyState'
 
 export function Notice({
   tone = 'critical',
@@ -285,13 +312,13 @@ const STATE_TONE: Record<string, StatusTone> = {
   paused: 'warning',
   queued: 'warning',
   moderate: 'info',
-  submitted_for_review: 'warning',
+  submitted_for_review: 'info',
   in_review: 'warning',
   changes_requested: 'warning',
   pending_review: 'warning',
   maintenance: 'warning',
   rejected: 'critical',
-  withdrawn: 'critical',
+  withdrawn: 'neutral',
   suspended: 'critical',
   failed: 'critical',
   cancelled: 'critical',

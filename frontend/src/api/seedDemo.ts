@@ -21,12 +21,12 @@ type BackendSeedPayload = {
  * Prefer backend PostgreSQL seed (interconnected demo). Falls back to legacy API chaining when
  * the lab-only admin route is unavailable.
  */
-export async function seedPortalDemo(): Promise<SeedDemoResult> {
+export async function seedPortalDemo(opts?: { force?: boolean }): Promise<SeedDemoResult> {
   const errors: string[] = []
   try {
     const res = await qre<BackendSeedPayload>('/admin/seed-demo', {
       method: 'POST',
-      body: JSON.stringify({ force: false }),
+      body: JSON.stringify({ force: Boolean(opts?.force) }),
     })
     const counts = res.counts ?? {}
     return {

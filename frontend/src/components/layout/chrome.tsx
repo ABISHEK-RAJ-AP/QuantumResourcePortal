@@ -1,28 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Boxes,
-  Building2,
-  CalendarClock,
-  ChevronDown,
-  ClipboardList,
-  Gauge,
-  LayoutDashboard,
-  LogOut,
-  Scale,
-  PanelLeftClose,
-  PanelLeftOpen,
-  RefreshCw,
-  ScrollText,
-  Server,
-  Settings2,
-  Shield,
-  Siren,
-  Users,
-} from 'lucide-react'
+import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, RefreshCw } from 'lucide-react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
-import type { LucideIcon } from 'lucide-react'
-
 import { asList, qre } from '@/api/qre'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { DataFreshness } from '@/components/data/DataFreshness'
@@ -40,62 +19,10 @@ import { useAuth } from '@/auth/hooks'
 import { useEnsureDemoData } from '@/hooks/useEnsureDemoData'
 import { useWorkspacePrefs } from '@/hooks/useWorkspacePrefs'
 import { formatPrincipalId, formatRole } from '@/lib/display'
+import { getNavigation } from '@/components/layout/navigation'
+import { detectWorkspace } from '@/lib/workspace'
+import { InfoTip } from '@/components/ui/InfoTip'
 import { cn } from '@/lib/utils'
-
-/**
- * Lifecycle rail — Submit → Review → Hold → Dispatch → Reconcile → Audit.
- * Users/roles sit under Admin (directory work), not Review. Status lives inside Settings.
- */
-const NAV: {
-  label: string
-  items: { to: string; label: string; icon: LucideIcon; end?: boolean; perm?: string; badgeKey?: 'approvals' | 'reconcile' | 'alerts' | 'incidents' }[]
-}[] = [
-  {
-    label: 'Work',
-    items: [
-      { to: '/qrp', label: 'Home', icon: LayoutDashboard, end: true },
-      { to: '/qrp/centre', label: 'Operations', icon: Gauge },
-      { to: '/qrp/approvals', label: 'Approvals', icon: ClipboardList, badgeKey: 'approvals' },
-      { to: '/qrp/projects', label: 'Projects', icon: Users },
-    ],
-  },
-  {
-    label: 'Resources',
-    items: [
-      { to: '/qrp/inventory', label: 'Resources', icon: Boxes },
-      { to: '/qrp/providers', label: 'Facilities & Providers', icon: Server, end: true },
-    ],
-  },
-  {
-    label: 'Compute',
-    items: [
-      { to: '/qrp/jobs', label: 'Jobs & Queues', icon: ClipboardList },
-      { to: '/qrp/reconciliation', label: 'Dispatch reconcile', icon: ClipboardList, badgeKey: 'reconcile' },
-      { to: '/qrp/support', label: 'Incidents', icon: Siren, badgeKey: 'alerts' },
-      { to: '/qrp/reservations', label: 'Reservations', icon: CalendarClock },
-    ],
-  },
-  {
-    label: 'Govern',
-    items: [
-      { to: '/qrp/policies', label: 'Policies', icon: Shield },
-      { to: '/qrp/quotas', label: 'Quotas', icon: Scale },
-      { to: '/qrp/metering', label: 'Metering', icon: Gauge },
-      { to: '/qrp/audit', label: 'Audit & Evidence', icon: ScrollText },
-    ],
-  },
-  {
-    label: 'Organization',
-    items: [
-      { to: '/qrp/organization', label: 'Organization', icon: Building2, end: true },
-      { to: '/qrp/admin/users', label: 'People & access', icon: Users, perm: 'user:read' },
-    ],
-  },
-  {
-    label: 'Admin',
-    items: [{ to: '/qrp/settings', label: 'Settings', icon: Settings2 }],
-  },
-]
 
 function pathInGroup(pathname: string, items: { to: string; end?: boolean }[]) {
   return items.some((item) => {
@@ -127,6 +54,8 @@ function ShellInner() {
   const queryClient = useQueryClient()
   const { user: authUser, permissions, logout: authLogout } = useAuth()
   const primaryRole = authUser?.roles?.[0]
+  const workspace = detectWorkspace(authUser?.roles)
+  const NAV = getNavigation(workspace, permissions)
   const user = authUser
     ? {
         username: formatPrincipalId(authUser.principal_id, primaryRole),
@@ -221,7 +150,7 @@ function ShellInner() {
         aria-label="Primary navigation"
         className={cn(
           'sticky top-8 flex h-[calc(100svh-2rem)] shrink-0 flex-col border-e border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out',
-          collapsed ? 'w-[72px]' : 'w-60',
+          collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-60 max-w-[var(--sidebar-width)]',
         )}
       >
         <div className={cn('flex items-center border-b border-sidebar-border', collapsed ? 'justify-center px-2 py-4' : 'gap-3 px-4 py-4')}>
@@ -381,11 +310,16 @@ function ShellInner() {
               {navCrumbs.length > 0 ? (
                 <Breadcrumbs items={navCrumbs} />
               ) : headerEyebrow ? (
-                <p className="page-header__kicker text-[11px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                  {headerEyebrow}
-                </p>
+                <p className="page-header__kicker text-[11px] font-medium text-muted-foreground">{headerEyebrow}</p>
               ) : null}
-              <h1 className="type-page-title type-trim type-title-clamp">{pageTitle}</h1>
+              <div className="flex min-w-0 items-start gap-1.5">
+                <h1 className="type-page-title type-trim type-title-clamp min-w-0">{pageTitle}</h1>
+                {chrome.descriptionHelp ? (
+                  <InfoTip label={`About ${pageTitle}`} className="mt-1 shrink-0">
+                    {chrome.descriptionHelp}
+                  </InfoTip>
+                ) : null}
+              </div>
               {chrome.description ? (
                 <p className="qrp-page-desc type-desc-clamp hyphenate mt-0.5">{chrome.description}</p>
               ) : null}
@@ -429,7 +363,7 @@ function ShellInner() {
         </header>
         <div
           id="page-content"
-          className="shell-canvas min-w-0 flex-1 px-4 py-4 sm:px-6 lg:px-8 pb-20"
+          className="shell-canvas page-canvas min-w-0 flex-1 py-4 pb-20"
           data-density={prefs.density}
           data-chart-size={prefs.chartSize}
           data-kpi={prefs.kpiLayout}

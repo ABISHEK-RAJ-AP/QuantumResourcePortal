@@ -12,6 +12,7 @@ import { AccessUsersPanel } from '@/components/admin/AccessUsersPanel'
 import { PermissionGate } from '@/auth/PermissionGate'
 import { useAuth } from '@/auth/hooks'
 import { Card, Page, RelatedNav } from '@/components/layout/Page'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { cn } from '@/lib/utils'
 
 import '@/styles/access-workspace.css'
@@ -53,7 +54,7 @@ export function UsersAdminPage() {
         { label: 'People & access' },
       ]}
       title="People & access"
-      description="Organization member directory, roles, and permission catalogue (Cert Studio Organisation → People)."
+      {...opsPageGuidance.adminPeople}
     >
       <div className="qrp-access qrp-settings">
         <div className="qrp-settings__shell">

@@ -89,23 +89,23 @@ const MODULES: StudioFeatureItem[] = [
 const WORKFLOW_STEPS = [
   {
     n: '01',
-    title: 'Register',
-    body: 'Create your organization and first administrator, then invite members.',
+    title: 'Discover',
+    body: 'Browse quantum processors, simulators, and hybrid resources in the catalogue.',
   },
   {
     n: '02',
-    title: 'Submit',
-    body: 'Open a research project and submit a workload to the org review queue.',
+    title: 'Request',
+    body: 'Submit a workload with technical requirements, scheduling window, and project context.',
   },
   {
     n: '03',
-    title: 'Review',
-    body: 'Policy stages run at organization scope; quota must pass before authorise.',
+    title: 'Review & allocate',
+    body: 'Governance reviews policy and quota, coordinates reservations, and authorises access.',
   },
   {
     n: '04',
-    title: 'Reconcile',
-    body: 'Dispatch attempts and outcomes land on the org audit trail.',
+    title: 'Execute',
+    body: 'Approved workloads dispatch to providers; usage and audit records are retained.',
   },
 ]
 
@@ -164,21 +164,20 @@ export function LandingPage() {
                 >
                   <div className="landing-hero__glass-glow" aria-hidden />
                   <h1 id="landing-hero-title" className="landing-hero__title landing-hero__title--glass">
-                    Quantum resource governance
+                    Quantum Computing Resources.
                     <br />
-                    <span className="landing-hero__title-accent">for every organization on the platform</span>
+                    <span className="landing-hero__title-accent">Managed Access. Governed Execution.</span>
                   </h1>
                   <p className="landing-hero__lead landing-hero__lead--glass">
-                    CDAC operates the shared provider fabric; your org gets isolated projects, approvals, quotas,
-                    metering, and audit exports — the same public marketing craft as Cert Studio, with Q-TeleScope ops
-                    density inside the workspace.
+                    Discover quantum computing resources, submit workloads, and manage execution through a unified resource
+                    governance platform operated by C-DAC for Indian research infrastructure.
                   </p>
                   <div className="landing-hero__ctas">
-                    <Link to="/login" className="btn-primary landing-cta-primary">
-                      Sign in <ArrowRight size={18} aria-hidden />
+                    <Link to="/qrp/inventory" className="btn-primary landing-cta-primary">
+                      Explore resources <ArrowRight size={18} aria-hidden />
                     </Link>
-                    <Link to="/register" className="btn-secondary landing-cta-secondary--glass">
-                      Register organization
+                    <Link to="/login" className="btn-secondary landing-cta-secondary--glass">
+                      Access portal
                     </Link>
                   </div>
                 </div>

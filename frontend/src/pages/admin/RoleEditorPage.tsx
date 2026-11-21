@@ -13,6 +13,7 @@ import { FormField, fieldErrorClass } from '@/components/forms/FormField'
 import { Card, Notice, Page, RelatedNav } from '@/components/layout/Page'
 import { parseForm } from '@/lib/validation/parseForm'
 import { roleCreateSchema, roleEditSchema } from '@/lib/validation/schemas'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 import { cn } from '@/lib/utils'
 
 const SCOPES = ['TENANT', 'PROJECT', 'PROVIDER'] as const
@@ -128,7 +129,7 @@ export function RoleEditorPage() {
         { label: isNew ? 'New role' : readOnly ? 'View role' : 'Edit role' },
       ]}
       title={isNew ? 'New role' : readOnly ? 'Role (system)' : 'Edit role'}
-      description="Organization role — choose scope (organization, project, or provider) and permissions, grouped by module."
+      {...opsPageGuidance.adminRoleEditor}
     >
       {error && <Notice tone="critical">{error}</Notice>}
       {readOnly && (

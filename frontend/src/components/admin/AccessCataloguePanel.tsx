@@ -74,7 +74,7 @@ export function AccessCataloguePanel() {
 
       {!dismissed ? (
         <Notice tone="warning">
-          The permission catalogue is fixed by the platform. Grant permissions by editing a role.{' '}
+          Catalogue is platform-fixed — grant access by editing a role.{' '}
           <button type="button" className="font-medium underline" onClick={() => setDismissed(true)}>
             Dismiss
           </button>

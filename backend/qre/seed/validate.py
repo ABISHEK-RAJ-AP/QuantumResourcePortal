@@ -34,6 +34,14 @@ def validate_demo_seed(conn: Connection, tenant_id: str) -> dict[str, int]:
         t=tenant_id,
     )
     attempts = count("SELECT count(*) FROM dispatch_attempt WHERE tenant_id = :t", t=tenant_id)
+    incidents = count(
+        "SELECT count(*) FROM ops_incident WHERE tenant_id = :t AND title LIKE '[DEMO]%'",
+        t=tenant_id,
+    )
+    alerts = count(
+        "SELECT count(*) FROM ops_alert WHERE tenant_id = :t AND title LIKE '[DEMO]%'",
+        t=tenant_id,
+    )
 
     errors: list[str] = []
     if projects < 8:
@@ -48,6 +56,10 @@ def validate_demo_seed(conn: Connection, tenant_id: str) -> dict[str, int]:
         errors.append(f"expected >= 30 demo jobs, got {jobs}")
     if attempts < 20:
         errors.append(f"expected >= 20 dispatch attempts, got {attempts}")
+    if incidents < 5:
+        errors.append(f"expected >= 5 demo incidents, got {incidents}")
+    if alerts < 8:
+        errors.append(f"expected >= 8 demo alerts, got {alerts}")
 
     orphan_jobs = count(
         """
@@ -73,4 +85,6 @@ def validate_demo_seed(conn: Connection, tenant_id: str) -> dict[str, int]:
         "reservations": reservations,
         "jobs": jobs,
         "dispatch_attempts": attempts,
+        "incidents": incidents,
+        "alerts": alerts,
     }

@@ -9,6 +9,7 @@ import { PermissionGate } from '@/auth/PermissionGate'
 import { Card, EmptyState, Notice, Page, RelatedNav } from '@/components/layout/Page'
 import { StatusBadge } from '@/components/status/StatusBadge'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { opsPageGuidance } from '@/lib/opsPageGuidance'
 
 export function RolesPage() {
   const client = useQueryClient()
@@ -35,7 +36,7 @@ export function RolesPage() {
         { label: 'Roles' },
       ]}
       title="Roles"
-      description="System roles are fixed; create organization-specific roles from the permission catalogue."
+      {...opsPageGuidance.adminRoles}
       actions={
         <PermissionGate permission="role:create">
           <Link to="/qrp/admin/roles/new" className="btn-primary px-3 py-2 text-sm">

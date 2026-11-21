@@ -22,6 +22,8 @@ Load the portal with **interconnected demonstration data** stored in PostgreSQL.
 
 ```bash
 cd ~/QuantumResourcePortal
+make demo-data   # ensures QRP Postgres (:5434), migrate, force seed CDAC
+# or stepwise:
 make migrate
 QRE_ENV=lab make seed-demo                    # default tenant CDAC
 # or
