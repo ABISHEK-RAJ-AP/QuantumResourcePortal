@@ -29,7 +29,9 @@ export function MfaPage() {
   return (
     <AuthPanel
       title="Additional verification"
-      footer={<AuthFooterLinks />}
+      subtitle="Multi-factor sign-in when enabled for your organisation"
+      showBackLink
+      footer={<AuthFooterLinks showForgot showRegister />}
     >
       {caps.isError ? (
         <FormBanner message="Could not load deployment settings." tone="warning" />

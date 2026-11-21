@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react'
 import { LogoMark } from '@/components/brand/LogoMark'
 import { ThemeIconToggle } from '@/components/theme/ThemeIconToggle'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -22,6 +23,7 @@ export function PublicHeader({ className }: { className?: string }) {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const dark = theme === 'dark'
+  const { allowed: registrationOpen } = usePublicRegistration()
   const [open, setOpen] = useState(false)
 
   const onSectionNav = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -56,7 +58,7 @@ export function PublicHeader({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        'sticky top-8 z-50 w-full border-b backdrop-blur-xl',
+        'sticky top-8 z-50 w-full min-h-[72px] border-b backdrop-blur-xl',
         dark ? 'border-white/10 bg-[#0b1220]/90 text-white' : 'border-border bg-card/95 text-foreground',
         className,
       )}
@@ -123,19 +125,21 @@ export function PublicHeader({ className }: { className?: string }) {
           >
             Sign in
           </Link>
-          <Link
-            to="/register"
-            className={cn(
-              'btn-primary landing-hero-cta hidden min-h-10 items-center justify-center px-4 text-sm font-semibold whitespace-nowrap md:inline-flex',
-              onRegister && 'ring-2 ring-primary/40',
-            )}
-          >
-            Register
-          </Link>
+          {registrationOpen ? (
+            <Link
+              to="/register"
+              className={cn(
+                'btn-primary landing-hero-cta hidden min-h-10 items-center justify-center px-4 text-sm font-semibold whitespace-nowrap md:inline-flex',
+                onRegister && 'ring-2 ring-primary/40',
+              )}
+            >
+              Register
+            </Link>
+          ) : null}
 
           <button
             type="button"
-            className={cn(iconBtn, 'xl:hidden')}
+            className={cn(iconBtn, 'md:hidden')}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -146,7 +150,7 @@ export function PublicHeader({ className }: { className?: string }) {
       </div>
 
       {open ? (
-        <div className={cn('border-t px-6 py-4 sm:px-8 xl:hidden', dark ? 'border-white/10' : 'border-border')}>
+        <div className={cn('border-t px-6 py-4 sm:px-8 md:hidden', dark ? 'border-white/10' : 'border-border')}>
           <nav className="flex flex-col gap-1 text-left" aria-label="Mobile">
             {NAV.map((link) => (
               <a
@@ -165,9 +169,11 @@ export function PublicHeader({ className }: { className?: string }) {
               <Link to="/login" className="btn-primary justify-center" onClick={() => setOpen(false)}>
                 Sign in
               </Link>
-              <Link to="/register" className="fs-link px-3 py-2 text-center text-sm font-semibold" onClick={() => setOpen(false)}>
-                Register organization
-              </Link>
+              {registrationOpen ? (
+                <Link to="/register" className="fs-link px-3 py-2 text-center text-sm font-semibold" onClick={() => setOpen(false)}>
+                  Register organization
+                </Link>
+              ) : null}
             </div>
           </nav>
         </div>

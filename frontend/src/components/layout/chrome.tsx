@@ -150,7 +150,7 @@ function ShellInner() {
         aria-label="Primary navigation"
         className={cn(
           'sticky top-8 flex h-[calc(100svh-2rem)] shrink-0 flex-col border-e border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out',
-          collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-60 max-w-[var(--sidebar-width)]',
+          collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-[var(--sidebar-width)]',
         )}
       >
         <div className={cn('flex items-center border-b border-sidebar-border', collapsed ? 'justify-center px-2 py-4' : 'gap-3 px-4 py-4')}>

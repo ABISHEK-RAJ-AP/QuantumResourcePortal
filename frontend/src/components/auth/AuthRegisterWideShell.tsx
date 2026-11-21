@@ -22,9 +22,9 @@ function AuthRegisterWideInner({ children }: { children: ReactNode }) {
   const { fields } = useAuthBackdrop()
 
   return (
-    <PublicShell className="landing-page public-auth-page qrp-register-flow">
+    <PublicShell className="landing-page public-auth-page auth-shell auth-shell--register-studio qrp-register-flow">
       <IntroSceneBackground />
-      <main id="main-content" tabIndex={-1} className="qrp-register-flow__main outline-none">
+      <main id="main-content" tabIndex={-1} className="reg-auth-main outline-none">
         <LoginWireBackdrop
           variant={isDark ? 'dark' : 'light'}
           email={fields.username}
@@ -32,10 +32,12 @@ function AuthRegisterWideInner({ children }: { children: ReactNode }) {
           captchaInput={fields.captchaInput}
           captchaCode={fields.captchaCode}
         />
-        <Link to="/login" className="qrp-register-flow__back">
-          ← Back to sign in
-        </Link>
-        <div className="qrp-register-flow__panel qrp-auth-shell">{children}</div>
+        <div className="reg-cert-panel qrp-auth-shell">
+          <Link to="/login" className="qrp-register-flow__back">
+            ← Back to sign in
+          </Link>
+          {children}
+        </div>
       </main>
     </PublicShell>
   )

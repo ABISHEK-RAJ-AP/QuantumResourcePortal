@@ -76,7 +76,12 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthPanel title="Set new password" subtitle="Use the token from your administrator" footer={<AuthFooterLinks />}>
+    <AuthPanel
+      title="Set new password"
+      subtitle="Use the token from your administrator"
+      showBackLink
+      footer={<AuthFooterLinks showForgot showRegister />}
+    >
       <AuthBackdropSync password={password} captchaInput={captchaCode} />
       <form className="cert-auth-form" onSubmit={onSubmit} noValidate>
         <FormBanner message={error} />

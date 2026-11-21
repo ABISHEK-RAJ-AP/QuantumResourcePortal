@@ -172,9 +172,9 @@ export function RegisterPage() {
   if (caps.isSuccess && !selfReg) {
     return (
       <AuthRegisterWideShell>
-        <div className="qrp-register-flow__title-row">
+        <header className="reg-cert-head">
           <h1>Request access</h1>
-        </div>
+        </header>
         <p className="cert-auth-prose">{AUTH_COPY.registerClosed}</p>
         <Link to="/login" className="btn-primary qrp-auth-submit auth-cta qrp-register-flow__continue">
           Continue to sign in <ArrowRight className="size-4" aria-hidden />
@@ -187,12 +187,12 @@ export function RegisterPage() {
   return (
     <AuthRegisterWideShell>
       <AuthBackdropSync username={adminUsername} password={password} captchaInput={captchaCode} />
-      <div className="qrp-register-flow__title-row">
+      <header className="reg-cert-head qrp-register-flow__title-row">
         <h1>Register your organisation</h1>
         <button type="button" className="qrp-register-flow__info" title={AUTH_COPY.registerOrgAside} aria-label="About organisation registration">
           i
         </button>
-      </div>
+      </header>
       <RegisterFlowStepper phase={phase} />
       <FormBanner message={banner} />
 

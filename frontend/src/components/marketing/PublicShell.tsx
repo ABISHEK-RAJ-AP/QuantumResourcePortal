@@ -16,6 +16,7 @@ export function PublicShell({
   const { theme } = useTheme()
   const dark = theme === 'dark'
   const isLanding = className?.includes('landing-page')
+  const compactFooter = className?.includes('public-auth-page')
 
   return (
     <div
@@ -34,7 +35,7 @@ export function PublicShell({
       <div id="page-content" className="qrp-public-content flex min-h-0 flex-1 flex-col" tabIndex={-1}>
         {children}
       </div>
-      <PublicFooter variant={dark ? 'dark' : 'light'} />
+      <PublicFooter variant={dark ? 'dark' : 'light'} compact={compactFooter} />
     </div>
   )
 }

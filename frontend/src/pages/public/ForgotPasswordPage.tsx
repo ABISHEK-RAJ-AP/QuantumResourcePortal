@@ -8,7 +8,8 @@ export function ForgotPasswordPage() {
     <AuthPanel
       title="Password reset"
       subtitle="Administrator-assisted password reset"
-      footer={<AuthFooterLinks showRegister />}
+      showBackLink
+      footer={<AuthFooterLinks showRegister showHome />}
     >
       <p className="cert-auth-prose">
         Self-service password reset is not available on this deployment. Contact your system administrator to request a
