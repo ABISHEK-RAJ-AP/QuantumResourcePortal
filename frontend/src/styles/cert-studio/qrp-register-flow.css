@@ -27,6 +27,8 @@
 }
 
 .qrp-register-flow__panel {
+  position: relative;
+  z-index: 2;
   width: 100%;
   max-width: min(56rem, 96vw);
   margin-inline: auto;

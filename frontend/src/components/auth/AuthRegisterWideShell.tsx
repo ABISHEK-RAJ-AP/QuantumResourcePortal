@@ -35,7 +35,7 @@ function AuthRegisterWideInner({ children }: { children: ReactNode }) {
         <Link to="/login" className="qrp-register-flow__back">
           ← Back to sign in
         </Link>
-        <div className="qrp-register-flow__panel">{children}</div>
+        <div className="qrp-register-flow__panel qrp-auth-shell">{children}</div>
       </main>
     </PublicShell>
   )

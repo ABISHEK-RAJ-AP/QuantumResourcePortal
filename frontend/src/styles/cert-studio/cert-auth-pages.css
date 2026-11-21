@@ -37,7 +37,7 @@
   width: 100%;
   margin-inline: auto;
   background: color-mix(in srgb, var(--card) 94%, transparent);
-  padding: clamp(1.75rem, 4vw, 2.25rem);
+  padding: clamp(2rem, 4.5vw, 2.5rem);
   border-radius: var(--radius-xl, 1rem);
   box-shadow: 0 16px 48px color-mix(in srgb, var(--foreground) 8%, transparent);
   border: 1px solid var(--border);
@@ -75,16 +75,16 @@
 
 .cert-login-card__head h1,
 .cert-register-card__head h1 {
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-size: clamp(1.5rem, 3.2vw, 1.875rem);
   font-weight: 700;
   margin: 0 0 0.5rem;
 }
 
 .cert-login-card__subtitle {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: clamp(1rem, 2vw, 1.0625rem);
   color: var(--muted-foreground);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .cert-login-card__lab-hint {

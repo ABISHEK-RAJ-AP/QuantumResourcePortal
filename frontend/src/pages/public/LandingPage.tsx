@@ -1,6 +1,9 @@
 import './loadCertLandingStyles'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
+
+import { scrollToLandingSection } from '@/components/marketing/hashNav'
 import { Link } from 'react-router'
 import {
   ArrowRight,
@@ -125,8 +128,16 @@ const FAQ = [
 ]
 
 export function LandingPage() {
+  const location = useLocation()
   const heroTileRef = useRef<HTMLDivElement>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.replace(/^#/, '')
+    const timer = window.setTimeout(() => scrollToLandingSection(id, 'auto'), 0)
+    return () => window.clearTimeout(timer)
+  }, [location.hash])
   const onHeroMouseMove = (e: React.MouseEvent) => {
     if (prefersReducedMotion()) return
     const el = heroTileRef.current
@@ -187,32 +198,38 @@ export function LandingPage() {
 
           <section id="capabilities" className="landing-section landing-section--surface" aria-labelledby="capabilities-title">
             <MarketingContainer>
-              <h2 id="capabilities-title" className="landing-section__title">
-                What you get
-              </h2>
-              <p className="landing-section__lead">
-                Per-organization policy stages, capacity ledgers, and exportable records for accountable quantum ops.
-              </p>
+              <header className="landing-section__header">
+                <h2 id="capabilities-title" className="landing-section__title">
+                  What you get
+                </h2>
+                <p className="landing-section__lead">
+                  Per-organization policy stages, capacity ledgers, and exportable records for accountable quantum ops.
+                </p>
+              </header>
               <StudioFeatureGrid items={CAPABILITIES} className="studio-feature-grid--tri" />
             </MarketingContainer>
           </section>
 
           <section id="features" className="landing-section" aria-labelledby="features-title">
             <MarketingContainer>
-              <h2 id="features-title" className="landing-section__title">
-                Approvals, quotas, audit
-              </h2>
-              <p className="landing-section__lead">Fleet inventory, dispatch, and project access after sign-in.</p>
+              <header className="landing-section__header">
+                <h2 id="features-title" className="landing-section__title">
+                  Approvals, quotas, audit
+                </h2>
+                <p className="landing-section__lead">Fleet inventory, dispatch, and project access after sign-in.</p>
+              </header>
               <StudioFeatureGrid items={MODULES} />
             </MarketingContainer>
           </section>
 
           <section id="workflow" className="landing-section landing-section--surface" aria-labelledby="workflow-title">
             <MarketingContainer narrow>
-              <h2 id="workflow-title" className="landing-section__title">
-                From request to audit
-              </h2>
-              <p className="landing-section__lead">Submit, review, authorise, then reconcile dispatch.</p>
+              <header className="landing-section__header">
+                <h2 id="workflow-title" className="landing-section__title">
+                  From request to audit
+                </h2>
+                <p className="landing-section__lead">Submit, review, authorise, then reconcile dispatch.</p>
+              </header>
               <div className="landing-steps">
                 {WORKFLOW_STEPS.map((s) => (
                   <div key={s.n} className="landing-step-card">

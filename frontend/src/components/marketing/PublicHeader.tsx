@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useState, type MouseEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
+
+import { scrollToLandingSection } from '@/components/marketing/hashNav'
 import { Menu, X } from 'lucide-react'
 
 import { LogoMark } from '@/components/brand/LogoMark'
@@ -17,9 +19,29 @@ const NAV = [
 /** Q-TeleScope pattern: brand left · section nav center · actions right. */
 export function PublicHeader({ className }: { className?: string }) {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const dark = theme === 'dark'
   const [open, setOpen] = useState(false)
+
+  const onSectionNav = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    const hashIndex = href.indexOf('#')
+    if (hashIndex === -1) return
+    const path = href.slice(0, hashIndex) || '/'
+    const hash = href.slice(hashIndex)
+    if (pathname !== path && pathname !== '/') {
+      event.preventDefault()
+      void navigate({ pathname: path, hash: hash.slice(1) })
+      return
+    }
+    if (pathname === path || (path === '/' && pathname === '/')) {
+      event.preventDefault()
+      if (path !== pathname) void navigate(path)
+      scrollToLandingSection(hash)
+      window.history.replaceState(null, '', `${path}${hash}`)
+      setOpen(false)
+    }
+  }
 
   const onLogin = pathname.startsWith('/login')
   const onRegister = pathname.startsWith('/register')
@@ -65,6 +87,7 @@ export function PublicHeader({ className }: { className?: string }) {
               <a
                 key={link.label}
                 href={link.href}
+                onClick={(e) => onSectionNav(e, link.href)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
                   dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -130,7 +153,10 @@ export function PublicHeader({ className }: { className?: string }) {
                 key={link.label}
                 href={link.href}
                 className={cn('rounded-lg px-3 py-2.5 text-base font-semibold', dark ? 'hover:bg-white/10' : 'hover:bg-accent')}
-                onClick={() => setOpen(false)}
+                onClick={(e) => {
+                  onSectionNav(e, link.href)
+                  setOpen(false)
+                }}
               >
                 {link.label}
               </a>

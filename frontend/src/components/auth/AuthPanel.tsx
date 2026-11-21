@@ -78,7 +78,7 @@ function AuthPanelInner({
         <MarketingContainer
           narrow
           className="cert-auth-page__container"
-          style={{ maxWidth: wide ? 520 : 460 }}
+          style={{ maxWidth: wide ? 560 : 520 }}
         >
           {showBackLink ? (
             <Link to="/" className="cert-auth-inline-back cert-auth-inline-back--above-card">
