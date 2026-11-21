@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { parsePublicHashHref } from '@/components/marketing/hashNav'
+import { followPublicHashLink, parsePublicHashHref } from '@/components/marketing/hashNav'
 
 describe('parsePublicHashHref', () => {
   it('parses root hash links', () => {
@@ -13,5 +13,17 @@ describe('parsePublicHashHref', () => {
 
   it('returns null without hash', () => {
     expect(parsePublicHashHref('/login')).toBeNull()
+  })
+})
+
+describe('followPublicHashLink', () => {
+  it('navigates with combined path+hash string from auth routes', () => {
+    const navigate = vi.fn()
+    const preventDefault = vi.fn()
+    followPublicHashLink(navigate, '/login', '/#capabilities', {
+      preventDefault,
+    } as unknown as import('react').MouseEvent<HTMLAnchorElement>)
+    expect(preventDefault).toHaveBeenCalled()
+    expect(navigate).toHaveBeenCalledWith({ pathname: '/', hash: 'capabilities' })
   })
 })

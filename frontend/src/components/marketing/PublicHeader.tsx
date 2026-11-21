@@ -1,7 +1,7 @@
-import { useState, type MouseEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router'
 
-import { scrollToLandingSection } from '@/components/marketing/hashNav'
+import { PublicHashLink } from '@/components/marketing/PublicHashLink'
 import { Menu, X } from 'lucide-react'
 
 import { LogoMark } from '@/components/brand/LogoMark'
@@ -20,35 +20,13 @@ const NAV = [
 /** Q-TeleScope pattern: brand left · section nav center · actions right. */
 export function PublicHeader({ className }: { className?: string }) {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const dark = theme === 'dark'
   const { allowed: registrationOpen } = usePublicRegistration()
   const [open, setOpen] = useState(false)
 
-  const onSectionNav = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
-    const hashIndex = href.indexOf('#')
-    if (hashIndex === -1) return
-    const path = href.slice(0, hashIndex) || '/'
-    const hash = href.slice(hashIndex)
-    if (pathname !== path && pathname !== '/') {
-      event.preventDefault()
-      void navigate({ pathname: path, hash: hash.slice(1) })
-      return
-    }
-    if (pathname === path || (path === '/' && pathname === '/')) {
-      event.preventDefault()
-      if (path !== pathname) void navigate(path)
-      scrollToLandingSection(hash)
-      window.history.replaceState(null, '', `${path}${hash}`)
-      setOpen(false)
-    }
-  }
-
   const onLogin = pathname.startsWith('/login')
   const onRegister = pathname.startsWith('/register')
-  const authSurface =
-    pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password')
 
   const iconBtn = cn(
     'grid size-9 shrink-0 place-items-center rounded-lg border transition',
@@ -83,23 +61,21 @@ export function PublicHeader({ className }: { className?: string }) {
           </Link>
         </div>
 
-        {!authSurface ? (
-          <nav className="qrp-public-header__nav" aria-label="Page sections">
-            {NAV.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(e) => onSectionNav(e, link.href)}
-                className={cn(
-                  'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
-                  dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                )}
-              >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        ) : null}
+        <nav className="qrp-public-header__nav" aria-label="Page sections">
+          {NAV.map((link) => (
+            <PublicHashLink
+              key={link.label}
+              href={link.href}
+              onAfterNav={() => setOpen(false)}
+              className={cn(
+                'rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition',
+                dark ? 'text-white/75 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+              )}
+            >
+              {link.label}
+            </PublicHashLink>
+          ))}
+        </nav>
 
         <div className="qrp-public-header__actions qrp-public-header__actions--cluster">
           <ThemeIconToggle
@@ -153,17 +129,14 @@ export function PublicHeader({ className }: { className?: string }) {
         <div className={cn('border-t px-6 py-4 sm:px-8 md:hidden', dark ? 'border-white/10' : 'border-border')}>
           <nav className="flex flex-col gap-1 text-left" aria-label="Mobile">
             {NAV.map((link) => (
-              <a
+              <PublicHashLink
                 key={link.label}
                 href={link.href}
+                onAfterNav={() => setOpen(false)}
                 className={cn('rounded-lg px-3 py-2.5 text-base font-semibold', dark ? 'hover:bg-white/10' : 'hover:bg-accent')}
-                onClick={(e) => {
-                  onSectionNav(e, link.href)
-                  setOpen(false)
-                }}
               >
                 {link.label}
-              </a>
+              </PublicHashLink>
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t pt-3" style={{ borderColor: 'inherit' }}>
               <Link to="/login" className="btn-primary justify-center" onClick={() => setOpen(false)}>

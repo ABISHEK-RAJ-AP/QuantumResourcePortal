@@ -82,7 +82,7 @@ function AuthPanelInner({
           style={{ maxWidth: wide ? 560 : 520 }}
         >
           {showBackLink ? (
-            <Link to="/" className="cert-auth-inline-back cert-auth-inline-back--above-card">
+            <Link to="/" reloadDocument className="cert-auth-inline-back cert-auth-inline-back--above-card">
               ← Back to home
             </Link>
           ) : null}

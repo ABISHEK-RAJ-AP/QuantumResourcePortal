@@ -3,7 +3,7 @@ import './loadCertLandingStyles'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 
-import { scrollToLandingSection } from '@/components/marketing/hashNav'
+import { scrollToHashWhenReady } from '@/components/marketing/hashNav'
 import { Link } from 'react-router'
 import {
   ArrowRight,
@@ -139,11 +139,9 @@ export function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   useEffect(() => {
-    if (!location.hash) return
-    const id = location.hash.replace(/^#/, '')
-    const timer = window.setTimeout(() => scrollToLandingSection(id, 'auto'), 0)
-    return () => window.clearTimeout(timer)
-  }, [location.hash])
+    if (location.pathname !== '/' || !location.hash) return
+    scrollToHashWhenReady(location.hash)
+  }, [location.pathname, location.hash])
   const onHeroMouseMove = (e: React.MouseEvent) => {
     if (prefersReducedMotion()) return
     const el = heroTileRef.current

@@ -1,8 +1,7 @@
-import type { MouseEvent, ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 
 import { LogoMark } from '@/components/brand/LogoMark'
-import { parsePublicHashHref, scrollToLandingSection } from '@/components/marketing/hashNav'
+import { PublicHashLink } from '@/components/marketing/PublicHashLink'
 import { usePublicRegistration } from '@/hooks/usePublicRegistration'
 import { cn } from '@/lib/utils'
 
@@ -48,44 +47,6 @@ type PublicFooterProps = {
   compact?: boolean
 }
 
-function FooterHashLink({
-  href,
-  children,
-  className,
-  onAfterNav,
-}: {
-  href: string
-  children: ReactNode
-  className?: string
-  onAfterNav?: () => void
-}) {
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
-  const parsed = parsePublicHashHref(href)
-
-  const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!parsed) return
-    const { path, hash } = parsed
-    if (pathname !== path && !(path === '/' && pathname === '/')) {
-      event.preventDefault()
-      void navigate({ pathname: path, hash: hash.slice(1) })
-      onAfterNav?.()
-      return
-    }
-    event.preventDefault()
-    if (path !== pathname) void navigate(path)
-    scrollToLandingSection(hash)
-    window.history.replaceState(null, '', `${path}${hash}`)
-    onAfterNav?.()
-  }
-
-  return (
-    <a href={href} className={className} onClick={onClick}>
-      {children}
-    </a>
-  )
-}
-
 /** Q-TeleScope footer: brand column · link grid · copyright left / legal right. */
 export function PublicFooter({ variant = 'dark', className, compact = false }: PublicFooterProps) {
   const year = new Date().getFullYear()
@@ -107,9 +68,9 @@ export function PublicFooter({ variant = 'dark', className, compact = false }: P
     }
     if (link.href) {
       return (
-        <FooterHashLink href={link.href} className={linkClass}>
+        <PublicHashLink href={link.href} className={linkClass}>
           {link.name}
-        </FooterHashLink>
+        </PublicHashLink>
       )
     }
     return null
@@ -198,12 +159,12 @@ export function PublicFooter({ variant = 'dark', className, compact = false }: P
                 {link.name}
               </Link>
             ))}
-            <FooterHashLink
+            <PublicHashLink
               href="/#capabilities"
               className={cn('text-xs font-semibold sm:text-sm', dark ? 'hover:text-white' : 'hover:text-foreground')}
             >
               Capabilities
-            </FooterHashLink>
+            </PublicHashLink>
             <Link
               to="/login"
               className={cn('text-xs font-semibold sm:text-sm', dark ? 'hover:text-white' : 'hover:text-foreground')}

@@ -190,7 +190,22 @@
 }
 
 .qrp-public-shell #page-content {
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
   text-align: inherit;
+}
+
+.qrp-public-shell .landing-page__content,
+.qrp-public-shell .cert-auth-page__main,
+.qrp-public-shell .reg-auth-main {
+  position: relative;
+  z-index: 2;
+}
+
+/* Sticky a11y (32px) + header (72px) — hash scroll lands below chrome */
+.landing-page .landing-section {
+  scroll-margin-top: 6.5rem;
 }
 
 .qrp-auth-form-footer {
